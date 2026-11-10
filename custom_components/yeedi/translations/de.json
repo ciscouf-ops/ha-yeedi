@@ -1,0 +1,117 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "yeedi-Konto",
+        "description": "Gib das Konto ein, das du in der yeedi-App verwendest.",
+        "data": {
+          "username": "E-Mail",
+          "password": "Passwort",
+          "country": "Land"
+        }
+      },
+      "device_verification": {
+        "title": "Geräteprüfung",
+        "description": "yeedi hat einen Bestätigungscode an deine E-Mail-Adresse gesendet. Gib ihn unten ein.",
+        "data": {
+          "verification_code": "Bestätigungscode"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung fehlgeschlagen",
+      "invalid_auth": "Ungültige Anmeldedaten",
+      "invalid_verification_code": "Ungültiger Bestätigungscode",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "abort": {
+      "already_configured": "Dieses Konto ist bereits eingerichtet",
+      "reauth_successful": "Erneute Anmeldung erfolgreich"
+    }
+  },
+  "entity": {
+    "select": {
+      "water_amount": {
+        "name": "Wassermenge",
+        "state": {
+          "low": "Niedrig",
+          "medium": "Mittel",
+          "high": "Hoch",
+          "ultrahigh": "Sehr hoch"
+        }
+      },
+      "suction": {
+        "name": "Saugleistung",
+        "state": {
+          "mop_only": "Nur wischen",
+          "normal": "Standard",
+          "max": "Max",
+          "max_plus": "Max+"
+        }
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Fehler"
+      },
+      "stats_area": {
+        "name": "Gereinigte Fläche"
+      },
+      "stats_time": {
+        "name": "Reinigungsdauer"
+      },
+      "total_stats_area": {
+        "name": "Gereinigte Fläche gesamt"
+      },
+      "total_stats_time": {
+        "name": "Reinigungsdauer gesamt"
+      },
+      "total_stats_cleanings": {
+        "name": "Reinigungen gesamt"
+      },
+      "lifespan_brush": {
+        "name": "Hauptbürste"
+      },
+      "lifespan_filter": {
+        "name": "Filter"
+      },
+      "lifespan_side_brush": {
+        "name": "Seitenbürste"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "mop_only": "Nur wischen",
+              "normal": "Standard",
+              "max": "Max",
+              "max_plus": "Max+"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Anmeldung fehlgeschlagen, bitte erneut anmelden."
+    },
+    "device_verification_required": {
+      "message": "yeedi verlangt eine Geräteprüfung, bitte erneut anmelden."
+    },
+    "setup_error": {
+      "message": "Die yeedi-Cloud ist nicht erreichbar."
+    },
+    "params_dict": {
+      "message": "Die Parameter müssen ein Wörterbuch sein."
+    },
+    "area_not_supported": {
+      "message": "Dieser Roboter unterstützt keine Bereichsreinigung."
+    },
+    "rooms_required": {
+      "message": "Der Befehl spot_area braucht einen Parameter „rooms“."
+    }
+  }
+}

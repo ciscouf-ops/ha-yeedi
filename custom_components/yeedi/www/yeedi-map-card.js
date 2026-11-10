@@ -34,6 +34,33 @@ const TEXT = {
       idle: 'À l’arrêt', paused: 'En pause', error: 'Erreur' },
     since: 'commencé à',
   },
+  de: {
+    clean: 'Reinigen', clean_rooms: (n) => `${n} ${n > 1 ? 'Räume' : 'Raum'} reinigen`, pause: 'Pause',
+    resume: 'Fortsetzen', dock: 'Station', clear: 'Zurücksetzen', last_clean: 'Letzte Reinigung', no_map: 'Warte auf die Karte…',
+    no_outline: 'Der Roboter hat keine Raumumrisse gesendet: wähle die Räume unten aus.',
+    not_yeedi: 'Diese Entität ist kein yeedi-Staubsauger.', fan: 'Saugkraft', water: 'Wasser', mop_only_short: 'Aus',
+    states: { cleaning: 'Reinigt', returning: 'Rückkehr zur Station', docked: 'An der Station',
+      idle: 'Bereit', paused: 'Pausiert', error: 'Fehler' },
+    since: 'gestartet um',
+  },
+  es: {
+    clean: 'Limpiar', clean_rooms: (n) => `Limpiar ${n} habitaci${n > 1 ? 'ones' : 'ón'}`, pause: 'Pausa',
+    resume: 'Reanudar', dock: 'Base', clear: 'Borrar', last_clean: 'Última limpieza', no_map: 'Esperando el mapa…',
+    no_outline: 'El robot no envió el contorno de las habitaciones: elígelas abajo.',
+    not_yeedi: 'Esta entidad no es una aspiradora yeedi.', fan: 'Succión', water: 'Agua', mop_only_short: 'Apagada',
+    states: { cleaning: 'Limpiando', returning: 'Volviendo a la base', docked: 'En la base',
+      idle: 'Inactiva', paused: 'En pausa', error: 'Error' },
+    since: 'iniciada a las',
+  },
+  it: {
+    clean: 'Pulisci', clean_rooms: (n) => `Pulisci ${n} stanz${n > 1 ? 'e' : 'a'}`, pause: 'Pausa',
+    resume: 'Riprendi', dock: 'Base', clear: 'Annulla', last_clean: 'Ultima pulizia', no_map: 'In attesa della mappa…',
+    no_outline: 'Il robot non ha inviato il contorno delle stanze: scegline qui sotto.',
+    not_yeedi: 'Questa entità non è un aspirapolvere yeedi.', fan: 'Aspirazione', water: 'Acqua', mop_only_short: 'Spenta',
+    states: { cleaning: 'Pulizia', returning: 'Ritorno alla base', docked: 'Alla base',
+      idle: 'Inattivo', paused: 'In pausa', error: 'Errore' },
+    since: 'iniziata alle',
+  },
 };
 
 // Generic room names sent by the robot (deebot-client), translated.
@@ -43,6 +70,18 @@ const ROOM_NAMES = {
     'Laundry': 'Buanderie', 'Lounge': 'Salon', 'Storeroom': 'Débarras',
     'Kids room': 'Chambre d’enfant', 'Sunroom': 'Véranda', 'Corridor': 'Couloir',
     'Balcony': 'Balcon', 'Gym': 'Salle de sport' },
+  de: { 'Default': 'Raum', 'Living Room': 'Wohnzimmer', 'Dining Room': 'Esszimmer', 'Bedroom': 'Schlafzimmer',
+    'Study': 'Arbeitszimmer', 'Kitchen': 'Küche', 'Bathroom': 'Bad', 'Laundry': 'Waschküche', 'Lounge': 'Salon',
+    'Storeroom': 'Abstellraum', 'Kids room': 'Kinderzimmer', 'Sunroom': 'Wintergarten', 'Corridor': 'Flur',
+    'Balcony': 'Balkon', 'Gym': 'Fitnessraum' },
+  es: { 'Default': 'Habitación', 'Living Room': 'Salón', 'Dining Room': 'Comedor', 'Bedroom': 'Dormitorio',
+    'Study': 'Despacho', 'Kitchen': 'Cocina', 'Bathroom': 'Baño', 'Laundry': 'Lavadero', 'Lounge': 'Sala de estar',
+    'Storeroom': 'Trastero', 'Kids room': 'Cuarto infantil', 'Sunroom': 'Galería', 'Corridor': 'Pasillo',
+    'Balcony': 'Balcón', 'Gym': 'Gimnasio' },
+  it: { 'Default': 'Stanza', 'Living Room': 'Soggiorno', 'Dining Room': 'Sala da pranzo', 'Bedroom': 'Camera da letto',
+    'Study': 'Studio', 'Kitchen': 'Cucina', 'Bathroom': 'Bagno', 'Laundry': 'Lavanderia', 'Lounge': 'Salotto',
+    'Storeroom': 'Ripostiglio', 'Kids room': 'Cameretta', 'Sunroom': 'Veranda', 'Corridor': 'Corridoio',
+    'Balcony': 'Balcone', 'Gym': 'Palestra' },
 };
 
 // Icons for the suction and water levels (fallbacks by position: _0, _1, …).
@@ -185,8 +224,15 @@ class YeediMapCard extends HTMLElement {
     const moving = ['cleaning', 'returning'].includes(st?.state);
     const r = this._related();
     const battery = r.battery ? this._hass.states[r.battery]?.state : null;
-    const status = [text.states[st?.state] || st?.state || '', battery && !isNaN(battery) ? `${Math.round(battery)} %` : '']
-      .filter(Boolean).join(' · ');
+    // Battery with its icon, so the percentage is not read as a cleaning progress.
+    let bat = '';
+    if (battery && !isNaN(battery)) {
+      const pct = Math.round(battery), docked = st?.state === 'docked';
+      const level = pct >= 95 ? '' : `-${Math.max(10, Math.round(pct / 10) * 10)}`;
+      const icon = docked && pct < 100 ? `mdi:battery-charging${level || '-100'}` : `mdi:battery${level}`;
+      bat = `<span class="bat"><ha-icon icon="${icon}"></ha-icon>${pct} %</span>`;
+    }
+    const status = [esc(text.states[st?.state] || st?.state || ''), bat].filter(Boolean).join('<span class="sep">·</span>');
 
     let body;
     if (this._error) body = `<div class="msg">${text[this._error]}</div>`;
@@ -198,7 +244,7 @@ class YeediMapCard extends HTMLElement {
       <ha-card>
         <div class="head">
           <div class="title">${esc(title)}</div>
-          <div class="status">${esc(status)}</div>
+          <div class="status">${status}</div>
         </div>
         ${body}
         ${this._config.controls !== false && st ? this._controls(st, r, moving) : ''}
@@ -428,7 +474,9 @@ const STYLE = `
   ha-card { overflow: hidden; }
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 16px 6px; }
   .title { font-size: 16px; font-weight: 500; color: var(--primary-text-color); }
-  .status { font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; }
+  .status { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; }
+  .status .bat { display: inline-flex; align-items: center; gap: 1px; }
+  .status .bat ha-icon { --mdc-icon-size: 16px; }
   .map { padding: 4px 12px; }
   svg { width: 100%; height: auto; max-height: 420px; display: block; }
   .room { fill: var(--c); fill-opacity: .28; stroke: var(--card-background-color, #fff); stroke-width: 40; stroke-linejoin: round; transition: fill-opacity .2s; }
@@ -496,6 +544,12 @@ const EDITOR_TEXT = {
     rooms_help: 'Normally leave these empty: the card shows the Home Assistant area each room is associated with (vacuum entity settings → Clean rooms), or else the name from the robot. Type a name here only to override it on this card.', waiting: 'Waiting for the robot’s rooms…' },
   fr: { title: 'Titre', controls: 'Boutons et réglages sous le plan', rooms: 'Renommer les pièces sur cette carte seulement (facultatif)',
     rooms_help: 'À laisser vide en général : la carte affiche la pièce Home Assistant associée (paramètres de l’entité aspirateur → Nettoyer des pièces), sinon le nom donné par le robot. Ne saisir un nom ici que pour le remplacer sur cette carte.', waiting: 'En attente des pièces du robot…' },
+  de: { title: 'Titel', controls: 'Tasten und Einstellungen unter der Karte', rooms: 'Räume nur auf dieser Karte umbenennen (optional)',
+    rooms_help: 'Normalerweise leer lassen: die Karte zeigt den zugeordneten Home-Assistant-Bereich (Einstellungen der Staubsauger-Entität → Räume reinigen), sonst den Namen vom Roboter. Nur ausfüllen, um ihn auf dieser Karte zu ersetzen.', waiting: 'Warte auf die Räume des Roboters…' },
+  es: { title: 'Título', controls: 'Botones y ajustes bajo el mapa', rooms: 'Renombrar habitaciones solo en esta tarjeta (opcional)',
+    rooms_help: 'Normalmente déjalo vacío: la tarjeta muestra el área de Home Assistant asociada (ajustes de la entidad aspiradora → Limpiar habitaciones), o si no el nombre del robot. Escribe un nombre solo para sustituirlo en esta tarjeta.', waiting: 'Esperando las habitaciones del robot…' },
+  it: { title: 'Titolo', controls: 'Pulsanti e impostazioni sotto la mappa', rooms: 'Rinomina le stanze solo su questa scheda (facoltativo)',
+    rooms_help: 'Di solito lascia vuoto: la scheda mostra l’area di Home Assistant associata (impostazioni dell’entità aspirapolvere → Pulisci stanze), altrimenti il nome dato dal robot. Scrivi un nome solo per sostituirlo su questa scheda.', waiting: 'In attesa delle stanze del robot…' },
 };
 
 class YeediMapCardEditor extends HTMLElement {

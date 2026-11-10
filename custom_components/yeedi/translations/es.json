@@ -1,0 +1,117 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Cuenta yeedi",
+        "description": "Introduce la cuenta que usas en la aplicación yeedi.",
+        "data": {
+          "username": "Correo electrónico",
+          "password": "Contraseña",
+          "country": "País"
+        }
+      },
+      "device_verification": {
+        "title": "Verificación del dispositivo",
+        "description": "yeedi ha enviado un código de verificación a tu correo electrónico. Introdúcelo abajo.",
+        "data": {
+          "verification_code": "Código de verificación"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No se pudo conectar",
+      "invalid_auth": "Credenciales no válidas",
+      "invalid_verification_code": "Código de verificación no válido",
+      "unknown": "Error inesperado"
+    },
+    "abort": {
+      "already_configured": "Esta cuenta ya está configurada",
+      "reauth_successful": "Reautenticación correcta"
+    }
+  },
+  "entity": {
+    "select": {
+      "water_amount": {
+        "name": "Caudal de agua",
+        "state": {
+          "low": "Bajo",
+          "medium": "Medio",
+          "high": "Alto",
+          "ultrahigh": "Muy alto"
+        }
+      },
+      "suction": {
+        "name": "Potencia de succión",
+        "state": {
+          "mop_only": "Solo fregar",
+          "normal": "Estándar",
+          "max": "Máx",
+          "max_plus": "Máx+"
+        }
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Error"
+      },
+      "stats_area": {
+        "name": "Superficie limpiada"
+      },
+      "stats_time": {
+        "name": "Duración de la limpieza"
+      },
+      "total_stats_area": {
+        "name": "Superficie total limpiada"
+      },
+      "total_stats_time": {
+        "name": "Duración total de limpieza"
+      },
+      "total_stats_cleanings": {
+        "name": "Limpiezas en total"
+      },
+      "lifespan_brush": {
+        "name": "Cepillo principal"
+      },
+      "lifespan_filter": {
+        "name": "Filtro"
+      },
+      "lifespan_side_brush": {
+        "name": "Cepillo lateral"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "mop_only": "Solo fregar",
+              "normal": "Estándar",
+              "max": "Máx",
+              "max_plus": "Máx+"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Error de autenticación, vuelve a iniciar sesión."
+    },
+    "device_verification_required": {
+      "message": "yeedi pide verificar este dispositivo, vuelve a iniciar sesión."
+    },
+    "setup_error": {
+      "message": "No se puede contactar con la nube de yeedi."
+    },
+    "params_dict": {
+      "message": "Los parámetros deben ser un diccionario."
+    },
+    "area_not_supported": {
+      "message": "Este robot no admite la limpieza por zonas."
+    },
+    "rooms_required": {
+      "message": "El comando spot_area necesita un parámetro «rooms»."
+    }
+  }
+}
