@@ -230,7 +230,9 @@ class YeediMapCard extends HTMLElement {
       const pct = Math.round(battery), docked = st?.state === 'docked';
       const level = pct >= 95 ? '' : `-${Math.max(10, Math.round(pct / 10) * 10)}`;
       const icon = docked && pct < 100 ? `mdi:battery-charging${level || '-100'}` : `mdi:battery${level}`;
-      bat = `<span class="bat"><ha-icon icon="${icon}"></ha-icon>${pct} %</span>`;
+      // Colour: charging = blue, full/ok = green, getting low = orange, needs charging = red.
+      const tone = docked && pct < 100 ? 'charging' : pct >= 50 ? 'ok' : pct >= 20 ? 'low' : 'empty';
+      bat = `<span class="bat ${tone}"><ha-icon icon="${icon}"></ha-icon>${pct} %</span>`;
     }
     const status = [esc(text.states[st?.state] || st?.state || ''), bat].filter(Boolean).join('<span class="sep">·</span>');
 
@@ -477,6 +479,10 @@ const STYLE = `
   .status { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; }
   .status .bat { display: inline-flex; align-items: center; gap: 1px; }
   .status .bat ha-icon { --mdc-icon-size: 16px; }
+  .status .bat.ok ha-icon { color: var(--success-color, #43a047); }
+  .status .bat.charging ha-icon { color: var(--primary-color); }
+  .status .bat.low ha-icon { color: var(--warning-color, #ffa600); }
+  .status .bat.empty ha-icon { color: var(--error-color, #db4437); }
   .map { padding: 4px 12px; }
   svg { width: 100%; height: auto; max-height: 420px; display: block; }
   .room { fill: var(--c); fill-opacity: .28; stroke: var(--card-background-color, #fff); stroke-width: 40; stroke-linejoin: round; transition: fill-opacity .2s; }
