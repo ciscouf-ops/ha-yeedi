@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.2.6
+- Map card: last cleaning (duration, area, when) under the settings; a bogus robot position no longer squashes the map.
 - Diagnostics download from the device page (credentials and identifiers redacted).
 - Card URL carries a fingerprint of the file: browsers reload the card after an update.
 - Map card: selected rooms stand out (others dimmed, coloured outline, numbered badge).

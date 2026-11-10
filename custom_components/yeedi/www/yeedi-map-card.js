@@ -18,7 +18,7 @@ const CARD_VERSION = '0.2.6';
 const TEXT = {
   en: {
     clean: 'Clean', clean_rooms: (n) => `Clean ${n} room${n > 1 ? 's' : ''}`, pause: 'Pause',
-    resume: 'Resume', dock: 'Dock', clear: 'Clear', no_map: 'Waiting for the map…',
+    resume: 'Resume', dock: 'Dock', clear: 'Clear', last_clean: 'Last cleaning', no_map: 'Waiting for the map…',
     no_outline: 'The robot did not send the outline of the rooms: choose them below.',
     not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water', mop_only_short: 'Off',
     states: { cleaning: 'Cleaning', returning: 'Returning to the dock', docked: 'Docked',
@@ -27,7 +27,7 @@ const TEXT = {
   },
   fr: {
     clean: 'Nettoyer', clean_rooms: (n) => `Nettoyer ${n} pièce${n > 1 ? 's' : ''}`, pause: 'Pause',
-    resume: 'Reprendre', dock: 'Base', clear: 'Effacer', no_map: 'En attente de la carte…',
+    resume: 'Reprendre', dock: 'Base', clear: 'Effacer', last_clean: 'Dernier nettoyage', no_map: 'En attente de la carte…',
     no_outline: "Le robot n'a pas envoyé le contour des pièces : choisis-les ci-dessous.",
     not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau', mop_only_short: 'Coupée',
     states: { cleaning: 'Nettoyage', returning: 'Retour à la base', docked: 'Sur la base',
@@ -128,12 +128,15 @@ class YeediMapCard extends HTMLElement {
     const water = same.find((e) => e.entity_id.startsWith('select.')
       && (e.translation_key === 'water_amount' || /water/.test(e.entity_id)));
     const suction = same.find((e) => e.entity_id.startsWith('select.') && e.translation_key === 'suction');
-    return { battery: battery?.entity_id, water: water?.entity_id, suction: suction?.entity_id };
+    const area = same.find((e) => e.entity_id.startsWith('sensor.') && e.translation_key === 'stats_area');
+    const time = same.find((e) => e.entity_id.startsWith('sensor.') && e.translation_key === 'stats_time');
+    return { battery: battery?.entity_id, water: water?.entity_id, suction: suction?.entity_id,
+      area: area?.entity_id, time: time?.entity_id };
   }
 
   _otherStates() {
     const r = this._related();
-    return [r.battery, r.water, r.suction].map((e) => (e ? this._hass.states[e]?.state : '')).join('|');
+    return [r.battery, r.water, r.suction, r.area, r.time].map((e) => (e ? this._hass.states[e]?.state : '')).join('|');
   }
 
   // Name of a room: the card's own setting, else the Home Assistant area the room is
@@ -208,8 +211,14 @@ class YeediMapCard extends HTMLElement {
     const rooms = d.rooms.filter((x) => x.outline && x.outline.length > 2);
     const pts = [];
     rooms.forEach((x) => pts.push(...x.outline));
-    if (d.dock) pts.push([d.dock.x, d.dock.y]);
-    if (d.robot) pts.push([d.robot.x, d.robot.y]);
+    // Dock and robot extend the drawing, unless a bogus position would squash the rooms.
+    const near = (p) => {
+      if (!pts.length) return true;
+      const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]), R = 3000;
+      return p[0] > Math.min(...xs) - R && p[0] < Math.max(...xs) + R && p[1] > Math.min(...ys) - R && p[1] < Math.max(...ys) + R;
+    };
+    if (d.dock && near([d.dock.x, d.dock.y])) pts.push([d.dock.x, d.dock.y]);
+    if (d.robot && near([d.robot.x, d.robot.y])) pts.push([d.robot.x, d.robot.y]);
     if (!rooms.length) (d.trace || []).forEach((p) => pts.push(p));
 
     let svg = '';
@@ -327,7 +336,38 @@ class YeediMapCard extends HTMLElement {
     const water = wst && wst.attributes.options
       ? this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', wst.attributes.options, wst.state, waterLabel, 'data-water') : '';
 
-    return `<div class="actions">${main}${clear}${dock}</div>${fan}${water}`;
+    return `<div class="actions">${main}${clear}${dock}</div>${fan}${water}${this._lastClean(related, moving)}`;
+  }
+
+  // "Last cleaning: 32 min · 18 m² · 2 h ago", from the statistics sensors.
+  _lastClean(related, moving) {
+    if (moving) return '';
+    const { text } = this._t();
+    const lang = this._hass?.locale?.language || 'en';
+    const parts = [];
+    let when = null;
+    for (const key of ['time', 'area']) {
+      const st = related[key] ? this._hass.states[related[key]] : null;
+      if (!st || isNaN(parseFloat(st.state)) || parseFloat(st.state) <= 0) continue;
+      let v = parseFloat(st.state), u = st.attributes.unit_of_measurement || '';
+      if (key === 'time') {
+        if (u === 's') { v = v / 60; u = 'min'; }
+        if (u === 'h') { v = v * 60; u = 'min'; }
+        v = Math.round(v);
+      } else v = Math.round(v * 10) / 10;
+      parts.push(`${v.toLocaleString(lang)} ${u}`);
+      const t = new Date(st.last_changed).getTime();
+      if (!when || t > when) when = t;
+    }
+    if (!parts.length) return '';
+    if (when) {
+      const diff = Math.round((when - Date.now()) / 60000);
+      const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
+      const ago = Math.abs(diff) < 60 ? rtf.format(diff, 'minute')
+        : Math.abs(diff) < 60 * 48 ? rtf.format(Math.round(diff / 60), 'hour') : rtf.format(Math.round(diff / 1440), 'day');
+      parts.push(ago);
+    }
+    return `<div class="foot">${esc(text.last_clean)} · ${esc(parts.join(' · '))}</div>`;
   }
 
   _levelRow(title, icon, levels, current, labelOf, attr) {
@@ -419,6 +459,8 @@ const STYLE = `
   .btn ha-icon { --mdc-icon-size: 18px; }
   .row { display: flex; align-items: center; gap: 10px; padding: 4px 16px; }
   .row:last-child { padding-bottom: 14px; }
+  .foot { padding: 2px 16px 12px; font-size: 12px; color: var(--secondary-text-color); }
+  .row:last-child + .foot { margin-top: -8px; }
   .lbl { font-size: 12px; color: var(--secondary-text-color); min-width: 84px; flex: 0 0 auto; display: flex; flex-direction: column; line-height: 1.2; }
   .lbl small { font-size: 12px; color: var(--primary-text-color); font-weight: 500; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 0; }
