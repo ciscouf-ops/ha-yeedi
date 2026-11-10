@@ -34,6 +34,7 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 from .auth import YeediAuthenticator, create_yeedi_rest_config
 from .const import CONF_ACCOUNT_CREDENTIALS, DOMAIN
 from .hardware import register_yeedi_models
+from .map_data import YeediMapData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ class YeediController:
         self._entry = entry
         config = entry.data
         self._devices: list[Device] = []
+        self.map_data: dict[str, YeediMapData] = {}
         self._unsubscribe_device_events: list[Callable[[], None]] = []
         self._device_id = config[CONF_DEVICE_ID]
         country = config[CONF_COUNTRY]
@@ -94,6 +96,9 @@ class YeediController:
                     async def _init(device: Device) -> None:
                         await device.initialize(mqtt)
                         self._subscribe_device_info_events(device)
+                        map_data = YeediMapData(self._hass, device)
+                        map_data.start()
+                        self.map_data[device.device_info["did"]] = map_data
                         self._devices.append(device)
 
                     for device in mqtt_devices:
@@ -161,6 +166,8 @@ class YeediController:
         self._unsubscribe_account_credentials()
         for unsubscribe in self._unsubscribe_device_events:
             unsubscribe()
+        for map_data in self.map_data.values():
+            map_data.stop()
         for device in self._devices:
             await device.teardown()
         if self._mqtt_client is not None:

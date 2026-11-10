@@ -1,14 +1,24 @@
 {
   "domain": "yeedi",
   "name": "yeedi",
-  "codeowners": ["@ciscouf-ops"],
+  "codeowners": [
+    "@ciscouf-ops"
+  ],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": [
+    "frontend",
+    "http",
+    "websocket_api"
+  ],
   "documentation": "https://github.com/ciscouf-ops/ha-yeedi",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/ciscouf-ops/ha-yeedi/issues",
-  "loggers": ["deebot_client"],
-  "requirements": ["deebot-client>=18.7.0"],
-  "version": "0.1.1"
+  "loggers": [
+    "deebot_client"
+  ],
+  "requirements": [
+    "deebot-client>=18.7.0"
+  ],
+  "version": "0.2.0"
 }

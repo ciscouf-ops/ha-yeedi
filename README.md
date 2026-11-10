@@ -12,7 +12,7 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - `vacuum.send_command` with `spot_area` (`rooms: "2,1,3"`) and `custom_area`
 - Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
 - Water flow level select
-- Live position events from the robot (for custom cards)
+- **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map
 
 Tested with a yeedi vac max (class `04z443`) on Home Assistant 2026.11.
 
@@ -56,10 +56,28 @@ data:
 
 The room ids and names are in the `rooms` attribute of the vacuum entity.
 
+## Map card
+
+The integration ships its own Lovelace card, loaded automatically (no extra resource to add):
+
+```yaml
+type: custom:yeedi-map-card
+entity: vacuum.yeedi_vac_max
+title: Vacuum          # optional
+controls: true         # optional: buttons, suction and water level under the map
+room_names:            # optional: your own room names (room id -> name)
+  2: Living room
+  3: Bedroom
+```
+
+Tap rooms to choose them (the numbers give the cleaning order), then **Clean**. With no room chosen, **Clean** starts a full cleaning. The trace is drawn from the positions the robot reports while it cleans.
+
+If the robot does not report the outline of its rooms, the card shows them as a list to choose from instead of a map.
+
 ## Known limitations
 
 - Room names are the generic ones reported by the robot (Living room, Bedroom…). Custom names from the yeedi app are not available through the cloud API.
-- No map image yet.
+- No map image (walls and floor) as in the yeedi app: the card draws the outline of the rooms reported by the robot.
 - The robot does not report the mop-only setting: the integration keeps the last one set from Home Assistant (changing it in the yeedi app is not seen).
 - The account must not require a device verification e-mail more than once; if yeedi asks for a code, the flow will prompt for it.
 
