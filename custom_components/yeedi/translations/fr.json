@@ -1,0 +1,107 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Compte yeedi",
+        "description": "Saisis le compte que tu utilises dans l'application yeedi.",
+        "data": {
+          "username": "E-mail",
+          "password": "Mot de passe",
+          "country": "Pays"
+        }
+      },
+      "device_verification": {
+        "title": "Vérification de l'appareil",
+        "description": "yeedi a envoyé un code de vérification à ton adresse e-mail. Saisis-le ci-dessous.",
+        "data": {
+          "verification_code": "Code de vérification"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connexion impossible",
+      "invalid_auth": "Identifiants invalides",
+      "invalid_verification_code": "Code de vérification invalide",
+      "unknown": "Erreur inattendue"
+    },
+    "abort": {
+      "already_configured": "Ce compte est déjà configuré",
+      "reauth_successful": "Ré-authentification réussie"
+    }
+  },
+  "entity": {
+    "select": {
+      "water_amount": {
+        "name": "Débit d'eau",
+        "state": {
+          "low": "Faible",
+          "medium": "Moyen",
+          "high": "Fort",
+          "ultrahigh": "Très fort"
+        }
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Erreur"
+      },
+      "stats_area": {
+        "name": "Surface nettoyée"
+      },
+      "stats_time": {
+        "name": "Durée du nettoyage"
+      },
+      "total_stats_area": {
+        "name": "Surface totale nettoyée"
+      },
+      "total_stats_time": {
+        "name": "Durée totale de nettoyage"
+      },
+      "total_stats_cleanings": {
+        "name": "Nettoyages au total"
+      },
+      "lifespan_brush": {
+        "name": "Brosse principale"
+      },
+      "lifespan_filter": {
+        "name": "Filtre"
+      },
+      "lifespan_side_brush": {
+        "name": "Brosse latérale"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "normal": "Standard",
+              "max": "Max",
+              "max_plus": "Max+"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Échec de l'authentification, merci de te reconnecter."
+    },
+    "device_verification_required": {
+      "message": "yeedi demande de vérifier cet appareil, merci de te reconnecter."
+    },
+    "setup_error": {
+      "message": "Impossible de joindre le cloud yeedi."
+    },
+    "params_dict": {
+      "message": "Les paramètres doivent être un dictionnaire."
+    },
+    "area_not_supported": {
+      "message": "Ce robot ne gère pas le nettoyage par zone."
+    },
+    "rooms_required": {
+      "message": "La commande spot_area a besoin d'un paramètre « rooms »."
+    }
+  }
+}

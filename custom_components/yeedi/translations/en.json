@@ -1,0 +1,77 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "yeedi account",
+        "description": "Enter the account you use in the yeedi app.",
+        "data": {
+          "username": "E-mail",
+          "password": "Password",
+          "country": "Country"
+        }
+      },
+      "device_verification": {
+        "title": "Device verification",
+        "description": "yeedi sent a verification code to your e-mail address. Enter it below.",
+        "data": {
+          "verification_code": "Verification code"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "invalid_verification_code": "Invalid verification code",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "reauth_successful": "Re-authentication was successful"
+    }
+  },
+  "entity": {
+    "select": {
+      "water_amount": {
+        "name": "Water flow level",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "ultrahigh": "Ultrahigh"
+        }
+      }
+    },
+    "sensor": {
+      "error": { "name": "Error" },
+      "stats_area": { "name": "Area cleaned" },
+      "stats_time": { "name": "Cleaning duration" },
+      "total_stats_area": { "name": "Total area cleaned" },
+      "total_stats_time": { "name": "Total cleaning duration" },
+      "total_stats_cleanings": { "name": "Total cleanings" },
+      "lifespan_brush": { "name": "Main brush lifespan" },
+      "lifespan_filter": { "name": "Filter lifespan" },
+      "lifespan_side_brush": { "name": "Side brush lifespan" }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "normal": "Standard",
+              "max": "Max",
+              "max_plus": "Max+"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": { "message": "Authentication failed, please re-authenticate." },
+    "device_verification_required": { "message": "yeedi asks to verify this device, please re-authenticate." },
+    "setup_error": { "message": "Could not reach the yeedi cloud." },
+    "params_dict": { "message": "Params must be a dictionary." },
+    "area_not_supported": { "message": "This robot does not support area cleaning." },
+    "rooms_required": { "message": "The spot_area command needs a 'rooms' parameter." }
+  }
+}
