@@ -450,10 +450,10 @@ const STYLE = `
 // ------------------------------------------------------------------ editor
 
 const EDITOR_TEXT = {
-  en: { title: 'Title', controls: 'Buttons and settings under the map', rooms: 'Room names',
-    rooms_help: 'Leave empty to use the area the room is associated with in Home Assistant (vacuum entity settings), else the name reported by the robot.', waiting: 'Waiting for the robot’s rooms…' },
-  fr: { title: 'Titre', controls: 'Boutons et réglages sous le plan', rooms: 'Noms des pièces',
-    rooms_help: 'Laisser vide pour utiliser la pièce associée dans Home Assistant (paramètres de l’entité aspirateur), sinon le nom donné par le robot.', waiting: 'En attente des pièces du robot…' },
+  en: { title: 'Title', controls: 'Buttons and settings under the map', rooms: 'Rename rooms on this card only (optional)',
+    rooms_help: 'Normally leave these empty: the card shows the Home Assistant area each room is associated with (vacuum entity settings → Clean rooms), or else the name from the robot. Type a name here only to override it on this card.', waiting: 'Waiting for the robot’s rooms…' },
+  fr: { title: 'Titre', controls: 'Boutons et réglages sous le plan', rooms: 'Renommer les pièces sur cette carte seulement (facultatif)',
+    rooms_help: 'À laisser vide en général : la carte affiche la pièce Home Assistant associée (paramètres de l’entité aspirateur → Nettoyer des pièces), sinon le nom donné par le robot. Ne saisir un nom ici que pour le remplacer sur cette carte.', waiting: 'En attente des pièces du robot…' },
 };
 
 class YeediMapCardEditor extends HTMLElement {
