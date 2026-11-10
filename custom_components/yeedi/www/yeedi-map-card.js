@@ -13,7 +13,7 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.5';
+const CARD_VERSION = '0.2.6';
 
 const TEXT = {
   en: {
@@ -224,11 +224,16 @@ class YeediMapCard extends HTMLElement {
       const u = Math.max(W, H) / 100; // drawing unit: 1 % of the map
       const font = Math.round(u * 2.6);
       const choose = !moving;
-      let s = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" preserveAspectRatio="xMidYMid meet">`;
+      const hasSel = choose && this._selected.length > 0;
+      let s = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" preserveAspectRatio="xMidYMid meet" class="${hasSel ? 'has-sel' : ''}">`;
       rooms.forEach((room, i) => {
         const sel = this._selected.indexOf(room.id);
         s += `<polygon class="room${choose ? ' pick' : ''}${sel >= 0 ? ' sel' : ''}" data-room="${room.id}"
           points="${P(room.outline)}" style="--c:${PALETTE[i % PALETTE.length]}"/>`;
+      });
+      // Selected rooms get a coloured outline on top of the others.
+      if (hasSel) rooms.forEach((room) => {
+        if (this._selected.includes(room.id)) s += `<polygon class="selring" data-room="${room.id}" points="${P(room.outline)}"/>`;
       });
       if (moving && d.trace && d.trace.length > 1) {
         if (rooms.length) s += `<clipPath id="inside">${rooms.map((x) => `<polygon points="${P(x.outline)}"/>`).join('')}</clipPath>`;
@@ -240,8 +245,16 @@ class YeediMapCard extends HTMLElement {
         const rx = room.outline.map((p) => p[0]), ry = room.outline.map((p) => p[1]);
         const cx = X((Math.min(...rx) + Math.max(...rx)) / 2), cy = Y((Math.min(...ry) + Math.max(...ry)) / 2);
         const sel = this._selected.indexOf(room.id);
-        const label = (sel >= 0 ? `${sel + 1}. ` : '') + this._roomName(room);
-        s += `<text class="name" x="${cx}" y="${cy}" font-size="${font}">${esc(label)}</text>`;
+        const label = this._roomName(room);
+        if (sel >= 0) {
+          // Order badge above the name.
+          const r = font * 0.8, by = cy - font * 1.25;
+          s += `<circle class="badge" cx="${cx}" cy="${by}" r="${r}" data-room="${room.id}"/>
+            <text class="badgetxt" x="${cx}" y="${by}" font-size="${Math.round(font * 1.05)}" data-room="${room.id}">${sel + 1}</text>
+            <text class="name" x="${cx}" y="${cy + font * 0.6}" font-size="${font}">${esc(label)}</text>`;
+        } else {
+          s += `<text class="name" x="${cx}" y="${cy}" font-size="${font}">${esc(label)}</text>`;
+        }
       });
       if (d.dock) {
         s += `<g transform="translate(${X(d.dock.x)},${Y(d.dock.y)})"><g transform="scale(${(u / 75).toFixed(3)})"><rect x="-190" y="-190" width="380" height="380" rx="90" class="dock"/>
@@ -358,6 +371,10 @@ const STYLE = `
   .room.pick { cursor: pointer; }
   .room.pick:hover { fill-opacity: .4; }
   .room.sel { fill-opacity: .62; }
+  .has-sel .room:not(.sel) { fill-opacity: .12; }
+  .selring { fill: none; stroke: var(--primary-color); stroke-width: 55; stroke-linejoin: round; pointer-events: none; }
+  .badge { fill: var(--primary-color); stroke: var(--card-background-color, #fff); stroke-width: 25; }
+  .badgetxt { fill: #fff; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
   .name { text-anchor: middle; dominant-baseline: middle; fill: var(--primary-text-color); font-weight: 500;
           paint-order: stroke; stroke: var(--card-background-color, #fff); stroke-width: 40; stroke-linejoin: round; pointer-events: none; }
   .band { fill: none; stroke: var(--primary-color); stroke-opacity: .16; stroke-width: 260; stroke-linecap: round; stroke-linejoin: round; }
