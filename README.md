@@ -4,8 +4,6 @@ A Home Assistant integration for **yeedi** robot vacuums (yeedi vac max, vac 2, 
 
 yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, but the official Ecovacs integration cannot log into a yeedi account. This integration logs in with the yeedi application identity and reuses [deebot-client](https://github.com/DeebotUniverse/client.py), the library behind the official integration, with the yeedi specifics added (login, model sheets, map discovery).
 
-*Version française plus bas.*
-
 ## Features
 
 - Configuration in the UI (e-mail, password, country), credentials stored by Home Assistant
@@ -70,34 +68,3 @@ The room ids and names are in the `rooms` attribute of the vacuum entity.
 - [deebot-client](https://github.com/DeebotUniverse/client.py) and the Home Assistant Ecovacs integration, which this integration is built on.
 - [ecovacs-deebot.js](https://github.com/mrbungle64/ecovacs-deebot.js), whose yeedi support documented the login differences.
 
----
-
-# yeedi pour Home Assistant
-
-Intégration Home Assistant pour les aspirateurs robots **yeedi**, via le compte yeedi (cloud).
-
-yeedi est une marque d'Ecovacs : les robots parlent le même protocole que les Deebot, mais l'intégration Ecovacs officielle ne sait pas se connecter à un compte yeedi. Cette intégration se connecte avec l'identité de l'application yeedi et réutilise deebot-client, la bibliothèque de l'intégration officielle, en y ajoutant ce qui est propre à yeedi (connexion, fiches des modèles, découverte de la carte).
-
-## Fonctions
-
-- Configuration dans l'interface (e-mail, mot de passe, pays), identifiants conservés par Home Assistant
-- Entité `vacuum` : démarrer, pause, stop, retour base, localiser, vitesse (Standard / Max / Max+)
-- Nettoyage par pièce avec les **segments** natifs de Home Assistant (`vacuum.clean_area`), pièces nettoyées dans l'ordre donné
-- `vacuum.send_command` avec `spot_area` (`rooms: "2,1,3"`) et `custom_area`
-- Capteurs : batterie, erreur, surface et durée du dernier nettoyage, totaux, consommables
-- Sélecteur de débit d'eau
-- Position du robot en temps réel (pour des cartes personnalisées)
-
-Testé avec un yeedi vac max (classe `04z443`) sur Home Assistant 2026.11.
-
-## Installation
-
-Via HACS : dépôt personnalisé `https://github.com/ciscouf-ops/ha-yeedi` (type *Intégration*), installer **yeedi**, redémarrer, puis Paramètres → Appareils et services → Ajouter une intégration → **yeedi**.
-
-Manuellement : copier `custom_components/yeedi` dans `config/custom_components/` et redémarrer.
-
-## Limites connues
-
-- Les noms des pièces sont ceux, génériques, renvoyés par le robot. Les noms donnés dans l'application yeedi ne sont pas accessibles.
-- Pas encore d'image de la carte.
-- Le mode serpillère seule n'est pas encore exposé (`vacuum.send_command`, `command: setMopMute`, `params: {enable: 1}`).
