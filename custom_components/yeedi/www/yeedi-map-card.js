@@ -509,9 +509,13 @@ class YeediMapCardEditor extends HTMLElement {
           .yeedi-editor { display: flex; flex-direction: column; gap: 16px; }
           .yeedi-editor h4 { margin: 8px 0 0; font-weight: 500; }
           .yeedi-editor .help { font-size: 12px; color: var(--secondary-text-color); margin: -8px 0 0; }
+          .yeedi-editor .roomlist { display: flex; flex-direction: column; gap: 8px; }
           .yeedi-editor .roomrow { display: flex; align-items: center; gap: 12px; }
-          .yeedi-editor .roomrow span { min-width: 120px; font-size: 14px; color: var(--secondary-text-color); }
-          .yeedi-editor ha-textfield { flex: 1; }
+          .yeedi-editor .roomrow span { flex: 0 0 150px; font-size: 14px; color: var(--secondary-text-color); }
+          .yeedi-editor .roomrow input { flex: 1; min-width: 0; box-sizing: border-box; height: 40px; padding: 0 12px;
+            font: inherit; font-size: 14px; color: var(--primary-text-color); border: 1px solid var(--divider-color);
+            border-radius: 8px; background: var(--card-background-color); }
+          .yeedi-editor .roomrow input:focus { outline: none; border-color: var(--primary-color); }
         </style>
         <div class="yeedi-editor"><ha-form></ha-form><h4></h4><p class="help"></p><div class="roomlist"></div></div>`;
       this._form = this.querySelector('ha-form');
@@ -544,7 +548,8 @@ class YeediMapCardEditor extends HTMLElement {
       const span = document.createElement('span');
       const fallback = room.area_name || rooms[room.robot_name || room.name] || room.robot_name || room.name || '?';
       span.textContent = `${room.id} · ${fallback}`;
-      const field = document.createElement('ha-textfield');
+      const field = document.createElement('input');
+      field.type = 'text';
       field.value = names[room.id] != null ? String(names[room.id]) : '';
       field.placeholder = fallback;
       field.addEventListener('change', () => {
