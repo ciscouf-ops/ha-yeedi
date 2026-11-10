@@ -76,6 +76,9 @@ class YeediMapData:
         self._device = device
         self._map_id: str | None = None
         self._rooms: dict[int, dict[str, Any]] = {}
+        # Virtual walls and no-mop zones set in the yeedi app: {id: points}.
+        self._walls: dict[int, list[list[float]]] = {}
+        self._no_mop: dict[int, list[list[float]]] = {}
         self._robot: dict[str, float] | None = None
         self._dock: dict[str, float] | None = None
         self._trace: list[list[float]] = []
@@ -104,6 +107,12 @@ class YeediMapData:
         if saved:
             self._map_id = saved.get("map_id")
             self._dock = saved.get("dock")
+            for key, target in (("walls", self._walls), ("no_mop", self._no_mop)):
+                for item in saved.get(key) or []:
+                    try:
+                        target[int(item["id"])] = list(item.get("points") or [])
+                    except (KeyError, TypeError, ValueError):
+                        continue
             for room in saved.get("rooms", []):
                 try:
                     room_id = int(room["id"])
@@ -174,6 +183,14 @@ class YeediMapData:
         self._schedule_notify()
 
     async def _on_map_subset(self, event: MapSubsetEvent) -> None:
+        if event.type in (MapSetType.VIRTUAL_WALLS, MapSetType.NO_MOP_ZONES):
+            target = self._walls if event.type is MapSetType.VIRTUAL_WALLS else self._no_mop
+            points = _parse_outline(event.coordinates)
+            if points and target.get(event.id) != points:
+                target[event.id] = points
+                self._schedule_save()
+                self._schedule_notify()
+            return
         if event.type is not MapSetType.ROOMS:
             return
         entry = self._rooms.setdefault(event.id, {"id": event.id, "outline": []})
@@ -273,6 +290,8 @@ class YeediMapData:
                 {"id": r["id"], "name": r.get("name", ""), "outline": r["outline"]}
                 for r in self._rooms.values()
             ],
+            "walls": [{"id": i, "points": p} for i, p in self._walls.items()],
+            "no_mop": [{"id": i, "points": p} for i, p in self._no_mop.items()],
         }
 
     @callback
@@ -316,6 +335,8 @@ class YeediMapData:
                 {"id": r["id"], "name": r.get("name") or "", "outline": r["outline"]}
                 for r in sorted(self._rooms.values(), key=lambda r: r["id"])
             ],
+            "walls": [{"id": i, "points": p} for i, p in sorted(self._walls.items())],
+            "no_mop": [{"id": i, "points": p} for i, p in sorted(self._no_mop.items())],
             "robot": self._robot,
             "dock": self._dock,
             "trace": self._trace,

@@ -45,10 +45,14 @@ async def test_rooms_and_outlines(hass, device) -> None:
 
     # Outlines also arrive through MapSubsetEvent, rooms only.
     await device.events.emit(MapSubsetEvent(1, MapSetType.ROOMS, SQUARE, "Default"))
-    await device.events.emit(MapSubsetEvent(9, MapSetType.VIRTUAL_WALLS, SQUARE))
-    rooms = {r["id"]: r for r in data.as_dict()["rooms"]}
+    await device.events.emit(MapSubsetEvent(9, MapSetType.VIRTUAL_WALLS, "0,0;500,0"))
+    await device.events.emit(MapSubsetEvent(3, MapSetType.NO_MOP_ZONES, SQUARE))
+    d = data.as_dict()
+    rooms = {r["id"]: r for r in d["rooms"]}
     assert len(rooms[1]["outline"]) == 4
     assert 9 not in rooms
+    assert d["walls"] == [{"id": 9, "points": [[0, 0], [500, 0]]}]
+    assert d["no_mop"][0]["id"] == 3 and len(d["no_mop"][0]["points"]) == 4
 
     # A room that disappears from the robot's list is dropped.
     await device.events.emit(RoomsEvent("m1", [Room("Living Room", 2, SQUARE)]))
@@ -109,6 +113,7 @@ async def test_outlines_are_persisted(hass, device, hass_storage) -> None:
 
     saved = hass_storage["yeedi.map_did123"]["data"]
     assert saved["map_id"] == "m1"
+    assert saved["walls"] == [] and saved["no_mop"] == []
     assert saved["dock"] == {"x": 7, "y": 8, "a": 0}
     assert saved["rooms"][0]["id"] == 4 and len(saved["rooms"][0]["outline"]) == 4
 

@@ -1,6 +1,4 @@
-<p align="center"><img src="custom_components/yeedi/brand/icon@2x.png" width="96" alt="yeedi"></p>
-
-# yeedi for Home Assistant
+# <img src="custom_components/yeedi/brand/icon@2x.png" width="40" alt="" align="absmiddle"> yeedi for Home Assistant
 
 A Home Assistant integration for **yeedi** robot vacuums, through the yeedi cloud account.
 
