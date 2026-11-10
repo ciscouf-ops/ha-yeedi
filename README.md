@@ -1,6 +1,8 @@
 # yeedi for Home Assistant
 
-A Home Assistant integration for **yeedi** robot vacuums (yeedi vac max, vac 2, vac 2 pro, vac hybrid, vac station, 2 hybrid, mop station), through the yeedi cloud account.
+A Home Assistant integration for **yeedi** robot vacuums, through the yeedi cloud account.
+
+> **Only tested with a yeedi vac max** (class `04z443`), on Home Assistant 2026.11. Other yeedi models (vac 2, vac 2 pro, vac hybrid, vac station, 2 hybrid, mop station) use the same protocol and are declared, but have not been tried: please open an issue to report what works or not.
 
 yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, but the official Ecovacs integration cannot log into a yeedi account. This integration logs in with the yeedi application identity and reuses [deebot-client](https://github.com/DeebotUniverse/client.py), the library behind the official integration, with the yeedi specifics added (login, model sheets, map discovery).
 
@@ -13,8 +15,6 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
 - **Suction power** select (Standard / Max / Max+ / mop only) and **water flow level** select
 - **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map
-
-Tested with a yeedi vac max (class `04z443`) on Home Assistant 2026.11.
 
 ## Installation
 
@@ -76,6 +76,8 @@ If the robot does not report the outline of its rooms, the card shows them as a 
 
 ## Known limitations
 
+- Only the yeedi vac max has been tested. Other models may expose different settings or report their map differently.
+
 - Room names are the generic ones reported by the robot (Living room, Bedroom…). Custom names from the yeedi app are not available through the cloud API.
 - No map image (walls and floor) as in the yeedi app: the card draws the outline of the rooms reported by the robot.
 - The robot does not report the mop-only setting: the integration keeps the last one set from Home Assistant (changing it in the yeedi app is not seen).
@@ -86,3 +88,6 @@ If the robot does not report the outline of its rooms, the card shows them as a 
 - [deebot-client](https://github.com/DeebotUniverse/client.py) and the Home Assistant Ecovacs integration, which this integration is built on.
 - [ecovacs-deebot.js](https://github.com/mrbungle64/ecovacs-deebot.js), whose yeedi support documented the login differences.
 
+## Disclaimer
+
+This is a community project, not affiliated with, endorsed by or supported by yeedi or Ecovacs. yeedi and Ecovacs are trademarks of their respective owners; the brand images are used only to identify the devices this integration works with.
