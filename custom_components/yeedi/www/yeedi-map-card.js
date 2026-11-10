@@ -242,12 +242,19 @@ class YeediMapCard extends HTMLElement {
     // Battery with its icon, so the percentage is not read as a cleaning progress.
     let bat = '';
     if (battery && !isNaN(battery)) {
-      const pct = Math.round(battery), docked = st?.state === 'docked';
-      const level = pct >= 95 ? '' : `-${Math.max(10, Math.round(pct / 10) * 10)}`;
-      const icon = docked && pct < 100 ? `mdi:battery-charging${level || '-100'}` : `mdi:battery${level}`;
+      const pct = Math.max(0, Math.min(100, Math.round(battery))), docked = st?.state === 'docked';
+      const charging = docked && pct < 100;
       // Colour: charging = blue, full/ok = green, getting low = orange, needs charging = red.
-      const tone = docked && pct < 100 ? 'charging' : pct >= 50 ? 'ok' : pct >= 20 ? 'low' : 'empty';
-      bat = `<span class="bat ${tone}"><ha-icon icon="${icon}"></ha-icon>${pct} %</span>`;
+      const tone = charging ? 'charging' : pct >= 50 ? 'ok' : pct >= 20 ? 'low' : 'empty';
+      // A drawn battery: the fill is the level, the percentage sits inside it.
+      const w = Math.round(36 * pct / 100);
+      const bolt = charging ? '<path class="bolt" d="M35.5 1.5 L31.5 9 H34.5 L33 14.5 L38 7 H35 Z"/>' : '';
+      bat = `<svg class="bat ${tone}" viewBox="0 0 44 16" width="44" height="16" aria-label="${pct} %">
+        <rect class="shell" x="0.5" y="0.5" width="39" height="15" rx="3"/>
+        <rect class="tip" x="40.5" y="5" width="3" height="6" rx="1"/>
+        <rect class="fill" x="2" y="2" width="${w}" height="12" rx="2"/>
+        <text x="20" y="12">${pct}%</text>${bolt}
+      </svg>`;
     }
     const status = [esc(text.states[st?.state] || st?.state || ''), bat].filter(Boolean).join('<span class="sep">·</span>');
 
@@ -545,12 +552,17 @@ const STYLE = `
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 16px 6px; }
   .title { font-size: 16px; font-weight: 500; color: var(--primary-text-color); }
   .status { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; }
-  .status .bat { display: inline-flex; align-items: center; gap: 1px; }
-  .status .bat ha-icon { --mdc-icon-size: 16px; }
-  .status .bat.ok ha-icon { color: var(--success-color, #43a047); }
-  .status .bat.charging ha-icon { color: var(--primary-color); }
-  .status .bat.low ha-icon { color: var(--warning-color, #ffa600); }
-  .status .bat.empty ha-icon { color: var(--error-color, #db4437); }
+  .status .bat { display: inline-block; vertical-align: middle; overflow: visible; }
+  .status .bat .shell { fill: none; stroke: var(--secondary-text-color); stroke-opacity: 0.6; }
+  .status .bat .tip { fill: var(--secondary-text-color); fill-opacity: 0.6; }
+  .status .bat .fill { fill: var(--bat-color); opacity: 0.9; }
+  .status .bat text { font: 700 9.5px/1 var(--paper-font-body1_-_font-family, sans-serif); text-anchor: middle;
+    fill: var(--primary-text-color); paint-order: stroke; stroke: var(--ha-card-background, var(--card-background-color, #fff)); stroke-width: 1.6px; stroke-linejoin: round; }
+  .status .bat .bolt { fill: var(--primary-text-color); paint-order: stroke; stroke: var(--ha-card-background, var(--card-background-color, #fff)); stroke-width: 1.5px; stroke-linejoin: round; }
+  .status .bat.ok { --bat-color: var(--success-color, #43a047); }
+  .status .bat.charging { --bat-color: var(--primary-color); }
+  .status .bat.low { --bat-color: var(--warning-color, #ffa600); }
+  .status .bat.empty { --bat-color: var(--error-color, #db4437); }
   .map { padding: 4px 12px; }
   svg { width: 100%; height: auto; max-height: 420px; display: block; }
   .room { fill: var(--c); fill-opacity: .28; stroke: var(--card-background-color, #fff); stroke-width: 40; stroke-linejoin: round; transition: fill-opacity .2s; }

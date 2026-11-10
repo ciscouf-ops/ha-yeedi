@@ -4,7 +4,7 @@
 - Map card: zone cleaning (draw a rectangle on the map); no-mop zones and virtual walls from the yeedi app are drawn.
 - Test suite (pytest) run in CI; a segment id without a room number is ignored; the map is saved immediately when the integration unloads.
 - German, Spanish and Italian translations (integration and card).
-- Map card: battery icon next to the percentage.
+- Map card: drawn battery gauge in the header (level fill, percentage inside, colour: green ≥50 %, orange, red <20 %, blue with a bolt while charging).
 - Map card: last cleaning (duration, area, when) under the settings; a bogus robot position no longer squashes the map.
 - Diagnostics download from the device page (credentials and identifiers redacted).
 - Card URL carries a fingerprint of the file: browsers reload the card after an update.
