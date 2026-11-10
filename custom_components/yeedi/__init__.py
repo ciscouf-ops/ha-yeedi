@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -26,9 +27,11 @@ _CARD_FILE = Path(__file__).parent / "www" / "yeedi-map-card.js"
 _CARD_URL = "/yeedi_static/yeedi-map-card.js"
 
 
-def _read_version() -> str:
+def _card_tag() -> str:
+    """Version plus a fingerprint of the card file, so browsers reload it when it changes."""
     manifest = json.loads((Path(__file__).parent / "manifest.json").read_text())
-    return manifest.get("version", "0")
+    digest = hashlib.md5(_CARD_FILE.read_bytes()).hexdigest()[:8]  # noqa: S324
+    return f"{manifest.get('version', '0')}-{digest}"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -38,9 +41,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(_CARD_URL, str(_CARD_FILE), True)]
         )
-        version = await hass.async_add_executor_job(_read_version)
-        # The version in the URL makes browsers load the new card after an update.
-        add_extra_js_url(hass, f"{_CARD_URL}?v={version}")
+        tag = await hass.async_add_executor_job(_card_tag)
+        # The tag in the URL makes browsers load the new card after an update.
+        add_extra_js_url(hass, f"{_CARD_URL}?v={tag}")
     except Exception:  # never block the integration because of the card
         _LOGGER.exception("Could not register the yeedi map card")
     return True
