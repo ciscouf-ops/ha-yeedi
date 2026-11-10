@@ -310,8 +310,12 @@ class YeediMapCard extends HTMLElement {
     };
     // Mop only is a toggle in front of the suction gauge, not a level.
     // It takes the place of the gauge icon: a tap turns the vacuum motor off.
+    const mopOn = fanNow === 'mop_only';
+    if (fanNow && !mopOn) this._lastFan = fanNow; // to turn the motor back on from the icon
+    // A tap on the icon turns the vacuum motor off, or back on at the last level.
+    const iconTarget = mopOn ? (this._lastFan || fanList.find((f) => f !== 'mop_only')) : 'mop_only';
     const mopChip = fanList.includes('mop_only')
-      ? `<button class="gicon${fanNow === 'mop_only' ? ' on' : ''}" data-fan="mop_only" title="${esc(fanLabel('mop_only'))}" aria-label="${esc(fanLabel('mop_only'))}"><ha-icon icon="mdi:fan-off"></ha-icon></button>`
+      ? `<button class="gicon${mopOn ? ' on' : ''}" data-fan="${esc(iconTarget)}" title="${esc(fanLabel('mop_only'))}" aria-label="${esc(fanLabel('mop_only'))}"><ha-icon icon="${mopOn ? 'mdi:fan-off' : 'mdi:fan'}"></ha-icon></button>`
       : '<ha-icon icon="mdi:fan"></ha-icon>';
     const fan = fanList.length
       ? this._levelRow(text.fan, mopChip, fanList.filter((f) => f !== 'mop_only'), fanNow, fanLabel, 'data-fan') : '';
