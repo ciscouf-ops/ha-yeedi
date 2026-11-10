@@ -79,3 +79,10 @@ async def test_clean_zone_metres_to_millimetres_sorted() -> None:
     device, vac = _vacuum()
     await vac.async_clean_zone([1.0, 2.4, -1.5, 0.2])
     assert device.commands == [("area", CleanMode.CUSTOM_AREA, "-1500,200,1000,2400", 1)]
+
+
+async def test_clean_zone_thin_rectangle_widened_to_one_metre() -> None:
+    device, vac = _vacuum()
+    # 20 cm wide, 3 m long: widened to 1 m around its middle (x = 0.1).
+    await vac.async_clean_zone([0.0, 0.0, 0.2, 3.0])
+    assert device.commands == [("area", CleanMode.CUSTOM_AREA, "-400,0,600,3000", 1)]

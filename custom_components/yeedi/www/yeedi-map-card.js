@@ -90,6 +90,7 @@ const FAN_ICONS = { mop_only: 'mdi:fan-off', quiet: 'mdi:fan-minus', normal: 'md
 const WATER_ICONS = { low: 'mdi:water-minus', medium: 'mdi:water', high: 'mdi:water-plus', ultrahigh: 'mdi:waves',
   _0: 'mdi:water-minus', _1: 'mdi:water', _2: 'mdi:water-plus', _3: 'mdi:waves' };
 
+const MIN_ZONE_MM = 1000; // smallest side of a zone sent to the robot
 const PALETTE = ['#4f8edc', '#e0a04a', '#5bb07a', '#c46fb8', '#d96a5c', '#4fb3bf', '#9a8bd6', '#b5a046'];
 
 class YeediMapCard extends HTMLElement {
@@ -508,8 +509,22 @@ class YeediMapCard extends HTMLElement {
       this._drag = null;
       // Too small to be a zone: treat it as a tap.
       if (Math.abs(this._zone.x2 - this._zone.x1) < 300 || Math.abs(this._zone.y2 - this._zone.y1) < 300) this._zone = null;
+      // The robot cleans a zone in ~30 cm strips: a thin rectangle is done in one straight
+      // line. Like the yeedi app, widen each side to at least 1 m, around what was drawn.
+      else this._zone = this._minZone(this._zone, MIN_ZONE_MM);
     }
     this._render();
+  }
+
+  _minZone(z, min) {
+    const grow = (a, b) => {
+      const lo = Math.min(a, b), hi = Math.max(a, b);
+      if (hi - lo >= min) return [lo, hi];
+      const mid = (lo + hi) / 2;
+      return [mid - min / 2, mid + min / 2];
+    };
+    const [x1, x2] = grow(z.x1, z.x2), [y1, y2] = grow(z.y1, z.y2);
+    return { x1, y1, x2, y2 };
   }
 
   _toRobot(svg, ev) {

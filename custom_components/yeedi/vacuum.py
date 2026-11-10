@@ -45,6 +45,16 @@ ATTR_CLEANINGS = "cleanings"
 ATTR_ZONE = "zone"
 SERVICE_CLEAN_ROOMS = "clean_rooms"
 SERVICE_CLEAN_ZONE = "clean_zone"
+MIN_ZONE_SIDE_M = 1.0  # the robot does a thinner zone in one straight line
+
+
+def _min_side(a: float, b: float, minimum: float) -> tuple[float, float]:
+    """Return (low, high), widened around the middle to at least `minimum`."""
+    low, high = min(a, b), max(a, b)
+    if high - low >= minimum:
+        return low, high
+    mid = (low + high) / 2
+    return mid - minimum / 2, mid + minimum / 2
 
 _CLEANINGS = vol.All(vol.Coerce(int), vol.Range(min=1, max=2))
 CLEAN_ROOMS_SCHEMA = {
@@ -279,11 +289,12 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
         """Action yeedi.clean_zone: clean a rectangle given in metres [x1, y1, x2, y2]."""
         area = self._area_capability()
         x1, y1, x2, y2 = zone
-        # The robot wants millimetres, min corner first.
-        coords = ",".join(
-            str(int(round(v * 1000)))
-            for v in (min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2))
-        )
+        # The robot wants millimetres, min corner first. It cleans a zone in ~30 cm
+        # strips and does a thin rectangle in one straight line: like the yeedi app,
+        # widen each side to at least 1 m, around the rectangle given.
+        min_x, max_x = _min_side(x1, x2, MIN_ZONE_SIDE_M)
+        min_y, max_y = _min_side(y1, y2, MIN_ZONE_SIDE_M)
+        coords = ",".join(str(round(v * 1000)) for v in (min_x, min_y, max_x, max_y))
         await self._device.execute_command(area(CleanMode.CUSTOM_AREA, coords, cleanings))
 
     def _get_segments(self) -> list[Segment]:
