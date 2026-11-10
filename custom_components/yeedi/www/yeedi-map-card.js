@@ -13,7 +13,7 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.1';
+const CARD_VERSION = '0.2.2';
 
 const TEXT = {
   en: {
@@ -48,21 +48,15 @@ const ROOM_NAMES = {
 const PALETTE = ['#4f8edc', '#e0a04a', '#5bb07a', '#c46fb8', '#d96a5c', '#4fb3bf', '#9a8bd6', '#b5a046'];
 
 class YeediMapCard extends HTMLElement {
-  static getConfigForm() {
-    return {
-      schema: [
-        { name: 'entity', required: true, selector: { entity: { domain: 'vacuum', integration: 'yeedi' } } },
-        { name: 'title', selector: { text: {} } },
-        { name: 'controls', selector: { boolean: {} } },
-      ],
-    };
+  static getConfigElement() {
+    return document.createElement('yeedi-map-card-editor');
   }
 
   static getStubConfig(hass) {
     const entity = Object.values(hass.entities || {}).find(
       (e) => e.platform === 'yeedi' && e.entity_id.startsWith('vacuum.'),
     );
-    return { entity: entity ? entity.entity_id : '' };
+    return { entity: entity ? entity.entity_id : '', controls: true };
   }
 
   setConfig(config) {
@@ -244,10 +238,14 @@ class YeediMapCard extends HTMLElement {
         s += `<g transform="translate(${X(d.dock.x)},${Y(d.dock.y)})"><g transform="scale(${(u / 75).toFixed(3)})"><rect x="-190" y="-190" width="380" height="380" rx="90" class="dock"/>
           <path transform="translate(-144,-144) scale(12)" fill="#fff" d="M12 3L2 12h3v8h14v-8h3L12 3z"/></g></g>`;
       }
-      if (d.robot && !(st_docked(this) && d.dock)) {
-        const a = ((d.robot.a || 0) * Math.PI) / 180;
+      // Robot: at its reported position, or on the dock when docked (the robot
+      // stops reporting its position once it is charging).
+      const docked = st_docked(this) && d.dock;
+      const rob = docked ? { ...d.dock, a: (d.robot && d.robot.a) || d.dock.a } : d.robot;
+      if (rob) {
+        const a = ((rob.a || 0) * Math.PI) / 180;
         const hx = Math.cos(a) * 120, hy = -Math.sin(a) * 120;
-        s += `<g transform="translate(${X(d.robot.x)},${Y(d.robot.y)}) scale(${(u / 75).toFixed(3)})">
+        s += `<g transform="translate(${X(rob.x)},${Y(rob.y)}) scale(${(u / 75).toFixed(3)})">
           ${moving ? '<circle r="320" class="halo"/>' : ''}
           <circle r="170" class="robot"/><line x1="0" y1="0" x2="${hx.toFixed(0)}" y2="${hy.toFixed(0)}" class="heading"/></g>`;
       }
@@ -360,10 +358,13 @@ const STYLE = `
          background: var(--primary-color); color: var(--text-primary-color, #fff); }
   .btn.flat { background: color-mix(in srgb, var(--primary-text-color) 8%, transparent); color: var(--primary-text-color); }
   .btn ha-icon { --mdc-icon-size: 18px; }
-  .row { display: flex; align-items: center; gap: 10px; padding: 4px 16px; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 4px 0 4px 16px; }
   .row:last-child { padding-bottom: 14px; }
-  .lbl { font-size: 12px; color: var(--secondary-text-color); min-width: 72px; }
+  .lbl { font-size: 12px; color: var(--secondary-text-color); min-width: 64px; flex: 0 0 auto; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 0; }
+  .row .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-right: 16px; }
+  .row .chips::-webkit-scrollbar { display: none; }
+  .row .chip { white-space: nowrap; flex: 0 0 auto; }
   .msg + .chips { padding: 4px 16px 8px; }
   .chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--divider-color); border-radius: 14px;
           padding: 4px 11px; font-size: 12px; cursor: pointer; background: none; color: var(--primary-text-color); }
@@ -371,6 +372,120 @@ const STYLE = `
   .chip:disabled { opacity: .5; cursor: default; }
   .chip ha-icon { --mdc-icon-size: 14px; }
 `;
+
+
+// ------------------------------------------------------------------ editor
+
+const EDITOR_TEXT = {
+  en: { title: 'Title', controls: 'Buttons and settings under the map', rooms: 'Room names',
+    rooms_help: 'Leave empty to keep the name reported by the robot.', waiting: 'Waiting for the robot’s rooms…' },
+  fr: { title: 'Titre', controls: 'Boutons et réglages sous le plan', rooms: 'Noms des pièces',
+    rooms_help: 'Laisser vide pour garder le nom donné par le robot.', waiting: 'En attente des pièces du robot…' },
+};
+
+class YeediMapCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...config };
+    if (this._config.entity !== this._entity) {
+      this._entity = this._config.entity;
+      this._rooms = null;
+      this._subscribe();
+    }
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (!this._unsub && this._entity) this._subscribe();
+    this._render();
+  }
+
+  disconnectedCallback() { if (this._unsub) { try { this._unsub(); } catch (e) { /* closed */ } this._unsub = null; } }
+
+  async _subscribe() {
+    if (!this._hass || !this._entity || this._subscribing) return;
+    if (this._unsub) { try { this._unsub(); } catch (e) { /* closed */ } this._unsub = null; }
+    this._subscribing = true;
+    try {
+      this._unsub = await this._hass.connection.subscribeMessage(
+        (data) => { this._rooms = data.rooms || []; this._render(); },
+        { type: 'yeedi/map/subscribe', entity_id: this._entity },
+      );
+    } catch (e) { this._rooms = []; this._render(); } finally { this._subscribing = false; }
+  }
+
+  _t() {
+    const lang = (this._hass?.locale?.language || 'en').split('-')[0];
+    return { text: EDITOR_TEXT[lang] || EDITOR_TEXT.en, rooms: ROOM_NAMES[lang] || {} };
+  }
+
+  _changed(patch) {
+    const config = { ...this._config, ...patch };
+    for (const k of Object.keys(config)) if (config[k] === '' || config[k] === undefined) delete config[k];
+    if (config.room_names && !Object.keys(config.room_names).length) delete config.room_names;
+    this._config = config;
+    this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true }));
+  }
+
+  _render() {
+    if (!this._hass || !this._config) return;
+    const { text, rooms } = this._t();
+    if (!this._form) {
+      this.innerHTML = `
+        <style>
+          .yeedi-editor { display: flex; flex-direction: column; gap: 16px; }
+          .yeedi-editor h4 { margin: 8px 0 0; font-weight: 500; }
+          .yeedi-editor .help { font-size: 12px; color: var(--secondary-text-color); margin: -8px 0 0; }
+          .yeedi-editor .roomrow { display: flex; align-items: center; gap: 12px; }
+          .yeedi-editor .roomrow span { min-width: 120px; font-size: 14px; color: var(--secondary-text-color); }
+          .yeedi-editor ha-textfield { flex: 1; }
+        </style>
+        <div class="yeedi-editor"><ha-form></ha-form><h4></h4><p class="help"></p><div class="roomlist"></div></div>`;
+      this._form = this.querySelector('ha-form');
+      this._form.addEventListener('value-changed', (ev) => {
+        ev.stopPropagation();
+        this._changed(ev.detail.value);
+      });
+      this._list = this.querySelector('.roomlist');
+    }
+    this._form.hass = this._hass;
+    this._form.data = { entity: this._config.entity || '', title: this._config.title || '', controls: this._config.controls !== false };
+    this._form.schema = [
+      { name: 'entity', required: true, selector: { entity: { domain: 'vacuum', integration: 'yeedi' } } },
+      { name: 'title', selector: { text: {} } },
+      { name: 'controls', selector: { boolean: {} } },
+    ];
+    this._form.computeLabel = (sch) => ({ entity: this._hass.localize('ui.panel.lovelace.editor.card.generic.entity') || 'Entity',
+      title: text.title, controls: text.controls }[sch.name] || sch.name);
+    this.querySelector('h4').textContent = text.rooms;
+    this.querySelector('.help').textContent = text.rooms_help;
+
+    const names = this._config.room_names || {};
+    const key = JSON.stringify([this._rooms && this._rooms.map((r) => [r.id, r.name]), names]);
+    if (key === this._listKey) return;
+    this._listKey = key;
+    this._list.innerHTML = '';
+    if (!this._rooms) { this._list.textContent = text.waiting; return; }
+    for (const room of this._rooms) {
+      const row = document.createElement('div'); row.className = 'roomrow';
+      const span = document.createElement('span');
+      span.textContent = `${room.id} · ${rooms[room.name] || room.name || '?'}`;
+      const field = document.createElement('ha-textfield');
+      field.value = names[room.id] != null ? String(names[room.id]) : '';
+      field.placeholder = rooms[room.name] || room.name || '';
+      field.addEventListener('change', () => {
+        const next = { ...(this._config.room_names || {}) };
+        const v = field.value.trim();
+        if (v) next[room.id] = v; else delete next[room.id];
+        this._changed({ room_names: next });
+      });
+      row.append(span, field);
+      this._list.append(row);
+    }
+  }
+}
+
+if (!customElements.get('yeedi-map-card-editor')) customElements.define('yeedi-map-card-editor', YeediMapCardEditor);
 
 if (!customElements.get('yeedi-map-card')) customElements.define('yeedi-map-card', YeediMapCard);
 window.customCards = window.customCards || [];
