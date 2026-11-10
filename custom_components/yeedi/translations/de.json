@@ -88,15 +88,6 @@
       },
       "lifespan_side_brush": {
         "name": "Seitenbürste"
-      },
-      "station_state": {
-        "name": "Station",
-        "state": {
-          "idle": "Bereit",
-          "emptying_dustbin": "Entleert den Behälter",
-          "washing_mop": "Wäscht den Wischmopp",
-          "drying_mop": "Trocknet den Wischmopp"
-        }
       }
     },
     "vacuum": {

@@ -26,7 +26,7 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - `vacuum` entity: start, pause, stop, return to dock, locate, fan speed (Standard / Max / Max+) and **mop only** (vacuum motor off)
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
 - Actions **`yeedi.clean_rooms`** (by room number *or name*) and **`yeedi.clean_zone`** (a rectangle in metres), plus `vacuum.send_command` with `spot_area` / `custom_area`
-- Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush), station state
+- Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
 - Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**, **auto-empty** (off / automatic / smart)
 - Switches: **continuous cleaning**, **carpet boost**, **advanced mode**; number: **volume**
 - Buttons: **empty the dustbin**, **relocate**, **reset** of each consumable counter, **clear the map** (disabled by default)

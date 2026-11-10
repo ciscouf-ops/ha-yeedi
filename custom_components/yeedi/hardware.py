@@ -67,7 +67,6 @@ from deebot_client.commands.json.ota import GetOta
 from deebot_client.commands.json.play_sound import PlaySound
 from deebot_client.commands.json.pos import GetPos
 from deebot_client.commands.json.relocation import SetRelocationState
-from deebot_client.commands.json.station_state import GetStationState
 from deebot_client.commands.json.stats import GetStats, GetTotalStats
 from deebot_client.commands.json.volume import GetVolume, SetVolume
 from deebot_client.commands.json.water_info import GetWaterInfo, SetWaterInfo
@@ -121,7 +120,8 @@ def _station() -> CapabilityStation:
             set=SetAutoEmpty,
             types=(auto_empty.Frequency.AUTO, auto_empty.Frequency.SMART),
         ),
-        state=CapabilityEvent(StationEvent, [GetStationState()]),
+        # The yeedi stations do not answer getStationState: nothing to poll.
+        state=CapabilityEvent(StationEvent, []),
     )
 
 

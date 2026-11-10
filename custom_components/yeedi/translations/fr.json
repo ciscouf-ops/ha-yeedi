@@ -88,15 +88,6 @@
       },
       "lifespan_side_brush": {
         "name": "Brosse latérale"
-      },
-      "station_state": {
-        "name": "Station",
-        "state": {
-          "idle": "Au repos",
-          "emptying_dustbin": "Vidage du bac",
-          "washing_mop": "Lavage de la serpillère",
-          "drying_mop": "Séchage de la serpillère"
-        }
       }
     },
     "vacuum": {

@@ -88,15 +88,6 @@
       },
       "lifespan_side_brush": {
         "name": "Side brush lifespan"
-      },
-      "station_state": {
-        "name": "Station",
-        "state": {
-          "idle": "Idle",
-          "emptying_dustbin": "Emptying the dustbin",
-          "washing_mop": "Washing the mop",
-          "drying_mop": "Drying the mop"
-        }
       }
     },
     "vacuum": {

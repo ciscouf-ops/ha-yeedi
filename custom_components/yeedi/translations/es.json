@@ -88,15 +88,6 @@
       },
       "lifespan_side_brush": {
         "name": "Cepillo lateral"
-      },
-      "station_state": {
-        "name": "Estación",
-        "state": {
-          "idle": "En reposo",
-          "emptying_dustbin": "Vaciando el depósito",
-          "washing_mop": "Lavando la mopa",
-          "drying_mop": "Secando la mopa"
-        }
       }
     },
     "vacuum": {

@@ -12,7 +12,6 @@ from deebot_client.events import (
     Event,
     LifeSpan,
     LifeSpanEvent,
-    StationEvent,
     StatsEvent,
     TotalStatsEvent,
 )
@@ -99,15 +98,6 @@ ENTITY_DESCRIPTIONS: tuple[YeediSensorEntityDescription, ...] = (
         capability_fn=lambda caps: caps.stats.total,
         value_fn=lambda e: e.cleanings,
         state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    YeediSensorEntityDescription[StationEvent](
-        key="station_state",
-        translation_key="station_state",
-        capability_fn=lambda caps: caps.station.state if caps.station else None,
-        value_fn=lambda e: e.state.name.lower(),
-        device_class=SensorDeviceClass.ENUM,
-        options=["idle", "emptying_dustbin", "washing_mop", "drying_mop"],
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     YeediSensorEntityDescription[ErrorEvent](
         key="error",

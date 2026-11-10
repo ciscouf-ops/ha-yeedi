@@ -88,15 +88,6 @@
       },
       "lifespan_side_brush": {
         "name": "Spazzola laterale"
-      },
-      "station_state": {
-        "name": "Stazione",
-        "state": {
-          "idle": "In attesa",
-          "emptying_dustbin": "Svuotamento del contenitore",
-          "washing_mop": "Lavaggio del panno",
-          "drying_mop": "Asciugatura del panno"
-        }
       }
     },
     "vacuum": {

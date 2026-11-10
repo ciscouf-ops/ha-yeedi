@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.2.6
-- New entities: buttons (empty the dustbin, relocate, reset each consumable counter, clear the map — disabled by default), switches (continuous cleaning, carpet boost, advanced mode), volume number, auto-empty select (off / automatic / smart), station state sensor.
+- New entities: buttons (empty the dustbin, relocate, reset each consumable counter, clear the map — disabled by default), switches (continuous cleaning, carpet boost, advanced mode), volume number, auto-empty select (off / automatic / smart).
 - Actions `yeedi.clean_rooms` (room numbers or names, 1–2 passes) and `yeedi.clean_zone` (rectangle in metres), with UI schemas.
 - README: entities, actions, four up-to-date screenshots of the card (cleaning, rooms, zone, dark theme).
 - Model table: yeedi cube and mop station pro added, Floor 3 family left to deebot-client, README table of models and dock kinds.

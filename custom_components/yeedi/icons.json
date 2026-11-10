@@ -1,30 +1,53 @@
 {
   "entity": {
     "button": {
-      "relocate": {"default": "mdi:crosshairs-gps"},
-      "clear_map": {"default": "mdi:map-marker-remove"},
-      "station_empty_dustbin": {"default": "mdi:delete-empty"},
-      "reset_lifespan_brush": {"default": "mdi:broom"},
-      "reset_lifespan_filter": {"default": "mdi:air-filter"},
-      "reset_lifespan_side_brush": {"default": "mdi:broom"}
+      "relocate": {
+        "default": "mdi:crosshairs-gps"
+      },
+      "clear_map": {
+        "default": "mdi:map-marker-remove"
+      },
+      "station_empty_dustbin": {
+        "default": "mdi:delete-empty"
+      },
+      "reset_lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_side_brush": {
+        "default": "mdi:broom"
+      }
     },
     "switch": {
-      "continuous_cleaning": {"default": "mdi:refresh-auto"},
-      "carpet_auto_fan_boost": {"default": "mdi:rug"},
-      "advanced_mode": {"default": "mdi:tune"}
+      "continuous_cleaning": {
+        "default": "mdi:refresh-auto"
+      },
+      "carpet_auto_fan_boost": {
+        "default": "mdi:rug"
+      },
+      "advanced_mode": {
+        "default": "mdi:tune"
+      }
     },
     "number": {
-      "volume": {"default": "mdi:volume-high"}
+      "volume": {
+        "default": "mdi:volume-high"
+      }
     },
     "select": {
-      "auto_empty": {"default": "mdi:delete-restore"}
-    },
-    "sensor": {
-      "station_state": {"default": "mdi:home-battery"}
+      "auto_empty": {
+        "default": "mdi:delete-restore"
+      }
     }
   },
   "services": {
-    "clean_rooms": {"service": "mdi:floor-plan"},
-    "clean_zone": {"service": "mdi:selection-drag"}
+    "clean_rooms": {
+      "service": "mdi:floor-plan"
+    },
+    "clean_zone": {
+      "service": "mdi:selection-drag"
+    }
   }
 }
