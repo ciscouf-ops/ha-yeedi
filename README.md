@@ -63,8 +63,8 @@ The room ids and names are in the `rooms` attribute of the vacuum entity.
 The integration ships its own Lovelace card, loaded automatically (no extra resource to add):
 
 <p align="center">
-  <img src="docs/card-cleaning.png" width="420" alt="Map card during a cleaning: rooms, robot, dock and trace">
-  <img src="docs/card-rooms.png" width="420" alt="Map card with two rooms selected for cleaning">
+  <img src="docs/card-cleaning.png" width="300" alt="Map card during a cleaning: rooms, robot, dock and trace">&nbsp;&nbsp;
+  <img src="docs/card-rooms.png" width="300" alt="Map card with two rooms selected for cleaning">
 </p>
 
 *Preview rendered with a fictional flat; the card draws the outlines your robot reports.*
