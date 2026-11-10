@@ -39,6 +39,15 @@
           "high": "Fort",
           "ultrahigh": "Très fort"
         }
+      },
+      "suction": {
+        "name": "Puissance d'aspiration",
+        "state": {
+          "mop_only": "Serpillère uniquement",
+          "normal": "Standard",
+          "max": "Max",
+          "max_plus": "Max+"
+        }
       }
     },
     "sensor": {

@@ -13,7 +13,7 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.0';
+const CARD_VERSION = '0.2.1';
 
 const TEXT = {
   en: {
@@ -127,12 +127,13 @@ class YeediMapCard extends HTMLElement {
       && this._hass.states[e.entity_id]?.attributes?.device_class === 'battery');
     const water = same.find((e) => e.entity_id.startsWith('select.')
       && (e.translation_key === 'water_amount' || /water/.test(e.entity_id)));
-    return { battery: battery?.entity_id, water: water?.entity_id };
+    const suction = same.find((e) => e.entity_id.startsWith('select.') && e.translation_key === 'suction');
+    return { battery: battery?.entity_id, water: water?.entity_id, suction: suction?.entity_id };
   }
 
   _otherStates() {
     const r = this._related();
-    return [r.battery, r.water].map((e) => (e ? this._hass.states[e]?.state : '')).join('|');
+    return [r.battery, r.water, r.suction].map((e) => (e ? this._hass.states[e]?.state : '')).join('|');
   }
 
   _roomName(room) {
@@ -277,11 +278,17 @@ class YeediMapCard extends HTMLElement {
     const clear = n && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
     const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
 
-    const fanList = st.attributes.fan_speed_list || [];
+    // Suction: the "suction" select when the integration provides it (its labels are
+    // translated), otherwise the fan speeds of the vacuum entity.
+    const sst = related.suction ? this._hass.states[related.suction] : null;
+    const fanList = sst ? sst.attributes.options || [] : st.attributes.fan_speed_list || [];
+    const fanNow = sst ? sst.state : st.attributes.fan_speed;
     const fan = fanList.length ? `<div class="row"><span class="lbl">${text.fan}</span><div class="chips">${fanList.map((f) => {
-      const label = this._hass.formatEntityAttributeValue ? this._hass.formatEntityAttributeValue(st, 'fan_speed', f) : f;
+      let label = f;
+      if (sst && this._hass.formatEntityState) label = this._hass.formatEntityState(sst, f);
+      else if (this._hass.formatEntityAttributeValue) label = this._hass.formatEntityAttributeValue(st, 'fan_speed', f);
       const icon = f === 'mop_only' ? '<ha-icon icon="mdi:fan-off"></ha-icon>' : '';
-      return `<button class="chip${st.attributes.fan_speed === f ? ' on' : ''}" data-fan="${f}">${icon}${esc(label)}</button>`;
+      return `<button class="chip${fanNow === f ? ' on' : ''}" data-fan="${f}">${icon}${esc(label)}</button>`;
     }).join('')}</div></div>` : '';
 
     const wst = related.water ? this._hass.states[related.water] : null;
@@ -306,7 +313,11 @@ class YeediMapCard extends HTMLElement {
     else if (el.dataset.act === 'resume') this._call('start');
     else if (el.dataset.act === 'dock') this._call('return_to_base');
     else if (el.dataset.act === 'clear') { this._selected = []; this._render(); }
-    else if (el.dataset.fan) this._call('set_fan_speed', { fan_speed: el.dataset.fan });
+    else if (el.dataset.fan) {
+      const sel = this._related().suction;
+      if (sel) this._hass.callService('select', 'select_option', { entity_id: sel, option: el.dataset.fan });
+      else this._call('set_fan_speed', { fan_speed: el.dataset.fan });
+    }
     else if (el.dataset.water) {
       this._hass.callService('select', 'select_option', { entity_id: this._related().water, option: el.dataset.water });
     }

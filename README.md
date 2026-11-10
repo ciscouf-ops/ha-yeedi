@@ -11,7 +11,7 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
 - `vacuum.send_command` with `spot_area` (`rooms: "2,1,3"`) and `custom_area`
 - Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
-- Water flow level select
+- **Suction power** select (Standard / Max / Max+ / mop only) and **water flow level** select
 - **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map
 
 Tested with a yeedi vac max (class `04z443`) on Home Assistant 2026.11.

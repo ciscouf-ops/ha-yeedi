@@ -35,6 +35,7 @@ from .auth import YeediAuthenticator, create_yeedi_rest_config
 from .const import CONF_ACCOUNT_CREDENTIALS, DOMAIN
 from .hardware import register_yeedi_models
 from .map_data import YeediMapData
+from .suction import YeediSuction
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class YeediController:
         config = entry.data
         self._devices: list[Device] = []
         self.map_data: dict[str, YeediMapData] = {}
+        self.suction: dict[str, YeediSuction] = {}
         self._unsubscribe_device_events: list[Callable[[], None]] = []
         self._device_id = config[CONF_DEVICE_ID]
         country = config[CONF_COUNTRY]
@@ -99,6 +101,9 @@ class YeediController:
                         map_data = YeediMapData(self._hass, device)
                         map_data.start()
                         self.map_data[device.device_info["did"]] = map_data
+                        suction = YeediSuction(device)
+                        suction.start()
+                        self.suction[device.device_info["did"]] = suction
                         self._devices.append(device)
 
                     for device in mqtt_devices:
@@ -168,6 +173,8 @@ class YeediController:
             unsubscribe()
         for map_data in self.map_data.values():
             map_data.stop()
+        for suction in self.suction.values():
+            suction.stop()
         for device in self._devices:
             await device.teardown()
         if self._mqtt_client is not None:

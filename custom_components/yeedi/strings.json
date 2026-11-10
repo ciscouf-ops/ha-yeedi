@@ -39,6 +39,15 @@
           "high": "High",
           "ultrahigh": "Ultrahigh"
         }
+      },
+      "suction": {
+        "name": "Suction power",
+        "state": {
+          "mop_only": "Mop only",
+          "normal": "Standard",
+          "max": "Max",
+          "max_plus": "Max+"
+        }
       }
     },
     "sensor": {

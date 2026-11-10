@@ -11,7 +11,6 @@ from deebot_client.device import Device
 from deebot_client.events import (
     CachedMapInfoEvent,
     ErrorEvent,
-    FanSpeedEvent,
     RoomsEvent,
     StateEvent,
 )
@@ -25,7 +24,7 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -34,13 +33,12 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 from .controller import YeediConfigEntry
 from .entity import YeediEntity
+from .suction import YeediSuction
 
 _LOGGER = logging.getLogger(__name__)
 _SEGMENTS_SEPARATOR = "_"
 ATTR_ROOMS = "rooms"
 ATTR_ERROR = "error"
-# Mop only: the vacuum motor is muted (yeedi "MopMute" setting), only the mop works.
-FAN_SPEED_MOP_ONLY = "mop_only"
 
 _STATE_TO_ACTIVITY = {
     State.IDLE: VacuumActivity.IDLE,
@@ -58,15 +56,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the vacuums."""
+    controller = entry.runtime_data
     async_add_entities(
-        YeediVacuum(device)
-        for device in entry.runtime_data.devices
+        YeediVacuum(device, controller.suction[device.device_info["did"]])
+        for device in controller.devices
         if device.capabilities.device_type is DeviceType.VACUUM
     )
-
-
-def _name_key(level: Any) -> str:
-    return str(level.name).lower()
 
 
 class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
@@ -86,19 +81,16 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
         key="vacuum", translation_key="vacuum", name=None
     )
 
-    def __init__(self, device: Device) -> None:
+    def __init__(self, device: Device, suction: YeediSuction) -> None:
         """Initialize the vacuum."""
         super().__init__(device, device.capabilities)
+        self._suction = suction
         self._rooms: RoomsEvent | None = None
         self._maps: dict[str, Map] = {}
         self._error: str | None = None
-        self._mop_only = False
-        self._robot_fan_speed: str | None = None
-        if fan_speed := self._capability.fan_speed:
+        if suction.supported:
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
-            self._attr_fan_speed_list = [_name_key(t) for t in fan_speed.types]
-            if self._capability.water:
-                self._attr_fan_speed_list.insert(0, FAN_SPEED_MOP_ONLY)
+            self._attr_fan_speed_list = suction.options
         if self._capability.map and self._capability.clean.action.area:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
 
@@ -108,7 +100,7 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
 
         # The robot does not report the mop-only setting: keep the last one set from HA.
         if (last := await self.async_get_last_state()) is not None:
-            self._mop_only = last.attributes.get("fan_speed") == FAN_SPEED_MOP_ONLY
+            self._suction.restore(last.attributes.get("fan_speed"))
 
         async def on_state(event: StateEvent) -> None:
             self._attr_activity = _STATE_TO_ACTIVITY[event.state]
@@ -122,14 +114,15 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
 
         self._subscribe(self._capability.error.event, on_error)
 
-        if self._capability.fan_speed:
+        if self._suction.supported:
 
-            async def on_fan_speed(event: FanSpeedEvent) -> None:
-                self._robot_fan_speed = _name_key(event.speed)
-                self._update_fan_speed()
+            @callback
+            def on_suction() -> None:
+                self._attr_fan_speed = self._suction.current
                 self.async_write_ha_state()
 
-            self._subscribe(self._capability.fan_speed.event, on_fan_speed)
+            self.async_on_remove(self._suction.add_listener(on_suction))
+            self._attr_fan_speed = self._suction.current
 
         if map_caps := self._capability.map:
 
@@ -158,28 +151,9 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
                     rooms[key] = room.id
         return {ATTR_ROOMS: rooms, ATTR_ERROR: self._error}
 
-    def _update_fan_speed(self) -> None:
-        self._attr_fan_speed = (
-            FAN_SPEED_MOP_ONLY if self._mop_only else self._robot_fan_speed
-        )
-
-    async def _set_mop_only(self, enable: bool) -> None:
-        await self._device.execute_command(
-            self._capability.custom.set("setMopMute", {"enable": 1 if enable else 0})
-        )
-        self._mop_only = enable
-
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
-        """Set fan speed, or mop only (vacuum motor off)."""
-        if TYPE_CHECKING:
-            assert self._capability.fan_speed
-        if fan_speed == FAN_SPEED_MOP_ONLY:
-            await self._set_mop_only(True)
-        else:
-            await self._set_mop_only(False)
-            await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
-        self._update_fan_speed()
-        self.async_write_ha_state()
+        """Set the suction power, or mop only (vacuum motor off)."""
+        await self._suction.async_set(fan_speed)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return to the dock."""
