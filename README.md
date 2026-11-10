@@ -1,3 +1,5 @@
+<p align="center"><img src="custom_components/yeedi/brand/icon@2x.png" width="96" alt="yeedi"></p>
+
 # yeedi for Home Assistant
 
 A Home Assistant integration for **yeedi** robot vacuums, through the yeedi cloud account.
@@ -59,6 +61,14 @@ The room ids and names are in the `rooms` attribute of the vacuum entity.
 ## Map card
 
 The integration ships its own Lovelace card, loaded automatically (no extra resource to add):
+
+<p align="center">
+  <img src="docs/card-cleaning.png" width="420" alt="Map card during a cleaning: rooms, robot, dock and trace">
+  <img src="docs/card-rooms.png" width="420" alt="Map card with two rooms selected for cleaning">
+</p>
+
+*Preview rendered with sample room outlines; the card draws the outlines your robot reports.*
+
 
 ```yaml
 type: custom:yeedi-map-card
