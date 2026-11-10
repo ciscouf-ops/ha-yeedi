@@ -96,7 +96,16 @@ class YeediController:
                 async with asyncio.TaskGroup() as tg:
 
                     async def _init(device: Device) -> None:
-                        await device.initialize(mqtt)
+                        # One robot failing must not take the others down.
+                        try:
+                            await device.initialize(mqtt)
+                        except Exception:
+                            _LOGGER.exception(
+                                "Could not initialize robot %s",
+                                device.device_info.get("nick")
+                                or device.device_info.get("name"),
+                            )
+                            return
                         self._subscribe_device_info_events(device)
                         map_data = YeediMapData(self._hass, device)
                         await map_data.async_start()
@@ -108,6 +117,11 @@ class YeediController:
 
                     for device in mqtt_devices:
                         tg.create_task(_init(device))
+
+                if not self._devices:
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN, translation_key="setup_error"
+                    )
 
             for device_config in devices.xmpp + devices.not_supported:
                 _LOGGER.warning(

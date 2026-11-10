@@ -9,12 +9,14 @@ Home Assistant (and restored by the entities after a restart).
 from __future__ import annotations
 
 from collections.abc import Callable
+import time
 from typing import Any
 
 from deebot_client.device import Device
 from deebot_client.events import FanSpeedEvent
 
 MOP_ONLY = "mop_only"
+_OWN_COMMAND_GRACE = 20  # seconds: fan speed changes right after our own command
 
 
 def _name_key(level: Any) -> str:
@@ -31,6 +33,7 @@ class YeediSuction:
         self.mop_only = False
         self._robot_level: str | None = None
         self._restored = False
+        self._last_set = 0.0
         self._listeners: list[Callable[[], None]] = []
         self._unsubscribe: Callable[[], None] | None = None
 
@@ -60,7 +63,12 @@ class YeediSuction:
             return
 
         async def on_fan_speed(event: FanSpeedEvent) -> None:
-            self._robot_level = _name_key(event.speed)
+            level = _name_key(event.speed)
+            changed = self._robot_level is not None and level != self._robot_level
+            self._robot_level = level
+            # A level changed elsewhere (yeedi app) means the vacuum motor is back on.
+            if changed and self.mop_only and time.monotonic() - self._last_set > _OWN_COMMAND_GRACE:
+                self.mop_only = False
             self._notify()
 
         self._unsubscribe = self._device.events.subscribe(
@@ -86,6 +94,7 @@ class YeediSuction:
         """Set the suction power."""
         if self._capability is None:
             return
+        self._last_set = time.monotonic()
         if level == MOP_ONLY:
             await self._set_mop_only(True)
         else:

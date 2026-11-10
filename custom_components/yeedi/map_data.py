@@ -96,14 +96,23 @@ class YeediMapData:
 
     async def async_start(self) -> None:
         """Load the saved outlines and subscribe to the robot's events."""
-        if saved := await self._store.async_load():
+        try:
+            saved = await self._store.async_load()
+        except Exception:  # a damaged file must not stop the integration
+            _LOGGER.warning("Saved map of %s unreadable, starting empty", self._store.key)
+            saved = None
+        if saved:
             self._map_id = saved.get("map_id")
             self._dock = saved.get("dock")
             for room in saved.get("rooms", []):
-                self._rooms[int(room["id"])] = {
-                    "id": int(room["id"]),
+                try:
+                    room_id = int(room["id"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                self._rooms[room_id] = {
+                    "id": room_id,
                     "name": room.get("name", ""),
-                    "outline": room.get("outline", []),
+                    "outline": room.get("outline") or [],
                 }
         events = self._device.events
         self._unsubscribers += [

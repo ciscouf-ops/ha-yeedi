@@ -24,7 +24,12 @@ from .map_data import YeediMapData
 def _find_map_data(hass: HomeAssistant, entity_id: str) -> YeediMapData | None:
     """Return the map data of the robot behind a yeedi vacuum entity."""
     entry = er.async_get(hass).async_get(entity_id)
-    if entry is None or entry.platform != DOMAIN or entry.config_entry_id is None:
+    if (
+        entry is None
+        or entry.platform != DOMAIN
+        or entry.config_entry_id is None
+        or not entry.unique_id
+    ):
         return None
     config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
     controller = getattr(config_entry, "runtime_data", None) if config_entry else None
