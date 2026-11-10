@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.2.6
+- Model table: yeedi cube and mop station pro added, Floor 3 family left to deebot-client, README table of models and dock kinds.
 - Map card: zone cleaning (draw a rectangle on the map); no-mop zones and virtual walls from the yeedi app are drawn.
 - Test suite (pytest) run in CI; a segment id without a room number is ignored; the map is saved immediately when the integration unloads.
 - German, Spanish and Italian translations (integration and card).

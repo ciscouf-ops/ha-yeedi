@@ -2,7 +2,21 @@
 
 A Home Assistant integration for **yeedi** robot vacuums, through the yeedi cloud account.
 
-> **Only tested with a yeedi vac max** (class `04z443`), on Home Assistant 2026.11. Other yeedi models (vac 2, vac 2 pro, vac hybrid, vac station, 2 hybrid, mop station) use the same protocol and are declared, but have not been tried: please open an issue to report what works or not.
+> **Only tested with a yeedi vac max** (class `04z443`), on Home Assistant 2026.11. Other yeedi models are declared on a best-effort basis and have not been tried: please open an issue (with the diagnostics file, see Troubleshooting) to report what works or not.
+
+| Model | Class | Dock | Status |
+|---|---|---|---|
+| yeedi vac max | `04z443` | auto-empty station | tested |
+| yeedi vac hybrid | `h041es` | auto-empty station | declared |
+| yeedi vac station | `mnx7f4` | auto-empty station | declared |
+| yeedi vac 2 | `9t30w8` | auto-empty station | declared |
+| yeedi vac 2 pro | `aaxesz` | auto-empty station (optional bundle) | declared |
+| yeedi cube | `6r6dbt` | auto-empty station | declared |
+| yeedi 2 hybrid | `p5nx9u` | charging dock | declared |
+| yeedi mop station / mop station pro | `vthpeg`, `zwvyi2` | mop-washing station (no station entities yet) | declared |
+| yeedi Floor 3 Station / Floor 3+ | `t5e5o6`, `kd0una`, `t6kipw`, `u3bsxq`, `rwp09o` | mop-washing station | supported natively by deebot-client |
+
+Models not in this table (for example the older yeedi K650 and the first yeedi vac, which use the legacy XML protocol) are logged as *not supported yet* at setup.
 
 yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, but the official Ecovacs integration cannot log into a yeedi account. This integration logs in with the yeedi application identity and reuses [deebot-client](https://github.com/DeebotUniverse/client.py), the library behind the official integration, with the yeedi specifics added (login, model sheets, map discovery).
 

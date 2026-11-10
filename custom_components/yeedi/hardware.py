@@ -223,24 +223,40 @@ def yeedi_950_capabilities(*, station: bool = True) -> StaticDeviceInfo:
     )
 
 
-# Yeedi model classes using the 950-type JSON protocol (from ecovacs-deebot.js, library/models.js).
-# Value: whether the model has an auto-empty station.
-YEEDI_MODELS: dict[str, bool] = {
-    "04z443": True,  # yeedi vac max
-    "h041es": True,  # yeedi vac hybrid
-    "mnx7f4": True,  # yeedi vac station
-    "aaxesz": True,  # yeedi vac 2 pro
-    "9t30w8": True,  # yeedi vac 2
-    "p5nx9u": False,  # yeedi 2 hybrid
-    "vthpeg": False,  # yeedi mop station
+# Yeedi model classes using the 950-type JSON protocol, and what kind of dock they have.
+# Sources: ecovacs-deebot.js (library/models.js, KnownYeediModels) and the yeedi product pages.
+# Only the vac max has been tested with a real robot; the others share the same protocol
+# family ("QRP"/"BL_QRP" in the Ecovacs cloud) and are declared on a best-effort basis.
+# The Floor 3 Station / Floor 3+ family (t5e5o6, kd0una, t6kipw, u3bsxq, rwp09o) is not
+# listed here on purpose: deebot-client ships its own, more complete sheets for them.
+#
+# Dock kinds:
+#   "empty"  - auto-empty station (dust bag): station entities are created.
+#   "mop"    - mop-washing/drying station: no auto-empty, so no station entities (yet).
+#   "none"   - plain charging dock.
+YEEDI_MODELS: dict[str, tuple[str, str]] = {
+    "04z443": ("yeedi vac max", "empty"),
+    "h041es": ("yeedi vac hybrid", "empty"),
+    "mnx7f4": ("yeedi vac station", "empty"),
+    "aaxesz": ("yeedi vac 2 pro", "empty"),  # station sold as an optional bundle
+    "9t30w8": ("yeedi vac 2", "empty"),
+    "6r6dbt": ("yeedi cube", "empty"),
+    "p5nx9u": ("yeedi 2 hybrid", "none"),
+    "vthpeg": ("yeedi mop station", "mop"),
+    "zwvyi2": ("yeedi mop station pro", "mop"),
 }
 
 
+def model_name(class_: str) -> str | None:
+    """Return the marketing name of a Yeedi class, if known."""
+    return YEEDI_MODELS.get(class_, (None, ""))[0]
+
+
 def register_yeedi_models() -> None:
-    """Make the Yeedi models known to deebot-client."""
+    """Make the Yeedi models known to deebot-client (without shadowing its own sheets)."""
     from deebot_client import hardware  # noqa: PLC0415
 
-    for model, station in YEEDI_MODELS.items():
+    for model, (_name, dock) in YEEDI_MODELS.items():
         if model not in hardware._DEVICES:  # noqa: SLF001
-            hardware._DEVICES[model] = yeedi_950_capabilities(station=station)  # noqa: SLF001
+            hardware._DEVICES[model] = yeedi_950_capabilities(station=dock == "empty")  # noqa: SLF001
         hardware._NOT_FOUND.discard(model)  # noqa: SLF001
