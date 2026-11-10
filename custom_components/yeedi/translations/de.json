@@ -193,5 +193,16 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen",
+        "description": "Hat der Roboter eine Absaugstation? Fügt die Taste „Staubbehälter entleeren“ und die Einstellung der automatischen Entleerung hinzu.",
+        "data": {
+          "station": "Absaugstation"
+        }
+      }
+    }
   }
 }

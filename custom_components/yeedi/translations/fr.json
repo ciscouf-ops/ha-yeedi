@@ -193,5 +193,16 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "Le robot a-t-il une station d’auto-vidage ? Ajoute le bouton « Vider le bac » et le réglage d’auto-vidage.",
+        "data": {
+          "station": "Station d’auto-vidage"
+        }
+      }
+    }
   }
 }

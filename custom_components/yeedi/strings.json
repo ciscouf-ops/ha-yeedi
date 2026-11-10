@@ -193,5 +193,16 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "Does the robot have an auto-empty station? Adds the \"Empty the dustbin\" button and the auto-empty setting.",
+        "data": {
+          "station": "Auto-empty station"
+        }
+      }
+    }
   }
 }

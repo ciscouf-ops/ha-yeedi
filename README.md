@@ -27,9 +27,9 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
 - Actions **`yeedi.clean_rooms`** (by room number *or name*) and **`yeedi.clean_zone`** (a rectangle in metres), plus `vacuum.send_command` with `spot_area` / `custom_area`
 - Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
-- Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**, **auto-empty** (off / automatic / smart)
+- Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**
 - Switches: **continuous cleaning**, **carpet boost**, **advanced mode**; number: **volume**
-- Buttons: **empty the dustbin**, **relocate**, **reset** of each consumable counter, **clear the map** (disabled by default)
+- Buttons: **relocate**, **reset** of each consumable counter, **clear the map** (disabled by default); with the *auto-empty station* option (integration → Configure): **empty the dustbin** button and **auto-empty** select
 - **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map, zone cleaning by drawing a rectangle, no-mop zones and virtual walls
 
 ## Installation
@@ -136,6 +136,9 @@ yeedi robots only send the outline of their rooms now and then, mostly while cle
 - The account must not require a device verification e-mail more than once; if yeedi asks for a code, the flow will prompt for it.
 
 ## Troubleshooting
+
+- **"Mop only" sends the robot straight back to the dock**: the robot refuses to start without the mop plate attached (it says so out loud). Attach the plate, or pick a suction level.
+- **No "Empty the dustbin" button / auto-empty setting**: the station is optional on several models, so these entities are created only when you turn on *Auto-empty station* in the integration's options (Settings → Integrations → yeedi → Configure).
 
 **No robot found after signing in.** Check that the robot shows up in the yeedi app with the same account and country. Robots the integration does not know yet are logged at startup (`Robot … is not supported yet`): open an issue with that log line.
 

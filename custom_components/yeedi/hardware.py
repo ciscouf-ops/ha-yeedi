@@ -231,11 +231,12 @@ def yeedi_950_capabilities(*, station: bool = True) -> StaticDeviceInfo:
 # listed here on purpose: deebot-client ships its own, more complete sheets for them.
 #
 # Dock kinds:
-#   "empty"  - auto-empty station (dust bag): station entities are created.
+#   "empty"  - auto-empty station (dust bag) exists or is sold as an option; the station
+#              entities are created only when the "station" option of the entry is on.
 #   "mop"    - mop-washing/drying station: no auto-empty, so no station entities (yet).
 #   "none"   - plain charging dock.
 YEEDI_MODELS: dict[str, tuple[str, str]] = {
-    "04z443": ("yeedi vac max", "empty"),
+    "04z443": ("yeedi vac max", "empty"),  # station sold separately: entities behind the option
     "h041es": ("yeedi vac hybrid", "empty"),
     "mnx7f4": ("yeedi vac station", "empty"),
     "aaxesz": ("yeedi vac 2 pro", "empty"),  # station sold as an optional bundle

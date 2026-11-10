@@ -17,7 +17,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SUPPORTED_LIFESPANS
+from .const import CONF_STATION, SUPPORTED_LIFESPANS
 from .controller import YeediConfigEntry
 from .entity import (
     YeediCapabilityEntityDescription,
@@ -106,7 +106,11 @@ async def async_setup_entry(
     entities: list[YeediEntity] = get_supported_entities(
         devices, YeediButton, ENTITY_DESCRIPTIONS
     )
-    entities.extend(get_supported_entities(devices, YeediStationButton, STATION_DESCRIPTIONS))
+    # The station is optional on several models: only when the user says they have one.
+    if entry.options.get(CONF_STATION, False):
+        entities.extend(
+            get_supported_entities(devices, YeediStationButton, STATION_DESCRIPTIONS)
+        )
     entities.extend(get_supported_entities(devices, YeediLifeSpanButton, LIFESPAN_DESCRIPTIONS))
     async_add_entities(entities)
 

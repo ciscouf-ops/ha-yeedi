@@ -193,5 +193,16 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones",
+        "description": "¿El robot tiene estación de autovaciado? Añade el botón «Vaciar el depósito» y el ajuste de autovaciado.",
+        "data": {
+          "station": "Estación de autovaciado"
+        }
+      }
+    }
   }
 }

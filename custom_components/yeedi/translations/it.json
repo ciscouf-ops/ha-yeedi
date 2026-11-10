@@ -193,5 +193,16 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni",
+        "description": "Il robot ha una stazione di svuotamento automatico? Aggiunge il pulsante «Svuota il contenitore» e l’impostazione di svuotamento automatico.",
+        "data": {
+          "station": "Stazione di svuotamento automatico"
+        }
+      }
+    }
   }
 }

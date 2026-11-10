@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import CONF_STATION
 from .controller import YeediConfigEntry
 from .entity import (
     YeediCapabilityEntityDescription,
@@ -75,8 +76,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the selects."""
     controller = entry.runtime_data
+    # Auto-empty belongs to the station, optional on several models.
+    descriptions = tuple(
+        d
+        for d in ENTITY_DESCRIPTIONS
+        if d.key != "auto_empty" or entry.options.get(CONF_STATION, False)
+    )
     entities: list[YeediEntity] = get_supported_entities(
-        controller.devices, YeediSelect, ENTITY_DESCRIPTIONS
+        controller.devices, YeediSelect, descriptions
     )
     entities.extend(
         YeediSuctionSelect(device, controller.suction[device.device_info["did"]])

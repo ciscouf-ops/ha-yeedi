@@ -2,6 +2,8 @@
 
 ## 0.2.6
 - Map card: with one room selected, the button names it ("Clean Kitchen").
+- Option *Auto-empty station* (integration → Configure, off by default): the "Empty the dustbin" button and the auto-empty select exist only when it is on, since the station is optional on the vac max and others.
+- Durations shown rounded (minutes without decimals, hours with one).
 - New entities: buttons (empty the dustbin, relocate, reset each consumable counter, clear the map — disabled by default), switches (continuous cleaning, carpet boost, advanced mode), volume number, auto-empty select (off / automatic / smart).
 - Actions `yeedi.clean_rooms` (room numbers or names, 1–2 passes) and `yeedi.clean_zone` (rectangle in metres), with UI schemas.
 - README: entities, actions, four up-to-date screenshots of the card (cleaning, rooms, zone, dark theme).

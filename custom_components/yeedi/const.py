@@ -8,3 +8,6 @@ MANUFACTURER = "yeedi"
 CONF_ACCOUNT_CREDENTIALS = "account_credentials"
 
 SUPPORTED_LIFESPANS = (LifeSpan.BRUSH, LifeSpan.FILTER, LifeSpan.SIDE_BRUSH)
+
+# Options
+CONF_STATION = "station"  # the robot has an auto-empty station (optional on some models)

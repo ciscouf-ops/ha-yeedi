@@ -72,6 +72,7 @@ ENTITY_DESCRIPTIONS: tuple[YeediSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
     ),
     YeediSensorEntityDescription[TotalStatsEvent](
         key="total_stats_area",
@@ -90,6 +91,7 @@ ENTITY_DESCRIPTIONS: tuple[YeediSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     YeediSensorEntityDescription[TotalStatsEvent](

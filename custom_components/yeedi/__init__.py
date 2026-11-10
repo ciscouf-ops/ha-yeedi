@@ -63,9 +63,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: YeediConfigEntry) -> boo
     await controller.initialize()
     entry.runtime_data = controller
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: YeediConfigEntry) -> bool:
     """Unload a Yeedi account."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def _async_options_updated(hass: HomeAssistant, entry: YeediConfigEntry) -> None:
+    """Reload the entry when its options change (station on/off)."""
+    await hass.config_entries.async_reload(entry.entry_id)

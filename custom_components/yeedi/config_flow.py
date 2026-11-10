@@ -24,7 +24,13 @@ try:
 except ImportError:  # Home Assistant before probatio
     import voluptuous as vol  # type: ignore[no-redef]
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
@@ -35,7 +41,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, selector
 
 from .auth import YeediAuthenticator, create_yeedi_rest_config
-from .const import CONF_ACCOUNT_CREDENTIALS, DOMAIN
+from .const import CONF_ACCOUNT_CREDENTIALS, CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +54,12 @@ class YeediConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the Yeedi config flow."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> YeediOptionsFlow:
+        """Return the options flow."""
+        return YeediOptionsFlow()
 
     _input: dict[str, Any]
     _authenticator: YeediAuthenticator | None = None
@@ -201,3 +213,25 @@ class YeediConfigFlow(ConfigFlow, domain=DOMAIN):
         """Re-authenticate."""
         self._input = dict(entry_data)
         return await self.async_step_user()
+
+
+class YeediOptionsFlow(OptionsFlow):
+    """Options: whether the robot has an auto-empty station."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show and save the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_STATION,
+                        default=self.config_entry.options.get(CONF_STATION, False),
+                    ): bool,
+                }
+            ),
+        )
