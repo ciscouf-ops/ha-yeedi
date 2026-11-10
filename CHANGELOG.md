@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.2.6
+- Diagnostics download from the device page (credentials and identifiers redacted).
+- Card URL carries a fingerprint of the file: browsers reload the card after an update.
 - Map card: selected rooms stand out (others dimmed, coloured outline, numbered badge).
 - Map card: room names follow the Home Assistant area each room is associated with (vacuum entity settings), then the card's own `room_names`, then the robot.
 - Map card: suction and water as level gauges (mop only toggles on the suction gauge), robot drawn on the dock, visual editor with room names.
