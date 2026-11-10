@@ -1,6 +1,9 @@
 {
   "domain": "yeedi",
   "name": "yeedi",
+  "categories": [
+    "appliances_cleaning.cleaning"
+  ],
   "codeowners": [
     "@ciscouf-ops"
   ],
