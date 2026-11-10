@@ -75,6 +75,7 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
+              "mop_only": "Serpillère uniquement",
               "normal": "Standard",
               "max": "Max",
               "max_plus": "Max+"

@@ -28,6 +28,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN
@@ -38,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 _SEGMENTS_SEPARATOR = "_"
 ATTR_ROOMS = "rooms"
 ATTR_ERROR = "error"
+# Mop only: the vacuum motor is muted (yeedi "MopMute" setting), only the mop works.
+FAN_SPEED_MOP_ONLY = "mop_only"
 
 _STATE_TO_ACTIVITY = {
     State.IDLE: VacuumActivity.IDLE,
@@ -66,7 +69,7 @@ def _name_key(level: Any) -> str:
     return str(level.name).lower()
 
 
-class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity):
+class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
     """A Yeedi robot vacuum."""
 
     _unrecorded_attributes = frozenset({ATTR_ROOMS})
@@ -89,15 +92,23 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity):
         self._rooms: RoomsEvent | None = None
         self._maps: dict[str, Map] = {}
         self._error: str | None = None
+        self._mop_only = False
+        self._robot_fan_speed: str | None = None
         if fan_speed := self._capability.fan_speed:
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
             self._attr_fan_speed_list = [_name_key(t) for t in fan_speed.types]
+            if self._capability.water:
+                self._attr_fan_speed_list.insert(0, FAN_SPEED_MOP_ONLY)
         if self._capability.map and self._capability.clean.action.area:
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the robot's events."""
         await super().async_added_to_hass()
+
+        # The robot does not report the mop-only setting: keep the last one set from HA.
+        if (last := await self.async_get_last_state()) is not None:
+            self._mop_only = last.attributes.get("fan_speed") == FAN_SPEED_MOP_ONLY
 
         async def on_state(event: StateEvent) -> None:
             self._attr_activity = _STATE_TO_ACTIVITY[event.state]
@@ -114,7 +125,8 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity):
         if self._capability.fan_speed:
 
             async def on_fan_speed(event: FanSpeedEvent) -> None:
-                self._attr_fan_speed = _name_key(event.speed)
+                self._robot_fan_speed = _name_key(event.speed)
+                self._update_fan_speed()
                 self.async_write_ha_state()
 
             self._subscribe(self._capability.fan_speed.event, on_fan_speed)
@@ -146,11 +158,28 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity):
                     rooms[key] = room.id
         return {ATTR_ROOMS: rooms, ATTR_ERROR: self._error}
 
+    def _update_fan_speed(self) -> None:
+        self._attr_fan_speed = (
+            FAN_SPEED_MOP_ONLY if self._mop_only else self._robot_fan_speed
+        )
+
+    async def _set_mop_only(self, enable: bool) -> None:
+        await self._device.execute_command(
+            self._capability.custom.set("setMopMute", {"enable": 1 if enable else 0})
+        )
+        self._mop_only = enable
+
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
-        """Set fan speed."""
+        """Set fan speed, or mop only (vacuum motor off)."""
         if TYPE_CHECKING:
             assert self._capability.fan_speed
-        await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
+        if fan_speed == FAN_SPEED_MOP_ONLY:
+            await self._set_mop_only(True)
+        else:
+            await self._set_mop_only(False)
+            await self._device.execute_command(self._capability.fan_speed.set(fan_speed))
+        self._update_fan_speed()
+        self.async_write_ha_state()
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return to the dock."""

@@ -7,7 +7,7 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 ## Features
 
 - Configuration in the UI (e-mail, password, country), credentials stored by Home Assistant
-- `vacuum` entity: start, pause, stop, return to dock, locate, fan speed (Standard / Max / Max+)
+- `vacuum` entity: start, pause, stop, return to dock, locate, fan speed (Standard / Max / Max+) and **mop only** (vacuum motor off)
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
 - `vacuum.send_command` with `spot_area` (`rooms: "2,1,3"`) and `custom_area`
 - Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
@@ -60,7 +60,7 @@ The room ids and names are in the `rooms` attribute of the vacuum entity.
 
 - Room names are the generic ones reported by the robot (Living room, Bedroom…). Custom names from the yeedi app are not available through the cloud API.
 - No map image yet.
-- Mop-only mode (`setMopMute`) is not exposed yet; it can be sent with `vacuum.send_command` (`command: setMopMute`, `params: {enable: 1}`).
+- The robot does not report the mop-only setting: the integration keeps the last one set from Home Assistant (changing it in the yeedi app is not seen).
 - The account must not require a device verification e-mail more than once; if yeedi asks for a code, the flow will prompt for it.
 
 ## Credits
