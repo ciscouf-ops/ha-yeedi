@@ -82,7 +82,7 @@ room_names:            # optional: your own room names (room id -> name)
 
 Tap rooms to choose them (the numbers give the cleaning order), then **Clean**. With no room chosen, **Clean** starts a full cleaning. The trace is drawn from the positions the robot reports while it cleans.
 
-If the robot does not report the outline of its rooms, the card shows them as a list to choose from instead of a map.
+yeedi robots only send the outline of their rooms now and then, mostly while cleaning. The integration asks for the outlines when a cleaning starts and keeps them once received, so the map may stay empty until the first cleaning after installation. Until then, the card shows the rooms as a list to choose from.
 
 ## Known limitations
 

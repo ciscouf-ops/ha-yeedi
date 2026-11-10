@@ -99,7 +99,7 @@ class YeediController:
                         await device.initialize(mqtt)
                         self._subscribe_device_info_events(device)
                         map_data = YeediMapData(self._hass, device)
-                        map_data.start()
+                        await map_data.async_start()
                         self.map_data[device.device_info["did"]] = map_data
                         suction = YeediSuction(device)
                         suction.start()

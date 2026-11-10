@@ -9,6 +9,10 @@ report everything a card needs to draw one:
 
 The trace is built from the robot positions received while it cleans, so it is lost
 when Home Assistant restarts during a cleaning.
+
+Yeedi robots only send the outline of the rooms now and then, mostly while cleaning (the
+rest of the time ``getMapSubSet`` answers with an empty value). Outlines are therefore
+asked again when a cleaning starts, and kept in Home Assistant's storage once received.
 """
 
 from __future__ import annotations
@@ -32,6 +36,7 @@ from deebot_client.events import (
 from deebot_client.models import State
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.storage import Store
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +46,8 @@ _MAX_TRACE_POINTS = 4000
 _POLL_INTERVAL = 3.0  # seconds, while the robot moves
 _NOTIFY_DELAY = 0.5  # seconds, to group bursts of events
 _MOVING = (State.CLEANING, State.RETURNING)
+_ROOMS_RETRY_DELAYS = (0, 45, 150, 400)  # seconds after a cleaning starts
+_STORAGE_VERSION = 1
 
 
 def _parse_outline(coordinates: str | None) -> list[list[float]]:
@@ -78,12 +85,26 @@ class YeediMapData:
         self._unsubscribers: list[Callable[[], None]] = []
         self._notify_handle: asyncio.TimerHandle | None = None
         self._poll_task: asyncio.Task | None = None
+        self._rooms_task: asyncio.Task | None = None
         self._updated = time.time()
+        self._store: Store[dict[str, Any]] = Store(
+            hass, _STORAGE_VERSION, f"yeedi.map_{device.device_info['did']}"
+        )
+        self._save_handle: asyncio.TimerHandle | None = None
 
     # ------------------------------------------------------------------ setup
 
-    def start(self) -> None:
-        """Subscribe to the robot's events."""
+    async def async_start(self) -> None:
+        """Load the saved outlines and subscribe to the robot's events."""
+        if saved := await self._store.async_load():
+            self._map_id = saved.get("map_id")
+            self._dock = saved.get("dock")
+            for room in saved.get("rooms", []):
+                self._rooms[int(room["id"])] = {
+                    "id": int(room["id"]),
+                    "name": room.get("name", ""),
+                    "outline": room.get("outline", []),
+                }
         events = self._device.events
         self._unsubscribers += [
             events.subscribe(StateEvent, self._on_state),
@@ -102,6 +123,11 @@ class YeediMapData:
             self._notify_handle.cancel()
         if self._poll_task is not None:
             self._poll_task.cancel()
+        if self._rooms_task is not None:
+            self._rooms_task.cancel()
+        if self._save_handle is not None:
+            self._save_handle.cancel()
+            self._save_now()
 
     # ---------------------------------------------------------------- events
 
@@ -120,9 +146,12 @@ class YeediMapData:
             entry = self._rooms.setdefault(room.id, {"id": room.id, "outline": []})
             entry["name"] = room.name
             if outline := _parse_outline(getattr(room, "coordinates", "")):
-                entry["outline"] = outline
+                if outline != entry["outline"]:
+                    entry["outline"] = outline
+                    self._schedule_save()
         for room_id in set(self._rooms) - seen:
             self._rooms.pop(room_id)
+            self._schedule_save()
         self._schedule_notify()
 
     async def _on_map_subset(self, event: MapSubsetEvent) -> None:
@@ -132,7 +161,9 @@ class YeediMapData:
         if event.name:
             entry.setdefault("name", event.name)
         if outline := _parse_outline(event.coordinates):
-            entry["outline"] = outline
+            if outline != entry["outline"]:
+                entry["outline"] = outline
+                self._schedule_save()
         self._schedule_notify()
 
     async def _on_state(self, event: StateEvent) -> None:
@@ -145,6 +176,8 @@ class YeediMapData:
             # A new cleaning: start a new trace.
             self._trace = []
             self._trace_start = time.time()
+            if any(not r["outline"] for r in self._rooms.values()) or not self._rooms:
+                self._start_rooms_refresh()
         if event.state in _MOVING:
             self._start_polling()
         self._schedule_notify()
@@ -154,7 +187,9 @@ class YeediMapData:
             kind = _position_kind(position)
             point = {"x": position.x, "y": position.y, "a": position.a}
             if kind == "dock":
-                self._dock = point
+                if point != self._dock:
+                    self._dock = point
+                    self._schedule_save()
             elif kind == "robot":
                 self._robot = point
                 if self._state in (State.CLEANING, State.RETURNING):
@@ -187,6 +222,44 @@ class YeediMapData:
             await asyncio.sleep(_POLL_INTERVAL)
         # One last time, to get the robot back on its dock.
         self._device.events.request_refresh(PositionsEvent)
+
+    def _start_rooms_refresh(self) -> None:
+        if self._rooms_task is None or self._rooms_task.done():
+            self._rooms_task = self._hass.async_create_background_task(
+                self._refresh_rooms(), name="yeedi_map_rooms"
+            )
+
+    async def _refresh_rooms(self) -> None:
+        """Ask for the room outlines a few times while the robot cleans."""
+        for i, delay in enumerate(_ROOMS_RETRY_DELAYS):
+            if i:
+                await asyncio.sleep(delay - _ROOMS_RETRY_DELAYS[i - 1])
+            if self._rooms and all(r["outline"] for r in self._rooms.values()):
+                return
+            if self._state not in (State.CLEANING, State.PAUSED):
+                return
+            self._device.events.request_refresh(RoomsEvent)
+
+    # --------------------------------------------------------------- storage
+
+    def _schedule_save(self) -> None:
+        if self._save_handle is None:
+            self._save_handle = self._hass.loop.call_later(5, self._save_now)
+
+    @callback
+    def _save_now(self) -> None:
+        self._save_handle = None
+        self._store.async_delay_save(
+            lambda: {
+                "map_id": self._map_id,
+                "dock": self._dock,
+                "rooms": [
+                    {"id": r["id"], "name": r.get("name", ""), "outline": r["outline"]}
+                    for r in self._rooms.values()
+                ],
+            },
+            1,
+        )
 
     # ------------------------------------------------------------- listeners
 
