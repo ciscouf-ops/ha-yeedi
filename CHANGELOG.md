@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.2.6
+- Map card: zone cleaning (draw a rectangle on the map); no-mop zones and virtual walls from the yeedi app are drawn.
 - Test suite (pytest) run in CI; a segment id without a room number is ignored; the map is saved immediately when the integration unloads.
 - German, Spanish and Italian translations (integration and card).
 - Map card: battery icon next to the percentage.

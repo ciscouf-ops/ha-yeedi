@@ -18,7 +18,7 @@ const CARD_VERSION = '0.2.6';
 const TEXT = {
   en: {
     clean: 'Clean', clean_rooms: (n) => `Clean ${n} room${n > 1 ? 's' : ''}`, pause: 'Pause',
-    resume: 'Resume', dock: 'Dock', clear: 'Clear', last_clean: 'Last cleaning', no_map: 'Waiting for the map…',
+    resume: 'Resume', dock: 'Dock', clear: 'Clear', last_clean: 'Last cleaning', zone: 'Zone', clean_zone: 'Clean the zone', zone_help: 'Draw a rectangle on the map.', no_map: 'Waiting for the map…',
     no_outline: 'The robot did not send the outline of the rooms: choose them below.',
     not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water', mop_only_short: 'Off',
     states: { cleaning: 'Cleaning', returning: 'Returning to the dock', docked: 'Docked',
@@ -27,7 +27,7 @@ const TEXT = {
   },
   fr: {
     clean: 'Nettoyer', clean_rooms: (n) => `Nettoyer ${n} pièce${n > 1 ? 's' : ''}`, pause: 'Pause',
-    resume: 'Reprendre', dock: 'Base', clear: 'Effacer', last_clean: 'Dernier nettoyage', no_map: 'En attente de la carte…',
+    resume: 'Reprendre', dock: 'Base', clear: 'Effacer', last_clean: 'Dernier nettoyage', zone: 'Zone', clean_zone: 'Nettoyer la zone', zone_help: 'Trace un rectangle sur le plan.', no_map: 'En attente de la carte…',
     no_outline: "Le robot n'a pas envoyé le contour des pièces : choisis-les ci-dessous.",
     not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau', mop_only_short: 'Coupée',
     states: { cleaning: 'Nettoyage', returning: 'Retour à la base', docked: 'Sur la base',
@@ -36,7 +36,7 @@ const TEXT = {
   },
   de: {
     clean: 'Reinigen', clean_rooms: (n) => `${n} ${n > 1 ? 'Räume' : 'Raum'} reinigen`, pause: 'Pause',
-    resume: 'Fortsetzen', dock: 'Station', clear: 'Zurücksetzen', last_clean: 'Letzte Reinigung', no_map: 'Warte auf die Karte…',
+    resume: 'Fortsetzen', dock: 'Station', clear: 'Zurücksetzen', last_clean: 'Letzte Reinigung', zone: 'Zone', clean_zone: 'Zone reinigen', zone_help: 'Ziehe ein Rechteck auf der Karte.', no_map: 'Warte auf die Karte…',
     no_outline: 'Der Roboter hat keine Raumumrisse gesendet: wähle die Räume unten aus.',
     not_yeedi: 'Diese Entität ist kein yeedi-Staubsauger.', fan: 'Saugkraft', water: 'Wasser', mop_only_short: 'Aus',
     states: { cleaning: 'Reinigt', returning: 'Rückkehr zur Station', docked: 'An der Station',
@@ -45,7 +45,7 @@ const TEXT = {
   },
   es: {
     clean: 'Limpiar', clean_rooms: (n) => `Limpiar ${n} habitaci${n > 1 ? 'ones' : 'ón'}`, pause: 'Pausa',
-    resume: 'Reanudar', dock: 'Base', clear: 'Borrar', last_clean: 'Última limpieza', no_map: 'Esperando el mapa…',
+    resume: 'Reanudar', dock: 'Base', clear: 'Borrar', last_clean: 'Última limpieza', zone: 'Zona', clean_zone: 'Limpiar la zona', zone_help: 'Dibuja un rectángulo en el mapa.', no_map: 'Esperando el mapa…',
     no_outline: 'El robot no envió el contorno de las habitaciones: elígelas abajo.',
     not_yeedi: 'Esta entidad no es una aspiradora yeedi.', fan: 'Succión', water: 'Agua', mop_only_short: 'Apagada',
     states: { cleaning: 'Limpiando', returning: 'Volviendo a la base', docked: 'En la base',
@@ -54,7 +54,7 @@ const TEXT = {
   },
   it: {
     clean: 'Pulisci', clean_rooms: (n) => `Pulisci ${n} stanz${n > 1 ? 'e' : 'a'}`, pause: 'Pausa',
-    resume: 'Riprendi', dock: 'Base', clear: 'Annulla', last_clean: 'Ultima pulizia', no_map: 'In attesa della mappa…',
+    resume: 'Riprendi', dock: 'Base', clear: 'Annulla', last_clean: 'Ultima pulizia', zone: 'Zona', clean_zone: 'Pulisci la zona', zone_help: 'Disegna un rettangolo sulla mappa.', no_map: 'In attesa della mappa…',
     no_outline: 'Il robot non ha inviato il contorno delle stanze: scegline qui sotto.',
     not_yeedi: 'Questa entità non è un aspirapolvere yeedi.', fan: 'Aspirazione', water: 'Acqua', mop_only_short: 'Spenta',
     states: { cleaning: 'Pulizia', returning: 'Ritorno alla base', docked: 'Alla base',
@@ -109,6 +109,9 @@ class YeediMapCard extends HTMLElement {
     const changed = !this._config || this._config.entity !== config.entity;
     this._config = { controls: true, ...config };
     this._selected = [];
+    this._zoneMode = false; // drawing a rectangle to clean instead of picking rooms
+    this._zone = null; // {x1, y1, x2, y2} in robot coordinates (mm)
+    this._drag = null;
     if (changed) this._unsubscribe();
     this._render();
   }
@@ -195,6 +198,14 @@ class YeediMapCard extends HTMLElement {
   }
 
   _cleanSelected() {
+    if (this._zone) {
+      const z = this._zone;
+      const c = [Math.min(z.x1, z.x2), Math.min(z.y1, z.y2), Math.max(z.x1, z.x2), Math.max(z.y1, z.y2)].map((v) => Math.round(v));
+      this._call('send_command', { command: 'custom_area', params: { coordinates: c.join(','), cleanings: 1 } });
+      this._zone = null; this._zoneMode = false;
+      this._render();
+      return;
+    }
     if (!this._selected.length) { this._call('start'); return; }
     this._call('send_command', {
       command: 'spot_area',
@@ -217,6 +228,10 @@ class YeediMapCard extends HTMLElement {
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
       this.shadowRoot.addEventListener('click', (ev) => this._onClick(ev));
+      this.shadowRoot.addEventListener('pointerdown', (ev) => this._onPointer(ev, 'down'));
+      this.shadowRoot.addEventListener('pointermove', (ev) => this._onPointer(ev, 'move'));
+      this.shadowRoot.addEventListener('pointerup', (ev) => this._onPointer(ev, 'up'));
+      this.shadowRoot.addEventListener('pointercancel', (ev) => this._onPointer(ev, 'up'));
     }
     const { text } = this._t();
     const st = this._hass?.states?.[this._config.entity];
@@ -282,7 +297,9 @@ class YeediMapCard extends HTMLElement {
       const font = Math.round(u * 2.6);
       const choose = !moving;
       const hasSel = choose && this._selected.length > 0;
-      let s = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" preserveAspectRatio="xMidYMid meet" class="${hasSel ? 'has-sel' : ''}">`;
+      this._geo = { x0, y1 }; // to turn pointer positions back into robot coordinates
+      const zoning = choose && this._zoneMode;
+      let s = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" preserveAspectRatio="xMidYMid meet" class="plan${hasSel ? ' has-sel' : ''}${zoning ? ' zoning' : ''}">`;
       rooms.forEach((room, i) => {
         const sel = this._selected.indexOf(room.id);
         s += `<polygon class="room${choose ? ' pick' : ''}${sel >= 0 ? ' sel' : ''}" data-room="${room.id}"
@@ -297,6 +314,18 @@ class YeediMapCard extends HTMLElement {
         const clip = rooms.length ? ' clip-path="url(#inside)"' : '';
         s += `<polyline class="band" points="${P(d.trace)}"${clip}/>`;
         s += `<polyline class="line" points="${P(d.trace)}"${clip}/>`;
+      }
+      // Restrictions set in the yeedi app: no-mop zones (hatched) and virtual walls (red).
+      if ((d.no_mop && d.no_mop.length) || (d.walls && d.walls.length)) {
+        s += `<defs><pattern id="hatch" width="${(u * 1.2).toFixed(0)}" height="${(u * 1.2).toFixed(0)}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="${(u * 1.2).toFixed(0)}" class="hatchline"/></pattern></defs>`;
+        (d.no_mop || []).forEach((z) => { if (z.points.length > 1) s += `<polygon class="nomop" points="${P(z.points)}"/>`; });
+        (d.walls || []).forEach((w) => { if (w.points.length > 1) s += `<polyline class="wall" points="${P(w.points)}"/>`; });
+      }
+      if (this._zone) {
+        const z = this._zone;
+        const zx = X(Math.min(z.x1, z.x2)), zy = Y(Math.max(z.y1, z.y2));
+        s += `<rect class="zone" x="${zx.toFixed(0)}" y="${zy.toFixed(0)}" width="${Math.abs(z.x2 - z.x1).toFixed(0)}" height="${Math.abs(z.y2 - z.y1).toFixed(0)}"/>`;
       }
       rooms.forEach((room) => {
         const rx = room.outline.map((p) => p[0]), ry = room.outline.map((p) => p[1]);
@@ -351,8 +380,11 @@ class YeediMapCard extends HTMLElement {
     let main;
     if (moving) main = `<button class="btn main" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${text.pause}</button>`;
     else if (paused) main = `<button class="btn main" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${text.resume}</button>`;
-    else main = `<button class="btn main" data-act="clean"><ha-icon icon="mdi:play"></ha-icon>${n ? text.clean_rooms(n) : text.clean}</button>`;
-    const clear = n && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
+    else main = `<button class="btn main" data-act="clean"><ha-icon icon="mdi:play"></ha-icon>${this._zone ? text.clean_zone : n ? text.clean_rooms(n) : text.clean}</button>`;
+    const clear = (n || this._zone) && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
+    const hasMap = this._data && this._data.rooms && this._data.rooms.some((r) => r.outline && r.outline.length > 2);
+    const zone = !moving && !paused && hasMap && !n
+      ? `<button class="btn flat${this._zoneMode ? ' on' : ''}" data-act="zone" title="${esc(text.zone_help)}"><ha-icon icon="mdi:selection-drag"></ha-icon>${text.zone}</button>` : '';
     const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
 
     // Suction and water: one icon per level (the label is the tooltip), the current
@@ -384,7 +416,8 @@ class YeediMapCard extends HTMLElement {
     const water = wst && wst.attributes.options
       ? this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', wst.attributes.options, wst.state, waterLabel, 'data-water') : '';
 
-    return `<div class="actions">${main}${clear}${dock}</div>${fan}${water}${this._lastClean(related, moving)}`;
+    const hint = this._zoneMode && !this._zone ? `<div class="foot">${esc(text.zone_help)}</div>` : '';
+    return `<div class="actions">${main}${clear}${zone}${dock}</div>${hint}${fan}${water}${this._lastClean(related, moving)}`;
   }
 
   // "Last cleaning: 32 min · 18 m² · 2 h ago", from the statistics sensors.
@@ -440,19 +473,54 @@ class YeediMapCard extends HTMLElement {
     return `<div class="row"><span class="lbl">${esc(title)}<small>${esc(now)}</small></span><div class="chips">${chips}</div></div>`;
   }
 
+  // Zone mode: drag on the map to draw the rectangle to clean.
+  _onPointer(ev, phase) {
+    if (!this._zoneMode || !this._geo) return;
+    const svg = ev.composedPath().find((n) => n.tagName === 'svg' && n.classList && n.classList.contains('plan'));
+    if (phase === 'down') {
+      if (!svg) return;
+      const p = this._toRobot(svg, ev);
+      this._drag = { x: p.x, y: p.y };
+      this._zone = null;
+      ev.preventDefault();
+      return;
+    }
+    if (!this._drag) return;
+    // The map is re-rendered while dragging: always measure against the current one.
+    const current = this.shadowRoot.querySelector('svg.plan');
+    if (!current) return;
+    const p = this._toRobot(current, ev);
+    this._zone = { x1: this._drag.x, y1: this._drag.y, x2: p.x, y2: p.y };
+    if (phase === 'up') {
+      this._drag = null;
+      // Too small to be a zone: treat it as a tap.
+      if (Math.abs(this._zone.x2 - this._zone.x1) < 300 || Math.abs(this._zone.y2 - this._zone.y1) < 300) this._zone = null;
+    }
+    this._render();
+  }
+
+  _toRobot(svg, ev) {
+    const pt = svg.createSVGPoint();
+    pt.x = ev.clientX; pt.y = ev.clientY;
+    const m = svg.getScreenCTM();
+    const q = m ? pt.matrixTransform(m.inverse()) : pt;
+    return { x: q.x + this._geo.x0, y: this._geo.y1 - q.y };
+  }
+
   _onClick(ev) {
     const path = ev.composedPath();
     const el = path.find((n) => n.dataset && (n.dataset.room || n.dataset.act || n.dataset.fan || n.dataset.water));
     if (!el || el.disabled) return;
     const st = this._hass.states[this._config.entity];
     if (el.dataset.room) {
-      if (['cleaning', 'returning'].includes(st?.state)) return;
+      if (['cleaning', 'returning'].includes(st?.state) || this._zoneMode) return;
       this._toggleRoom(Number(el.dataset.room));
     } else if (el.dataset.act === 'clean') this._cleanSelected();
     else if (el.dataset.act === 'pause') this._call('pause');
     else if (el.dataset.act === 'resume') this._call('start');
     else if (el.dataset.act === 'dock') this._call('return_to_base');
-    else if (el.dataset.act === 'clear') { this._selected = []; this._render(); }
+    else if (el.dataset.act === 'clear') { this._selected = []; this._zone = null; this._render(); }
+    else if (el.dataset.act === 'zone') { this._zoneMode = !this._zoneMode; if (!this._zoneMode) this._zone = null; this._render(); }
     else if (el.dataset.fan) {
       const sel = this._related().suction;
       if (sel) this._hass.callService('select', 'select_option', { entity_id: sel, option: el.dataset.fan });
@@ -501,6 +569,12 @@ const STYLE = `
   .robot { fill: var(--primary-color); stroke: #fff; stroke-width: 40; }
   .heading { stroke: #fff; stroke-width: 40; stroke-linecap: round; }
   .halo { fill: var(--primary-color); opacity: .18; animation: pulse 2s ease-in-out infinite; }
+  .hatchline { stroke: var(--error-color, #db4437); stroke-width: 18; stroke-opacity: .55; }
+  .nomop { fill: url(#hatch); stroke: var(--error-color, #db4437); stroke-width: 20; stroke-opacity: .7; pointer-events: none; }
+  .wall { fill: none; stroke: var(--error-color, #db4437); stroke-width: 60; stroke-linecap: round; pointer-events: none; }
+  .zone { fill: var(--primary-color); fill-opacity: .22; stroke: var(--primary-color); stroke-width: 40; stroke-dasharray: 90 60; pointer-events: none; }
+  svg.zoning { cursor: crosshair; touch-action: none; }
+  svg.zoning .room { cursor: crosshair; }
   @keyframes pulse { 50% { opacity: .05; } }
   .msg { padding: 24px 16px; text-align: center; color: var(--secondary-text-color); font-size: 13px; }
   .msg.small { padding: 8px 16px 4px; }
@@ -510,6 +584,7 @@ const STYLE = `
          font: 500 14px var(--paper-font-body1_-_font-family, inherit); cursor: pointer;
          background: var(--primary-color); color: var(--text-primary-color, #fff); }
   .btn.flat { background: color-mix(in srgb, var(--primary-text-color) 8%, transparent); color: var(--primary-text-color); }
+  .btn.flat.on { background: color-mix(in srgb, var(--primary-color) 22%, transparent); color: var(--primary-color); }
   .btn ha-icon { --mdc-icon-size: 18px; }
   .row { display: flex; align-items: center; gap: 10px; padding: 4px 16px; }
   .row:last-child { padding-bottom: 14px; }
