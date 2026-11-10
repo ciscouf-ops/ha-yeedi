@@ -292,9 +292,9 @@ class YeediMapCard extends HTMLElement {
     const paused = st.state === 'paused';
     const n = this._selected.length;
     let main;
-    if (moving) main = `<button class="btn" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${text.pause}</button>`;
-    else if (paused) main = `<button class="btn" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${text.resume}</button>`;
-    else main = `<button class="btn" data-act="clean"><ha-icon icon="mdi:play"></ha-icon>${n ? text.clean_rooms(n) : text.clean}</button>`;
+    if (moving) main = `<button class="btn main" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${text.pause}</button>`;
+    else if (paused) main = `<button class="btn main" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${text.resume}</button>`;
+    else main = `<button class="btn main" data-act="clean"><ha-icon icon="mdi:play"></ha-icon>${n ? text.clean_rooms(n) : text.clean}</button>`;
     const clear = n && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
     const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
 
@@ -308,14 +308,32 @@ class YeediMapCard extends HTMLElement {
       if (this._hass.formatEntityAttributeValue) return this._hass.formatEntityAttributeValue(st, 'fan_speed', f);
       return f;
     };
-    const fan = fanList.length ? this._iconRow(text.fan, fanList, fanNow, fanLabel, FAN_ICONS, 'data-fan') : '';
+    // Mop only is a toggle in front of the suction gauge, not a level.
+    // It takes the place of the gauge icon: a tap turns the vacuum motor off.
+    const mopChip = fanList.includes('mop_only')
+      ? `<button class="gicon${fanNow === 'mop_only' ? ' on' : ''}" data-fan="mop_only" title="${esc(fanLabel('mop_only'))}" aria-label="${esc(fanLabel('mop_only'))}"><ha-icon icon="mdi:fan-off"></ha-icon></button>`
+      : '<ha-icon icon="mdi:fan"></ha-icon>';
+    const fan = fanList.length
+      ? this._levelRow(text.fan, mopChip, fanList.filter((f) => f !== 'mop_only'), fanNow, fanLabel, 'data-fan') : '';
 
     const wst = related.water ? this._hass.states[related.water] : null;
     const waterLabel = (o) => (this._hass.formatEntityState ? this._hass.formatEntityState(wst, o) : o);
     const water = wst && wst.attributes.options
-      ? this._iconRow(text.water, wst.attributes.options, wst.state, waterLabel, WATER_ICONS, 'data-water') : '';
+      ? this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', wst.attributes.options, wst.state, waterLabel, 'data-water') : '';
 
     return `<div class="actions">${main}${clear}${dock}</div>${fan}${water}`;
+  }
+
+  _levelRow(title, icon, levels, current, labelOf, attr) {
+    // A gauge: one segment per level, filled up to the current one.
+    const at = levels.indexOf(current);
+    const segs = levels.map((o, i) => {
+      const label = labelOf(o);
+      return `<button class="seg${i <= at ? ' fill' : ''}${i === at ? ' on' : ''}" ${attr}="${esc(o)}" title="${esc(label)}" aria-label="${esc(label)}"></button>`;
+    }).join('');
+    const now = current != null ? labelOf(current) : '';
+    return `<div class="row"><span class="lbl">${esc(title)}<small>${esc(now)}</small></span>
+      <div class="chips"><div class="gauge">${icon}${segs}</div></div></div>`;
   }
 
   _iconRow(title, options, current, labelOf, icons, attr) {
@@ -386,18 +404,19 @@ const STYLE = `
   @keyframes pulse { 50% { opacity: .05; } }
   .msg { padding: 24px 16px; text-align: center; color: var(--secondary-text-color); font-size: 13px; }
   .msg.small { padding: 8px 16px 4px; }
-  .actions { display: flex; gap: 8px; padding: 10px 16px 6px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 8px; padding: 10px 16px 6px; }
+  .btn.main { flex: 1 1 auto; justify-content: center; }
   .btn { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 18px; padding: 8px 16px;
          font: 500 14px var(--paper-font-body1_-_font-family, inherit); cursor: pointer;
          background: var(--primary-color); color: var(--text-primary-color, #fff); }
   .btn.flat { background: color-mix(in srgb, var(--primary-text-color) 8%, transparent); color: var(--primary-text-color); }
   .btn ha-icon { --mdc-icon-size: 18px; }
-  .row { display: flex; align-items: center; gap: 10px; padding: 4px 0 4px 16px; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 4px 16px; }
   .row:last-child { padding-bottom: 14px; }
   .lbl { font-size: 12px; color: var(--secondary-text-color); min-width: 84px; flex: 0 0 auto; display: flex; flex-direction: column; line-height: 1.2; }
   .lbl small { font-size: 12px; color: var(--primary-text-color); font-weight: 500; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 0; }
-  .row .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-right: 16px; }
+  .row .chips { flex: 1 1 auto; flex-wrap: nowrap; align-items: center; }
   .row .chips::-webkit-scrollbar { display: none; }
   .row .chip { white-space: nowrap; flex: 0 0 auto; }
   .msg + .chips { padding: 4px 16px 8px; }
@@ -409,6 +428,16 @@ const STYLE = `
   .chip.icon { padding: 5px 9px; border-radius: 16px; }
   .chip.icon ha-icon { --mdc-icon-size: 18px; color: var(--secondary-text-color); }
   .chip.icon.on ha-icon { color: var(--primary-color); }
+  .gauge { flex: 1 1 auto; display: flex; align-items: center; gap: 3px; padding: 4px 10px; border: 1px solid var(--divider-color); border-radius: 16px; box-sizing: border-box; height: 32px; }
+  .gicon { border: 0; background: none; padding: 0; margin: 0; cursor: pointer; display: inline-flex; align-items: center; }
+  .gicon.on ha-icon { color: var(--primary-color); }
+  .gauge ha-icon { --mdc-icon-size: 18px; color: var(--secondary-text-color); margin-right: 6px; }
+  .seg { flex: 1 1 0; height: 12px; border: 0; padding: 0; margin: 0; cursor: pointer; border-radius: 3px;
+         background: color-mix(in srgb, var(--primary-text-color) 12%, transparent); transition: background .15s; }
+  .seg:first-of-type { border-radius: 6px 3px 3px 6px; }
+  .seg:last-of-type { border-radius: 3px 6px 6px 3px; }
+  .seg.fill { background: color-mix(in srgb, var(--primary-color) 55%, transparent); }
+  .seg.on { background: var(--primary-color); }
 `;
 
 
