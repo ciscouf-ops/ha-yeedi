@@ -26,7 +26,9 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import voluptuous as vol
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
@@ -39,6 +41,22 @@ _LOGGER = logging.getLogger(__name__)
 _SEGMENTS_SEPARATOR = "_"
 ATTR_ROOMS = "rooms"
 ATTR_ERROR = "error"
+ATTR_CLEANINGS = "cleanings"
+ATTR_ZONE = "zone"
+SERVICE_CLEAN_ROOMS = "clean_rooms"
+SERVICE_CLEAN_ZONE = "clean_zone"
+
+_CLEANINGS = vol.All(vol.Coerce(int), vol.Range(min=1, max=2))
+CLEAN_ROOMS_SCHEMA = {
+    vol.Required(ATTR_ROOMS): vol.All(cv.ensure_list, [vol.Any(cv.positive_int, cv.string)]),
+    vol.Optional(ATTR_CLEANINGS, default=1): _CLEANINGS,
+}
+CLEAN_ZONE_SCHEMA = {
+    vol.Required(ATTR_ZONE): vol.All(
+        cv.ensure_list, [vol.Coerce(float)], vol.Length(min=4, max=4)
+    ),
+    vol.Optional(ATTR_CLEANINGS, default=1): _CLEANINGS,
+}
 
 _STATE_TO_ACTIVITY = {
     State.IDLE: VacuumActivity.IDLE,
@@ -55,7 +73,14 @@ async def async_setup_entry(
     entry: YeediConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the vacuums."""
+    """Set up the vacuums and their actions."""
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_ROOMS, CLEAN_ROOMS_SCHEMA, "async_clean_rooms"
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_ZONE, CLEAN_ZONE_SCHEMA, "async_clean_zone"
+    )
     controller = entry.runtime_data
     async_add_entities(
         YeediVacuum(device, controller.suction[device.device_info["did"]])
@@ -221,6 +246,45 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
                 )
             return
         await self._device.execute_command(self._capability.custom.set(command, params))
+
+    def _room_id(self, room: int | str) -> int:
+        """Resolve a room given by number or by name (as shown on the map)."""
+        if isinstance(room, int) or str(room).isdigit():
+            return int(room)
+        wanted = slugify(str(room))
+        for r in self._rooms.rooms if self._rooms else []:
+            if slugify(r.name) == wanted:
+                return r.id
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_room",
+            translation_placeholders={"room": str(room)},
+        )
+
+    def _area_capability(self) -> Any:
+        area = self._capability.clean.action.area
+        if area is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="area_not_supported"
+            )
+        return area
+
+    async def async_clean_rooms(self, rooms: list[int | str], cleanings: int = 1) -> None:
+        """Action yeedi.clean_rooms: clean rooms by number or name, in the given order."""
+        area = self._area_capability()
+        ids = ",".join(str(self._room_id(r)) for r in rooms)
+        await self._device.execute_command(area(CleanMode.SPOT_AREA, ids, cleanings))
+
+    async def async_clean_zone(self, zone: list[float], cleanings: int = 1) -> None:
+        """Action yeedi.clean_zone: clean a rectangle given in metres [x1, y1, x2, y2]."""
+        area = self._area_capability()
+        x1, y1, x2, y2 = zone
+        # The robot wants millimetres, min corner first.
+        coords = ",".join(
+            str(int(round(v * 1000)))
+            for v in (min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2))
+        )
+        await self._device.execute_command(area(CleanMode.CUSTOM_AREA, coords, cleanings))
 
     def _get_segments(self) -> list[Segment]:
         if self._rooms is None:

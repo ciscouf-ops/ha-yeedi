@@ -48,6 +48,17 @@
           "max": "Max",
           "max_plus": "Max+"
         }
+      },
+      "auto_empty": {
+        "name": "Svuotamento automatico",
+        "state": {
+          "off": "Disattivato",
+          "auto": "Automatico",
+          "smart": "Intelligente",
+          "min_10": "Ogni 10 minuti",
+          "min_15": "Ogni 15 minuti",
+          "min_25": "Ogni 25 minuti"
+        }
       }
     },
     "sensor": {
@@ -77,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Spazzola laterale"
+      },
+      "station_state": {
+        "name": "Stazione",
+        "state": {
+          "idle": "In attesa",
+          "emptying_dustbin": "Svuotamento del contenitore",
+          "washing_mop": "Lavaggio del panno",
+          "drying_mop": "Asciugatura del panno"
+        }
       }
     },
     "vacuum": {
@@ -91,6 +111,42 @@
             }
           }
         }
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Rilocalizza"
+      },
+      "clear_map": {
+        "name": "Cancella la mappa"
+      },
+      "station_empty_dustbin": {
+        "name": "Svuota il contenitore"
+      },
+      "reset_lifespan_brush": {
+        "name": "Azzera usura spazzola principale"
+      },
+      "reset_lifespan_filter": {
+        "name": "Azzera usura filtro"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Azzera usura spazzola laterale"
+      }
+    },
+    "switch": {
+      "continuous_cleaning": {
+        "name": "Pulizia continua"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Potenza extra sui tappeti"
+      },
+      "advanced_mode": {
+        "name": "Modalità avanzata"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
       }
     }
   },
@@ -112,6 +168,39 @@
     },
     "rooms_required": {
       "message": "Il comando spot_area richiede un parametro «rooms»."
+    },
+    "unknown_room": {
+      "message": "Stanza sconosciuta «{room}»: usare un numero di stanza o un nome mostrato sulla mappa."
+    }
+  },
+  "services": {
+    "clean_rooms": {
+      "name": "Pulisci stanze",
+      "description": "Pulisce le stanze indicate, nell’ordine dato.",
+      "fields": {
+        "rooms": {
+          "name": "Stanze",
+          "description": "Numeri o nomi delle stanze, es. [\"Cucina\", 3]."
+        },
+        "cleanings": {
+          "name": "Passaggi",
+          "description": "Numero di passaggi (1 o 2)."
+        }
+      }
+    },
+    "clean_zone": {
+      "name": "Pulisci una zona",
+      "description": "Pulisce un rettangolo della mappa.",
+      "fields": {
+        "zone": {
+          "name": "Zona",
+          "description": "Angoli in metri dall’origine della mappa: [x1, y1, x2, y2]."
+        },
+        "cleanings": {
+          "name": "Passaggi",
+          "description": "Numero di passaggi (1 o 2)."
+        }
+      }
     }
   }
 }

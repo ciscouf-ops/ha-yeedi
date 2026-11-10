@@ -48,6 +48,17 @@
           "max": "Máx",
           "max_plus": "Máx+"
         }
+      },
+      "auto_empty": {
+        "name": "Autovaciado",
+        "state": {
+          "off": "Desactivado",
+          "auto": "Automático",
+          "smart": "Inteligente",
+          "min_10": "Cada 10 minutos",
+          "min_15": "Cada 15 minutos",
+          "min_25": "Cada 25 minutos"
+        }
       }
     },
     "sensor": {
@@ -77,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Cepillo lateral"
+      },
+      "station_state": {
+        "name": "Estación",
+        "state": {
+          "idle": "En reposo",
+          "emptying_dustbin": "Vaciando el depósito",
+          "washing_mop": "Lavando la mopa",
+          "drying_mop": "Secando la mopa"
+        }
       }
     },
     "vacuum": {
@@ -91,6 +111,42 @@
             }
           }
         }
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Relocalizar"
+      },
+      "clear_map": {
+        "name": "Borrar el mapa"
+      },
+      "station_empty_dustbin": {
+        "name": "Vaciar el depósito"
+      },
+      "reset_lifespan_brush": {
+        "name": "Reiniciar desgaste del cepillo principal"
+      },
+      "reset_lifespan_filter": {
+        "name": "Reiniciar desgaste del filtro"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Reiniciar desgaste del cepillo lateral"
+      }
+    },
+    "switch": {
+      "continuous_cleaning": {
+        "name": "Limpieza continua"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Potencia extra en alfombras"
+      },
+      "advanced_mode": {
+        "name": "Modo avanzado"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volumen"
       }
     }
   },
@@ -112,6 +168,39 @@
     },
     "rooms_required": {
       "message": "El comando spot_area necesita un parámetro «rooms»."
+    },
+    "unknown_room": {
+      "message": "Habitación desconocida «{room}»: use un número de habitación o un nombre mostrado en el mapa."
+    }
+  },
+  "services": {
+    "clean_rooms": {
+      "name": "Limpiar habitaciones",
+      "description": "Limpia las habitaciones indicadas, en el orden dado.",
+      "fields": {
+        "rooms": {
+          "name": "Habitaciones",
+          "description": "Números o nombres de habitaciones, p. ej. [\"Cocina\", 3]."
+        },
+        "cleanings": {
+          "name": "Pasadas",
+          "description": "Número de pasadas (1 o 2)."
+        }
+      }
+    },
+    "clean_zone": {
+      "name": "Limpiar una zona",
+      "description": "Limpia un rectángulo del mapa.",
+      "fields": {
+        "zone": {
+          "name": "Zona",
+          "description": "Esquinas en metros desde el origen del mapa: [x1, y1, x2, y2]."
+        },
+        "cleanings": {
+          "name": "Pasadas",
+          "description": "Número de pasadas (1 o 2)."
+        }
+      }
     }
   }
 }

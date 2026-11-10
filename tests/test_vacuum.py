@@ -58,3 +58,24 @@ async def test_send_command_spot_and_custom_area() -> None:
         await vac.async_send_command("spot_area", {})
     with pytest.raises(ServiceValidationError):
         await vac.async_send_command("spot_area", [1, 2])
+
+
+async def test_clean_rooms_by_name_and_number() -> None:
+    device, vac = _vacuum()
+    vac._rooms = RoomsEvent("m1", [Room("Cuisine", 2, ""), Room("Salon", 4, "")])
+    await vac.async_clean_rooms(["Cuisine", 4, "salon"], cleanings=2)
+    assert device.commands == [("area", CleanMode.SPOT_AREA, "2,4,4", 2)]
+
+
+async def test_clean_rooms_unknown_name() -> None:
+    device, vac = _vacuum()
+    vac._rooms = RoomsEvent("m1", [Room("Cuisine", 2, "")])
+    with pytest.raises(ServiceValidationError):
+        await vac.async_clean_rooms(["Garage"])
+    assert device.commands == []
+
+
+async def test_clean_zone_metres_to_millimetres_sorted() -> None:
+    device, vac = _vacuum()
+    await vac.async_clean_zone([1.0, 2.4, -1.5, 0.2])
+    assert device.commands == [("area", CleanMode.CUSTOM_AREA, "-1500,200,1000,2400", 1)]

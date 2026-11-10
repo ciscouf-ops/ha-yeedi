@@ -48,6 +48,17 @@
           "max": "Max",
           "max_plus": "Max+"
         }
+      },
+      "auto_empty": {
+        "name": "Automatische Entleerung",
+        "state": {
+          "off": "Aus",
+          "auto": "Automatisch",
+          "smart": "Intelligent",
+          "min_10": "Alle 10 Minuten",
+          "min_15": "Alle 15 Minuten",
+          "min_25": "Alle 25 Minuten"
+        }
       }
     },
     "sensor": {
@@ -77,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Seitenbürste"
+      },
+      "station_state": {
+        "name": "Station",
+        "state": {
+          "idle": "Bereit",
+          "emptying_dustbin": "Entleert den Behälter",
+          "washing_mop": "Wäscht den Wischmopp",
+          "drying_mop": "Trocknet den Wischmopp"
+        }
       }
     },
     "vacuum": {
@@ -91,6 +111,42 @@
             }
           }
         }
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Neu lokalisieren"
+      },
+      "clear_map": {
+        "name": "Karte löschen"
+      },
+      "station_empty_dustbin": {
+        "name": "Staubbehälter entleeren"
+      },
+      "reset_lifespan_brush": {
+        "name": "Hauptbürste zurücksetzen"
+      },
+      "reset_lifespan_filter": {
+        "name": "Filter zurücksetzen"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Seitenbürste zurücksetzen"
+      }
+    },
+    "switch": {
+      "continuous_cleaning": {
+        "name": "Fortgesetzte Reinigung"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Teppich-Boost"
+      },
+      "advanced_mode": {
+        "name": "Erweiterter Modus"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Lautstärke"
       }
     }
   },
@@ -112,6 +168,39 @@
     },
     "rooms_required": {
       "message": "Der Befehl spot_area braucht einen Parameter „rooms“."
+    },
+    "unknown_room": {
+      "message": "Unbekannter Raum „{room}“: Raumnummer oder einen auf der Karte angezeigten Namen verwenden."
+    }
+  },
+  "services": {
+    "clean_rooms": {
+      "name": "Räume reinigen",
+      "description": "Reinigt die angegebenen Räume in der angegebenen Reihenfolge.",
+      "fields": {
+        "rooms": {
+          "name": "Räume",
+          "description": "Raumnummern oder -namen, z. B. [\"Küche\", 3]."
+        },
+        "cleanings": {
+          "name": "Durchgänge",
+          "description": "Anzahl der Durchgänge (1 oder 2)."
+        }
+      }
+    },
+    "clean_zone": {
+      "name": "Zone reinigen",
+      "description": "Reinigt ein Rechteck der Karte.",
+      "fields": {
+        "zone": {
+          "name": "Zone",
+          "description": "Ecken in Metern vom Kartenursprung: [x1, y1, x2, y2]."
+        },
+        "cleanings": {
+          "name": "Durchgänge",
+          "description": "Anzahl der Durchgänge (1 oder 2)."
+        }
+      }
     }
   }
 }

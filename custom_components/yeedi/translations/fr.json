@@ -48,6 +48,17 @@
           "max": "Max",
           "max_plus": "Max+"
         }
+      },
+      "auto_empty": {
+        "name": "Auto-vidage",
+        "state": {
+          "off": "Désactivé",
+          "auto": "Automatique",
+          "smart": "Intelligent",
+          "min_10": "Toutes les 10 minutes",
+          "min_15": "Toutes les 15 minutes",
+          "min_25": "Toutes les 25 minutes"
+        }
       }
     },
     "sensor": {
@@ -77,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Brosse latérale"
+      },
+      "station_state": {
+        "name": "Station",
+        "state": {
+          "idle": "Au repos",
+          "emptying_dustbin": "Vidage du bac",
+          "washing_mop": "Lavage de la serpillère",
+          "drying_mop": "Séchage de la serpillère"
+        }
       }
     },
     "vacuum": {
@@ -91,6 +111,42 @@
             }
           }
         }
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Relocaliser"
+      },
+      "clear_map": {
+        "name": "Effacer la carte"
+      },
+      "station_empty_dustbin": {
+        "name": "Vider le bac"
+      },
+      "reset_lifespan_brush": {
+        "name": "Réinitialiser l’usure de la brosse principale"
+      },
+      "reset_lifespan_filter": {
+        "name": "Réinitialiser l’usure du filtre"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Réinitialiser l’usure de la brosse latérale"
+      }
+    },
+    "switch": {
+      "continuous_cleaning": {
+        "name": "Nettoyage continu"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Boost sur tapis"
+      },
+      "advanced_mode": {
+        "name": "Mode avancé"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
       }
     }
   },
@@ -112,6 +168,39 @@
     },
     "rooms_required": {
       "message": "La commande spot_area a besoin d'un paramètre « rooms »."
+    },
+    "unknown_room": {
+      "message": "Pièce inconnue « {room} » : utilisez un numéro de pièce ou un nom affiché sur la carte."
+    }
+  },
+  "services": {
+    "clean_rooms": {
+      "name": "Nettoyer des pièces",
+      "description": "Nettoie les pièces indiquées, dans l’ordre donné.",
+      "fields": {
+        "rooms": {
+          "name": "Pièces",
+          "description": "Numéros ou noms des pièces, ex. [\"Cuisine\", 3]."
+        },
+        "cleanings": {
+          "name": "Passages",
+          "description": "Nombre de passages (1 ou 2)."
+        }
+      }
+    },
+    "clean_zone": {
+      "name": "Nettoyer une zone",
+      "description": "Nettoie un rectangle de la carte.",
+      "fields": {
+        "zone": {
+          "name": "Zone",
+          "description": "Coins en mètres depuis l’origine de la carte : [x1, y1, x2, y2]."
+        },
+        "cleanings": {
+          "name": "Passages",
+          "description": "Nombre de passages (1 ou 2)."
+        }
+      }
     }
   }
 }

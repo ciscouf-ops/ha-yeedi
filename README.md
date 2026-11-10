@@ -25,10 +25,12 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - Configuration in the UI (e-mail, password, country), credentials stored by Home Assistant
 - `vacuum` entity: start, pause, stop, return to dock, locate, fan speed (Standard / Max / Max+) and **mop only** (vacuum motor off)
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
-- `vacuum.send_command` with `spot_area` (`rooms: "2,1,3"`) and `custom_area`
-- Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
-- **Suction power** select (Standard / Max / Max+ / mop only) and **water flow level** select
-- **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map
+- Actions **`yeedi.clean_rooms`** (by room number *or name*) and **`yeedi.clean_zone`** (a rectangle in metres), plus `vacuum.send_command` with `spot_area` / `custom_area`
+- Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush), station state
+- Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**, **auto-empty** (off / automatic / smart)
+- Switches: **continuous cleaning**, **carpet boost**, **advanced mode**; number: **volume**
+- Buttons: **empty the dustbin**, **relocate**, **reset** of each consumable counter, **clear the map** (disabled by default)
+- **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map, zone cleaning by drawing a rectangle, no-mop zones and virtual walls
 
 ## Installation
 
@@ -42,9 +44,30 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 
 Copy `custom_components/yeedi` into your `config/custom_components/` folder and restart Home Assistant.
 
-## Room cleaning
+## Room and zone cleaning
 
-Rooms are exposed as segments: in the UI, the vacuum's more-info dialog lets you pick rooms. In an automation:
+The simplest way in an automation is the `yeedi.clean_rooms` action, which accepts room numbers or the names shown on the map:
+
+```yaml
+action: yeedi.clean_rooms
+target:
+  entity_id: vacuum.yeedi
+data:
+  rooms: ["Kitchen", 3]
+  cleanings: 1          # 1 or 2 passes
+```
+
+and `yeedi.clean_zone` cleans a rectangle, given in metres from the map origin (the card shows the robot coordinates while you draw a zone):
+
+```yaml
+action: yeedi.clean_zone
+target:
+  entity_id: vacuum.yeedi
+data:
+  zone: [-1.5, 0.2, 1.0, 2.4]   # x1, y1, x2, y2
+```
+
+Rooms are also exposed as native segments: in the UI, the vacuum's more-info dialog lets you pick rooms, and in an automation:
 
 ```yaml
 action: vacuum.clean_area
@@ -78,6 +101,10 @@ The integration ships its own Lovelace card, loaded automatically (no extra reso
   <img src="docs/card-cleaning.png" width="300" alt="Map card during a cleaning: rooms, robot, dock and trace">&nbsp;&nbsp;
   <img src="docs/card-rooms.png" width="300" alt="Map card with two rooms selected for cleaning">
 </p>
+<p align="center">
+  <img src="docs/card-zone.png" width="300" alt="Map card in zone mode: a rectangle drawn on the plan, no-mop zone and virtual wall">&nbsp;&nbsp;
+  <img src="docs/card-dark.png" width="300" alt="Map card in a dark theme">
+</p>
 
 *Preview rendered with a fictional flat; the card draws the outlines your robot reports.*
 
@@ -103,7 +130,6 @@ yeedi robots only send the outline of their rooms now and then, mostly while cle
 ## Known limitations
 
 - Only the yeedi vac max has been tested. Other models may expose different settings or report their map differently.
-
 - Room names are the generic ones reported by the robot (Living room, Bedroom…). Custom names from the yeedi app are not available through the cloud API.
 - No map image (walls and floor) as in the yeedi app: the card draws the outline of the rooms reported by the robot.
 - The robot does not report the mop-only setting: the integration keeps the last one set from Home Assistant. Changing the suction level in the yeedi app turns mop only off in Home Assistant.

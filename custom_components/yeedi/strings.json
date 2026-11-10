@@ -48,6 +48,17 @@
           "max": "Max",
           "max_plus": "Max+"
         }
+      },
+      "auto_empty": {
+        "name": "Auto-empty",
+        "state": {
+          "off": "Off",
+          "auto": "Automatic",
+          "smart": "Smart",
+          "min_10": "Every 10 minutes",
+          "min_15": "Every 15 minutes",
+          "min_25": "Every 25 minutes"
+        }
       }
     },
     "sensor": {
@@ -77,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Side brush lifespan"
+      },
+      "station_state": {
+        "name": "Station",
+        "state": {
+          "idle": "Idle",
+          "emptying_dustbin": "Emptying the dustbin",
+          "washing_mop": "Washing the mop",
+          "drying_mop": "Drying the mop"
+        }
       }
     },
     "vacuum": {
@@ -91,6 +111,42 @@
             }
           }
         }
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Relocate"
+      },
+      "clear_map": {
+        "name": "Clear the map"
+      },
+      "station_empty_dustbin": {
+        "name": "Empty the dustbin"
+      },
+      "reset_lifespan_brush": {
+        "name": "Reset main brush lifespan"
+      },
+      "reset_lifespan_filter": {
+        "name": "Reset filter lifespan"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Reset side brush lifespan"
+      }
+    },
+    "switch": {
+      "continuous_cleaning": {
+        "name": "Continuous cleaning"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Carpet boost"
+      },
+      "advanced_mode": {
+        "name": "Advanced mode"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
       }
     }
   },
@@ -112,6 +168,39 @@
     },
     "rooms_required": {
       "message": "The spot_area command needs a 'rooms' parameter."
+    },
+    "unknown_room": {
+      "message": "Unknown room \"{room}\": use a room number or a name shown on the map."
+    }
+  },
+  "services": {
+    "clean_rooms": {
+      "name": "Clean rooms",
+      "description": "Clean the given rooms, in the given order.",
+      "fields": {
+        "rooms": {
+          "name": "Rooms",
+          "description": "Room numbers or names, e.g. [\"Kitchen\", 3]."
+        },
+        "cleanings": {
+          "name": "Passes",
+          "description": "Number of passes (1 or 2)."
+        }
+      }
+    },
+    "clean_zone": {
+      "name": "Clean a zone",
+      "description": "Clean a rectangle of the map.",
+      "fields": {
+        "zone": {
+          "name": "Zone",
+          "description": "Corners in metres from the map origin: [x1, y1, x2, y2]."
+        },
+        "cleanings": {
+          "name": "Passes",
+          "description": "Number of passes (1 or 2)."
+        }
+      }
     }
   }
 }

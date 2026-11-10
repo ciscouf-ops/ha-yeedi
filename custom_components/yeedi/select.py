@@ -1,4 +1,4 @@
-"""Select entities for Yeedi robots: water level."""
+"""Select entities for Yeedi robots: water level, suction power, auto-empty frequency."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import Any
 from deebot_client.capabilities import CapabilitySetTypes
 from deebot_client.device import Device
 from deebot_client.events import Event
+from deebot_client.events.auto_empty import AutoEmptyEvent, Frequency
 from deebot_client.events.water_info import WaterAmountEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -35,6 +36,8 @@ class YeediSelectEntityDescription[EventT: Event](
 
     current_option_fn: Callable[[EventT], str | None]
     options_fn: Callable[[CapabilitySetTypes], list[str]]
+    # How an option becomes the arguments of the set command (default: the option itself).
+    set_args_fn: Callable[[str], tuple] = lambda option: (option,)
 
 
 def _name_key(value: Any) -> str:
@@ -48,6 +51,18 @@ ENTITY_DESCRIPTIONS: tuple[YeediSelectEntityDescription, ...] = (
         capability_fn=lambda caps: caps.water.amount if caps.water else None,
         current_option_fn=lambda e: _name_key(e.value),
         options_fn=lambda cap: [_name_key(t) for t in cap.types],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    # Auto-empty: "off", or one of the frequencies the station offers.
+    YeediSelectEntityDescription[AutoEmptyEvent](
+        key="auto_empty",
+        translation_key="auto_empty",
+        capability_fn=lambda caps: caps.station.auto_empty if caps.station else None,
+        current_option_fn=lambda e: (
+            _name_key(e.frequency) if e.enabled and e.frequency else "off"
+        ),
+        options_fn=lambda cap: ["off", *(_name_key(t) for t in cap.types)],
+        set_args_fn=lambda option: (False, None) if option == "off" else (True, Frequency[option.upper()]),
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -99,7 +114,9 @@ class YeediSelect(YeediDescriptionEntity[CapabilitySetTypes], SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the setting."""
-        await self._device.execute_command(self._capability.set(option))
+        await self._device.execute_command(
+            self._capability.set(*self.entity_description.set_args_fn(option))
+        )
 
 
 class YeediSuctionSelect(YeediEntity[YeediSuction], SelectEntity, RestoreEntity):

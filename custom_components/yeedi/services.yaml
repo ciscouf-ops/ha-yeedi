@@ -1,0 +1,37 @@
+clean_rooms:
+  target:
+    entity:
+      domain: vacuum
+      integration: yeedi
+  fields:
+    rooms:
+      required: true
+      example: '["Kitchen", 3]'
+      selector:
+        object:
+    cleanings:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 2
+          mode: box
+
+clean_zone:
+  target:
+    entity:
+      domain: vacuum
+      integration: yeedi
+  fields:
+    zone:
+      required: true
+      example: "[-1.5, 0.2, 1.0, 2.4]"
+      selector:
+        object:
+    cleanings:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 2
+          mode: box
