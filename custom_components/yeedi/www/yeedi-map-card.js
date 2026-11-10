@@ -13,7 +13,7 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.4';
+const CARD_VERSION = '0.2.5';
 
 const TEXT = {
   en: {
@@ -136,11 +136,14 @@ class YeediMapCard extends HTMLElement {
     return [r.battery, r.water, r.suction].map((e) => (e ? this._hass.states[e]?.state : '')).join('|');
   }
 
+  // Name of a room: the card's own setting, else the Home Assistant area the room is
+  // associated with (vacuum entity settings), else the name reported by the robot.
   _roomName(room) {
     const custom = this._config.room_names || {};
-    if (custom[room.id] != null) return String(custom[room.id]);
+    if (custom[room.id] != null && String(custom[room.id]).trim()) return String(custom[room.id]);
+    if (room.area_name) return room.area_name;
     const { rooms } = this._t();
-    return rooms[room.name] || room.name || `#${room.id}`;
+    return rooms[room.robot_name || room.name] || room.robot_name || room.name || `#${room.id}`;
   }
 
   // ------------------------------------------------------------- actions
@@ -396,9 +399,9 @@ const STYLE = `
 
 const EDITOR_TEXT = {
   en: { title: 'Title', controls: 'Buttons and settings under the map', rooms: 'Room names',
-    rooms_help: 'Leave empty to keep the name reported by the robot.', waiting: 'Waiting for the robot’s rooms…' },
+    rooms_help: 'Leave empty to use the area the room is associated with in Home Assistant (vacuum entity settings), else the name reported by the robot.', waiting: 'Waiting for the robot’s rooms…' },
   fr: { title: 'Titre', controls: 'Boutons et réglages sous le plan', rooms: 'Noms des pièces',
-    rooms_help: 'Laisser vide pour garder le nom donné par le robot.', waiting: 'En attente des pièces du robot…' },
+    rooms_help: 'Laisser vide pour utiliser la pièce associée dans Home Assistant (paramètres de l’entité aspirateur), sinon le nom donné par le robot.', waiting: 'En attente des pièces du robot…' },
 };
 
 class YeediMapCardEditor extends HTMLElement {
@@ -479,7 +482,7 @@ class YeediMapCardEditor extends HTMLElement {
     this.querySelector('.help').textContent = text.rooms_help;
 
     const names = this._config.room_names || {};
-    const key = JSON.stringify([this._rooms && this._rooms.map((r) => [r.id, r.name]), names]);
+    const key = JSON.stringify([this._rooms && this._rooms.map((r) => [r.id, r.name, r.area_name]), names]);
     if (key === this._listKey) return;
     this._listKey = key;
     this._list.innerHTML = '';
@@ -487,10 +490,11 @@ class YeediMapCardEditor extends HTMLElement {
     for (const room of this._rooms) {
       const row = document.createElement('div'); row.className = 'roomrow';
       const span = document.createElement('span');
-      span.textContent = `${room.id} · ${rooms[room.name] || room.name || '?'}`;
+      const fallback = room.area_name || rooms[room.robot_name || room.name] || room.robot_name || room.name || '?';
+      span.textContent = `${room.id} · ${fallback}`;
       const field = document.createElement('ha-textfield');
       field.value = names[room.id] != null ? String(names[room.id]) : '';
-      field.placeholder = rooms[room.name] || room.name || '';
+      field.placeholder = fallback;
       field.addEventListener('change', () => {
         const next = { ...(this._config.room_names || {}) };
         const v = field.value.trim();
