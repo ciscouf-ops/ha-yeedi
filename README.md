@@ -67,7 +67,7 @@ The integration ships its own Lovelace card, loaded automatically (no extra reso
   <img src="docs/card-rooms.png" width="420" alt="Map card with two rooms selected for cleaning">
 </p>
 
-*Preview rendered with sample room outlines; the card draws the outlines your robot reports.*
+*Preview rendered with a fictional flat; the card draws the outlines your robot reports.*
 
 
 ```yaml
