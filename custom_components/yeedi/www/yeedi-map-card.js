@@ -20,7 +20,7 @@ const TEXT = {
     clean: 'Clean', clean_rooms: (n) => `Clean ${n} room${n > 1 ? 's' : ''}`, pause: 'Pause',
     resume: 'Resume', dock: 'Dock', clear: 'Clear', no_map: 'Waiting for the map…',
     no_outline: 'The robot did not send the outline of the rooms: choose them below.',
-    not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water',
+    not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water', mop_only_short: 'Off',
     states: { cleaning: 'Cleaning', returning: 'Returning to the dock', docked: 'Docked',
       idle: 'Idle', paused: 'Paused', error: 'Error' },
     since: 'started at',
@@ -29,7 +29,7 @@ const TEXT = {
     clean: 'Nettoyer', clean_rooms: (n) => `Nettoyer ${n} pièce${n > 1 ? 's' : ''}`, pause: 'Pause',
     resume: 'Reprendre', dock: 'Base', clear: 'Effacer', no_map: 'En attente de la carte…',
     no_outline: "Le robot n'a pas envoyé le contour des pièces : choisis-les ci-dessous.",
-    not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau',
+    not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau', mop_only_short: 'Coupée',
     states: { cleaning: 'Nettoyage', returning: 'Retour à la base', docked: 'Sur la base',
       idle: 'À l’arrêt', paused: 'En pause', error: 'Erreur' },
     since: 'commencé à',
@@ -317,8 +317,10 @@ class YeediMapCard extends HTMLElement {
     const mopChip = fanList.includes('mop_only')
       ? `<button class="gicon${mopOn ? ' on' : ''}" data-fan="${esc(iconTarget)}" title="${esc(fanLabel('mop_only'))}" aria-label="${esc(fanLabel('mop_only'))}"><ha-icon icon="${mopOn ? 'mdi:fan-off' : 'mdi:fan'}"></ha-icon></button>`
       : '<ha-icon icon="mdi:fan"></ha-icon>';
+    // Under the row title, "mop only" is too long: show a short word instead.
+    const fanShort = (f) => (f === 'mop_only' ? text.mop_only_short : fanLabel(f));
     const fan = fanList.length
-      ? this._levelRow(text.fan, mopChip, fanList.filter((f) => f !== 'mop_only'), fanNow, fanLabel, 'data-fan') : '';
+      ? this._levelRow(text.fan, mopChip, fanList.filter((f) => f !== 'mop_only'), fanNow, fanShort, 'data-fan') : '';
 
     const wst = related.water ? this._hass.states[related.water] : null;
     const waterLabel = (o) => (this._hass.formatEntityState ? this._hass.formatEntityState(wst, o) : o);
