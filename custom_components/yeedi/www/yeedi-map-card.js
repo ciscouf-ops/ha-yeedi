@@ -13,7 +13,7 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.2';
+const CARD_VERSION = '0.2.4';
 
 const TEXT = {
   en: {
@@ -44,6 +44,12 @@ const ROOM_NAMES = {
     'Kids room': 'Chambre d’enfant', 'Sunroom': 'Véranda', 'Corridor': 'Couloir',
     'Balcony': 'Balcon', 'Gym': 'Salle de sport' },
 };
+
+// Icons for the suction and water levels (fallbacks by position: _0, _1, …).
+const FAN_ICONS = { mop_only: 'mdi:fan-off', quiet: 'mdi:fan-minus', normal: 'mdi:fan-speed-1', max: 'mdi:fan-speed-2', max_plus: 'mdi:fan-speed-3',
+  _0: 'mdi:fan-speed-1', _1: 'mdi:fan-speed-2', _2: 'mdi:fan-speed-3', _3: 'mdi:fan-plus' };
+const WATER_ICONS = { low: 'mdi:water-minus', medium: 'mdi:water', high: 'mdi:water-plus', ultrahigh: 'mdi:waves',
+  _0: 'mdi:water-minus', _1: 'mdi:water', _2: 'mdi:water-plus', _3: 'mdi:waves' };
 
 const PALETTE = ['#4f8edc', '#e0a04a', '#5bb07a', '#c46fb8', '#d96a5c', '#4fb3bf', '#9a8bd6', '#b5a046'];
 
@@ -276,26 +282,34 @@ class YeediMapCard extends HTMLElement {
     const clear = n && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
     const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
 
-    // Suction: the "suction" select when the integration provides it (its labels are
-    // translated), otherwise the fan speeds of the vacuum entity.
+    // Suction and water: one icon per level (the label is the tooltip), the current
+    // level written next to the row title.
     const sst = related.suction ? this._hass.states[related.suction] : null;
     const fanList = sst ? sst.attributes.options || [] : st.attributes.fan_speed_list || [];
     const fanNow = sst ? sst.state : st.attributes.fan_speed;
-    const fan = fanList.length ? `<div class="row"><span class="lbl">${text.fan}</span><div class="chips">${fanList.map((f) => {
-      let label = f;
-      if (sst && this._hass.formatEntityState) label = this._hass.formatEntityState(sst, f);
-      else if (this._hass.formatEntityAttributeValue) label = this._hass.formatEntityAttributeValue(st, 'fan_speed', f);
-      const icon = f === 'mop_only' ? '<ha-icon icon="mdi:fan-off"></ha-icon>' : '';
-      return `<button class="chip${fanNow === f ? ' on' : ''}" data-fan="${f}">${icon}${esc(label)}</button>`;
-    }).join('')}</div></div>` : '';
+    const fanLabel = (f) => {
+      if (sst && this._hass.formatEntityState) return this._hass.formatEntityState(sst, f);
+      if (this._hass.formatEntityAttributeValue) return this._hass.formatEntityAttributeValue(st, 'fan_speed', f);
+      return f;
+    };
+    const fan = fanList.length ? this._iconRow(text.fan, fanList, fanNow, fanLabel, FAN_ICONS, 'data-fan') : '';
 
     const wst = related.water ? this._hass.states[related.water] : null;
-    const water = wst && wst.attributes.options ? `<div class="row"><span class="lbl">${text.water}</span><div class="chips">${wst.attributes.options.map((o) => {
-      const label = this._hass.formatEntityState ? this._hass.formatEntityState(wst, o) : o;
-      return `<button class="chip${wst.state === o ? ' on' : ''}" data-water="${o}">${esc(label)}</button>`;
-    }).join('')}</div></div>` : '';
+    const waterLabel = (o) => (this._hass.formatEntityState ? this._hass.formatEntityState(wst, o) : o);
+    const water = wst && wst.attributes.options
+      ? this._iconRow(text.water, wst.attributes.options, wst.state, waterLabel, WATER_ICONS, 'data-water') : '';
 
     return `<div class="actions">${main}${clear}${dock}</div>${fan}${water}`;
+  }
+
+  _iconRow(title, options, current, labelOf, icons, attr) {
+    const chips = options.map((o, i) => {
+      const label = labelOf(o);
+      const icon = icons[o] || icons[`_${i}`] || 'mdi:circle-small';
+      return `<button class="chip icon${current === o ? ' on' : ''}" ${attr}="${esc(o)}" title="${esc(label)}" aria-label="${esc(label)}"><ha-icon icon="${icon}"></ha-icon></button>`;
+    }).join('');
+    const now = current != null ? labelOf(current) : '';
+    return `<div class="row"><span class="lbl">${esc(title)}<small>${esc(now)}</small></span><div class="chips">${chips}</div></div>`;
   }
 
   _onClick(ev) {
@@ -360,7 +374,8 @@ const STYLE = `
   .btn ha-icon { --mdc-icon-size: 18px; }
   .row { display: flex; align-items: center; gap: 10px; padding: 4px 0 4px 16px; }
   .row:last-child { padding-bottom: 14px; }
-  .lbl { font-size: 12px; color: var(--secondary-text-color); min-width: 64px; flex: 0 0 auto; }
+  .lbl { font-size: 12px; color: var(--secondary-text-color); min-width: 84px; flex: 0 0 auto; display: flex; flex-direction: column; line-height: 1.2; }
+  .lbl small { font-size: 12px; color: var(--primary-text-color); font-weight: 500; }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px 0; }
   .row .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-right: 16px; }
   .row .chips::-webkit-scrollbar { display: none; }
@@ -371,6 +386,9 @@ const STYLE = `
   .chip.on { background: color-mix(in srgb, var(--primary-color) 18%, transparent); border-color: var(--primary-color); }
   .chip:disabled { opacity: .5; cursor: default; }
   .chip ha-icon { --mdc-icon-size: 14px; }
+  .chip.icon { padding: 5px 9px; border-radius: 16px; }
+  .chip.icon ha-icon { --mdc-icon-size: 18px; color: var(--secondary-text-color); }
+  .chip.icon.on ha-icon { color: var(--primary-color); }
 `;
 
 
