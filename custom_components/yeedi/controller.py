@@ -186,7 +186,7 @@ class YeediController:
         for unsubscribe in self._unsubscribe_device_events:
             unsubscribe()
         for map_data in self.map_data.values():
-            map_data.stop()
+            await map_data.async_stop()
         for suction in self.suction.values():
             suction.stop()
         for device in self._devices:

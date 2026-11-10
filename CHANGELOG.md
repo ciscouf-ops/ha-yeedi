@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.2.6
+- Test suite (pytest) run in CI; a segment id without a room number is ignored; the map is saved immediately when the integration unloads.
 - German, Spanish and Italian translations (integration and card).
 - Map card: battery icon next to the percentage.
 - Map card: last cleaning (duration, area, when) under the settings; a bogus robot position no longer squashes the map.

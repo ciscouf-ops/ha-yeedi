@@ -124,7 +124,7 @@ class YeediMapData:
         ]
 
     def stop(self) -> None:
-        """Unsubscribe from everything."""
+        """Unsubscribe from everything (a pending save is written with a short delay)."""
         for unsubscribe in self._unsubscribers:
             unsubscribe()
         self._unsubscribers.clear()
@@ -137,6 +137,16 @@ class YeediMapData:
         if self._save_handle is not None:
             self._save_handle.cancel()
             self._save_now()
+
+    async def async_stop(self) -> None:
+        """Unsubscribe from everything and write a pending save right away."""
+        pending = self._save_handle is not None
+        if pending:
+            self._save_handle.cancel()
+            self._save_handle = None
+        self.stop()
+        if pending:
+            await self._store.async_save(self._to_save())
 
     # ---------------------------------------------------------------- events
 
@@ -255,20 +265,20 @@ class YeediMapData:
         if self._save_handle is None:
             self._save_handle = self._hass.loop.call_later(5, self._save_now)
 
+    def _to_save(self) -> dict[str, Any]:
+        return {
+            "map_id": self._map_id,
+            "dock": self._dock,
+            "rooms": [
+                {"id": r["id"], "name": r.get("name", ""), "outline": r["outline"]}
+                for r in self._rooms.values()
+            ],
+        }
+
     @callback
     def _save_now(self) -> None:
         self._save_handle = None
-        self._store.async_delay_save(
-            lambda: {
-                "map_id": self._map_id,
-                "dock": self._dock,
-                "rooms": [
-                    {"id": r["id"], "name": r.get("name", ""), "outline": r["outline"]}
-                    for r in self._rooms.values()
-                ],
-            },
-            1,
-        )
+        self._store.async_delay_save(self._to_save, 1)
 
     # ------------------------------------------------------------- listeners
 

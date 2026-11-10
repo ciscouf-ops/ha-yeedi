@@ -242,9 +242,12 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
 
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the given rooms, in the order given."""
-        # segment id = "<map id>_<room id>"; the room id never contains "_".
-        room_ids = [cid.rpartition(_SEGMENTS_SEPARATOR)[2] for cid in segment_ids]
-        room_ids = [r for r in room_ids if r != ""]
+        # segment id = "<map id>_<room id>"; the room id is a number.
+        room_ids = []
+        for cid in segment_ids:
+            _, sep, room_id = str(cid).rpartition(_SEGMENTS_SEPARATOR)
+            if sep and room_id.isdigit():
+                room_ids.append(room_id)
         if not room_ids:
             _LOGGER.warning("No valid room to clean in %s", segment_ids)
             return
