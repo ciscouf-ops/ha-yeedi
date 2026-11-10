@@ -384,10 +384,16 @@ class YeediMapCard extends HTMLElement {
     const { text } = this._t();
     const paused = st.state === 'paused';
     const n = this._selected.length;
+    // One room: name it ("Clean Kitchen"); several: count them.
+    let roomsLabel = n ? text.clean_rooms(n) : text.clean;
+    if (n === 1) {
+      const room = (this._data?.rooms || []).find((r) => r.id === this._selected[0]);
+      if (room) roomsLabel = `${text.clean} ${esc(this._roomName(room))}`;
+    }
     let main;
     if (moving) main = `<button class="btn main" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${text.pause}</button>`;
     else if (paused) main = `<button class="btn main" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${text.resume}</button>`;
-    else main = `<button class="btn main" data-act="clean"><ha-icon icon="mdi:play"></ha-icon>${this._zone ? text.clean_zone : n ? text.clean_rooms(n) : text.clean}</button>`;
+    else main = `<button class="btn main" data-act="clean"><ha-icon icon="mdi:play"></ha-icon>${this._zone ? text.clean_zone : roomsLabel}</button>`;
     const clear = (n || this._zone) && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
     const hasMap = this._data && this._data.rooms && this._data.rooms.some((r) => r.outline && r.outline.length > 2);
     const zone = !moving && !paused && hasMap && !n
