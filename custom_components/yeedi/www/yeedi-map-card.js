@@ -17,7 +17,7 @@ const CARD_VERSION = '0.2.8';
 
 const TEXT = {
   en: {
-    clean: 'Clean', clean_rooms: (n) => `Clean ${n} room${n > 1 ? 's' : ''}`, pause: 'Pause',
+    clean: 'Clean', clean_all: 'Clean everything', clean_rooms: (n) => `Clean ${n} room${n > 1 ? 's' : ''}`, pause: 'Pause',
     resume: 'Resume', dock: 'Dock', clear: 'Clear', last_clean: 'Last cleaning', zone: 'Zone', clean_zone: 'Clean the zone', zone_help: 'Draw a rectangle on the map.', no_map: 'Waiting for the map…',
     no_outline: 'The robot did not send the outline of the rooms: choose them below.',
     not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water', mop_only_short: 'Off',
@@ -26,7 +26,7 @@ const TEXT = {
     since: 'started at', end_at: 'ends around', left: (n) => `~${n} min left`,
   },
   fr: {
-    clean: 'Nettoyer', clean_rooms: (n) => `Nettoyer ${n} pièce${n > 1 ? 's' : ''}`, pause: 'Pause',
+    clean: 'Nettoyer', clean_all: 'Nettoyer tout', clean_rooms: (n) => `Nettoyer ${n} pièce${n > 1 ? 's' : ''}`, pause: 'Pause',
     resume: 'Reprendre', dock: 'Base', clear: 'Effacer', last_clean: 'Dernier nettoyage', zone: 'Zone', clean_zone: 'Nettoyer la zone', zone_help: 'Trace un rectangle sur le plan.', no_map: 'En attente de la carte…',
     no_outline: "Le robot n'a pas envoyé le contour des pièces : choisis-les ci-dessous.",
     not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau', mop_only_short: 'Coupée',
@@ -35,7 +35,7 @@ const TEXT = {
     since: 'commencé à', end_at: 'fin vers', left: (n) => `reste ~${n} min`,
   },
   de: {
-    clean: 'Reinigen', clean_rooms: (n) => `${n} ${n > 1 ? 'Räume' : 'Raum'} reinigen`, pause: 'Pause',
+    clean: 'Reinigen', clean_all: 'Alles reinigen', clean_rooms: (n) => `${n} ${n > 1 ? 'Räume' : 'Raum'} reinigen`, pause: 'Pause',
     resume: 'Fortsetzen', dock: 'Station', clear: 'Zurücksetzen', last_clean: 'Letzte Reinigung', zone: 'Zone', clean_zone: 'Zone reinigen', zone_help: 'Ziehe ein Rechteck auf der Karte.', no_map: 'Warte auf die Karte…',
     no_outline: 'Der Roboter hat keine Raumumrisse gesendet: wähle die Räume unten aus.',
     not_yeedi: 'Diese Entität ist kein yeedi-Staubsauger.', fan: 'Saugkraft', water: 'Wasser', mop_only_short: 'Aus',
@@ -44,7 +44,7 @@ const TEXT = {
     since: 'gestartet um', end_at: 'Ende gegen', left: (n) => `noch ~${n} Min.`,
   },
   es: {
-    clean: 'Limpiar', clean_rooms: (n) => `Limpiar ${n} habitaci${n > 1 ? 'ones' : 'ón'}`, pause: 'Pausa',
+    clean: 'Limpiar', clean_all: 'Limpiar todo', clean_rooms: (n) => `Limpiar ${n} habitaci${n > 1 ? 'ones' : 'ón'}`, pause: 'Pausa',
     resume: 'Reanudar', dock: 'Base', clear: 'Borrar', last_clean: 'Última limpieza', zone: 'Zona', clean_zone: 'Limpiar la zona', zone_help: 'Dibuja un rectángulo en el mapa.', no_map: 'Esperando el mapa…',
     no_outline: 'El robot no envió el contorno de las habitaciones: elígelas abajo.',
     not_yeedi: 'Esta entidad no es una aspiradora yeedi.', fan: 'Succión', water: 'Agua', mop_only_short: 'Apagada',
@@ -53,7 +53,7 @@ const TEXT = {
     since: 'iniciada a las', end_at: 'fin hacia las', left: (n) => `quedan ~${n} min`,
   },
   it: {
-    clean: 'Pulisci', clean_rooms: (n) => `Pulisci ${n} stanz${n > 1 ? 'e' : 'a'}`, pause: 'Pausa',
+    clean: 'Pulisci', clean_all: 'Pulisci tutto', clean_rooms: (n) => `Pulisci ${n} stanz${n > 1 ? 'e' : 'a'}`, pause: 'Pausa',
     resume: 'Riprendi', dock: 'Base', clear: 'Annulla', last_clean: 'Ultima pulizia', zone: 'Zona', clean_zone: 'Pulisci la zona', zone_help: 'Disegna un rettangolo sulla mappa.', no_map: 'In attesa della mappa…',
     no_outline: 'Il robot non ha inviato il contorno delle stanze: scegline qui sotto.',
     not_yeedi: 'Questa entità non è un aspirapolvere yeedi.', fan: 'Aspirazione', water: 'Acqua', mop_only_short: 'Spenta',
@@ -533,23 +533,25 @@ class YeediMapCard extends HTMLElement {
     const paused = st.state === 'paused';
     const n = this._selected.length;
     // One room: name it ("Clean Kitchen"); several: count them.
-    let roomsLabel = n ? text.clean_rooms(n) : text.clean;
+    let roomsLabel = n ? text.clean_rooms(n) : text.clean_all;
     if (n === 1) {
       const room = (this._data?.rooms || []).find((r) => r.id === this._selected[0]);
       if (room) roomsLabel = `${text.clean} ${esc(this._roomName(room))}`;
     }
     let main;
     const pending = this._isPending();
-    const dis = pending ? ' disabled' : '';
+    // In zone mode, nothing to start until a rectangle is drawn.
+    const noZone = this._zoneMode && !this._zone && !moving && !paused;
+    const dis = pending || noZone ? ' disabled' : '';
     const icon = (i) => `<ha-icon icon="${pending ? 'mdi:loading' : i}"${pending ? ' class="spin"' : ''}></ha-icon>`;
     if (moving) main = `<button class="btn main" data-act="pause"${dis}>${icon('mdi:pause')}${text.pause}</button>`;
     else if (paused) main = `<button class="btn main" data-act="resume"${dis}>${icon('mdi:play')}${text.resume}</button>`;
-    else main = `<button class="btn main" data-act="clean"${dis}>${icon('mdi:play')}${this._zone ? text.clean_zone : roomsLabel}</button>`;
+    else main = `<button class="btn main" data-act="clean"${dis}>${icon('mdi:play')}${this._zoneMode ? text.clean_zone : roomsLabel}</button>`;
     const clear = (n || this._zone) && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
     const hasMap = this._data && this._data.rooms && this._data.rooms.some((r) => r.outline && r.outline.length > 2);
     const zone = !moving && !paused && hasMap && !n
       ? `<button class="btn flat${this._zoneMode ? ' on' : ''}" data-act="zone" title="${esc(text.zone_help)}"><ha-icon icon="mdi:selection-drag"></ha-icon>${text.zone}</button>` : '';
-    const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"${dis}><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
+    const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"${pending ? ' disabled' : ''}><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
 
     // Suction and water: one icon per level (the label is the tooltip), the current
     // level written next to the row title.
