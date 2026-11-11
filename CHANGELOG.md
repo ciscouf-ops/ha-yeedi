@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9 (unreleased)
+
+### Map card
+- The surface of a drawn zone is shown in its middle, counting only the floor inside the rooms (not the empty space around the map).
+- The zone or the rooms sent to the robot stay highlighted on the map until it is back on the dock.
+
 ## 0.2.8
 - **Fix: zone cleaning (and `clean_rooms` with two-digit room numbers) sent garbage to the robot.** deebot-client's `CleanArea` joins the coordinates itself, and the integration handed it a string, which was split character by character: the robot received a rectangle like `0,1,3,6` instead of the zone drawn, cleaned a few strips near the dock and went back. Lists are passed now; `custom_area` checks it gets four values.
 - New sensors during a cleaning: current room, remaining time and estimated end. The integration learns how long each room takes (kept in storage) and the order of a full cleaning; the map card shows the room, the end time and a progress bar under the controls.

@@ -90,6 +90,16 @@ const FAN_ICONS = { mop_only: 'mdi:fan-off', quiet: 'mdi:fan-minus', normal: 'md
 const WATER_ICONS = { low: 'mdi:water-minus', medium: 'mdi:water', high: 'mdi:water-plus', ultrahigh: 'mdi:waves',
   _0: 'mdi:water-minus', _1: 'mdi:water', _2: 'mdi:water-plus', _3: 'mdi:waves' };
 
+// Even-odd test of a point against a polygon given as [[x, y], ...].
+function pointInPolygon(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
 const MIN_ZONE_MM = 1000; // smallest side of a zone sent to the robot
 const PALETTE = ['#4f8edc', '#e0a04a', '#5bb07a', '#c46fb8', '#d96a5c', '#4fb3bf', '#9a8bd6', '#b5a046'];
 
@@ -170,7 +180,7 @@ class YeediMapCard extends HTMLElement {
     const X = (x) => x - this._geo.x0, Y = (y) => this._geo.y1 - y;
     const rx = X(d.robot.x), ry = Y(d.robot.y);
     if (rx < 0 || ry < 0 || rx > vb.width || ry > vb.height) return false; // map must grow: full render
-    const key = JSON.stringify([d.map_id, rooms.map((r) => [r.id, r.outline]), d.dock, d.no_mop, d.walls, this._geo.x0, this._geo.y1, true, this._zoneMode, this._zone, this._selected]);
+    const key = JSON.stringify([d.map_id, rooms.map((r) => [r.id, r.outline]), d.dock, d.no_mop, d.walls, this._geo.x0, this._geo.y1, true, this._zoneMode, this._zone, this._selected, this._active]);
     if (key !== this._mapKey) return false;
     const g = svg.querySelector('.robotg');
     if (!g) return false;
@@ -251,6 +261,15 @@ class YeediMapCard extends HTMLElement {
     this._render();
   }
 
+  // What the robot was sent to clean from this card, shown on the map until it is
+  // back on the dock (or idle again). Forgotten as soon as the robot is docked.
+  _activeJob() {
+    if (!this._active) return null;
+    const st = this._hass?.states?.[this._config.entity]?.state;
+    if ((st === 'docked' || st === 'idle') && !this._isPending()) { this._active = null; return null; }
+    return this._active;
+  }
+
   _isPending() {
     if (!this._pending) return false;
     const st = this._hass.states[this._config.entity];
@@ -263,6 +282,8 @@ class YeediMapCard extends HTMLElement {
       const z = this._zone;
       const c = [Math.min(z.x1, z.x2), Math.min(z.y1, z.y2), Math.max(z.x1, z.x2), Math.max(z.y1, z.y2)].map((v) => Math.round(v));
       this._call('send_command', { command: 'custom_area', params: { coordinates: c.join(','), cleanings: 1 } });
+      // Keep the zone on the map while the robot cleans it (see _activeJob).
+      this._active = { zone: z, rooms: [] };
       this._zone = null; this._zoneMode = false;
       this._wait();
       return;
@@ -272,6 +293,7 @@ class YeediMapCard extends HTMLElement {
       command: 'spot_area',
       params: { rooms: this._selected.join(','), cleanings: 1 },
     });
+    this._active = { zone: null, rooms: this._selected.slice() };
     this._selected = [];
     this._wait();
   }
@@ -458,7 +480,7 @@ class YeediMapCard extends HTMLElement {
       });
       // Selected rooms get a coloured outline on top of the others.
       if (hasSel) rooms.forEach((room) => {
-        if (this._selected.includes(room.id)) s += `<path class="selring" data-room="${room.id}" d="${paths[room.id]}"/>`;
+        if (this._selected.includes(room.id) || (job && job.rooms.includes(room.id))) s += `<path class="selring" data-room="${room.id}" d="${paths[room.id]}"/>`;
       });
       if (moving && d.trace && d.trace.length > 1) {
         if (rooms.length) s += `<clipPath id="inside">${rooms.map((x) => `<path d="${paths[x.id]}"/>`).join('')}</clipPath>`;
@@ -474,10 +496,12 @@ class YeediMapCard extends HTMLElement {
         (d.no_mop || []).forEach((z) => { if (z.points.length > 1) s += `<polygon class="nomop" points="${P(z.points)}"/>`; });
         (d.walls || []).forEach((w) => { if (w.points.length > 1) s += `<polyline class="wall" points="${P(w.points)}"/>`; });
       }
-      if (this._zone) {
-        const z = this._zone;
+      const job = this._activeJob();
+      const shownZone = this._zone || (job && job.zone);
+      if (shownZone) {
+        const z = shownZone;
         const zx = X(Math.min(z.x1, z.x2)), zy = Y(Math.max(z.y1, z.y2));
-        s += `<rect class="zone" x="${zx.toFixed(0)}" y="${zy.toFixed(0)}" width="${Math.abs(z.x2 - z.x1).toFixed(0)}" height="${Math.abs(z.y2 - z.y1).toFixed(0)}"/>`;
+        s += `<rect class="zone${this._zone ? '' : ' active'}" x="${zx.toFixed(0)}" y="${zy.toFixed(0)}" width="${Math.abs(z.x2 - z.x1).toFixed(0)}" height="${Math.abs(z.y2 - z.y1).toFixed(0)}"/>`;
       }
       rooms.forEach((room) => {
         const rx = room.outline.map((p) => p[0]), ry = room.outline.map((p) => p[1]);
@@ -495,6 +519,11 @@ class YeediMapCard extends HTMLElement {
           s += block(cy);
         }
       });
+      if (shownZone) {
+        // Surface of the zone, in its middle (on top of the room names).
+        const z = shownZone;
+        s += `<text class="zonetxt" x="${X((z.x1 + z.x2) / 2).toFixed(0)}" y="${Y((z.y1 + z.y2) / 2).toFixed(0)}" font-size="${Math.round(font * 1.1)}">${this._zoneArea(z)}</text>`;
+      }
       if (d.dock) {
         s += `<g transform="translate(${X(d.dock.x)},${Y(d.dock.y)})"><g transform="scale(${(u / 75).toFixed(3)})"><rect x="-190" y="-190" width="380" height="380" rx="90" class="dock"/>
           <path transform="translate(-144,-144) scale(12)" fill="#fff" d="M12 3L2 12h3v8h14v-8h3L12 3z"/></g></g>`;
@@ -510,7 +539,7 @@ class YeediMapCard extends HTMLElement {
           ${moving ? '<circle r="320" class="halo"/>' : ''}
           <circle r="170" class="robot"/><line x1="0" y1="0" x2="${hx.toFixed(0)}" y2="${hy.toFixed(0)}" class="heading"/></g>`;
       }
-      this._mapKey = JSON.stringify([d.map_id, rooms.map((r) => [r.id, r.outline]), d.dock, d.no_mop, d.walls, x0, y1, moving, this._zoneMode, this._zone, this._selected]);
+      this._mapKey = JSON.stringify([d.map_id, rooms.map((r) => [r.id, r.outline]), d.dock, d.no_mop, d.walls, x0, y1, moving, this._zoneMode, this._zone, this._selected, this._active]);
       this._scale = (u / 75).toFixed(3);
       s += '</svg>';
       svg = `<div class="map">${s}</div>`;
@@ -690,6 +719,28 @@ class YeediMapCard extends HTMLElement {
     this._render();
   }
 
+  // Floor surface of the drawn zone, e.g. "8 m²": only the part of the rectangle that
+  // lies inside a room counts (the robot cannot clean outside the map). Sampled on a
+  // 10 cm grid; cached until the zone or the map changes.
+  _zoneArea(z) {
+    const rooms = ((this._data && this._data.rooms) || []).filter((x) => x.outline && x.outline.length > 2);
+    const key = JSON.stringify([z, rooms.map((r) => r.outline)]);
+    if (this._areaKey !== key) {
+      const x0 = Math.min(z.x1, z.x2), x1 = Math.max(z.x1, z.x2), y0 = Math.min(z.y1, z.y2), y1 = Math.max(z.y1, z.y2);
+      const STEP = 100;
+      let cells = 0;
+      for (let x = x0 + STEP / 2; x < x1; x += STEP) {
+        for (let y = y0 + STEP / 2; y < y1; y += STEP) {
+          if (rooms.some((r) => pointInPolygon(x, y, r.outline))) cells++;
+        }
+      }
+      const m2 = (cells * STEP * STEP) / 1e6;
+      this._areaKey = key;
+      this._areaTxt = `${m2 < 10 ? m2.toFixed(1).replace('.0', '') : Math.round(m2)} m²`;
+    }
+    return this._areaTxt;
+  }
+
   _minZone(z, min) {
     const grow = (a, b) => {
       const lo = Math.min(a, b), hi = Math.max(a, b);
@@ -767,6 +818,7 @@ const STYLE = `
   .has-sel .room:not(.sel) { fill-opacity: .12; }
   .selring { fill: none; stroke: var(--primary-color); stroke-width: 55; stroke-linejoin: round; pointer-events: none; }
   .badge { fill: var(--primary-color); stroke: var(--card-background-color, #fff); stroke-width: 25; }
+  .zonetxt { fill: var(--primary-color); font-weight: 600; text-anchor: middle; dominant-baseline: central; pointer-events: none; paint-order: stroke; stroke: var(--card-background-color, #fff); stroke-width: 60; stroke-linejoin: round; }
   .badgetxt { fill: #fff; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
   .name { text-anchor: middle; dominant-baseline: middle; fill: var(--primary-text-color); font-weight: 500;
           paint-order: stroke; stroke: var(--card-background-color, #fff); stroke-width: 40; stroke-linejoin: round; pointer-events: none; }
@@ -780,6 +832,7 @@ const STYLE = `
   .nomop { fill: url(#hatch); stroke: var(--error-color, #db4437); stroke-width: 20; stroke-opacity: .7; pointer-events: none; }
   .wall { fill: none; stroke: var(--error-color, #db4437); stroke-width: 60; stroke-linecap: round; pointer-events: none; }
   .zone { fill: var(--primary-color); fill-opacity: .22; stroke: var(--primary-color); stroke-width: 40; stroke-dasharray: 90 60; pointer-events: none; }
+  .zone.active { fill-opacity: .16; stroke-dasharray: none; stroke-width: 55; }
   svg.zoning { cursor: crosshair; touch-action: none; }
   svg.zoning .room { cursor: crosshair; }
   @keyframes pulse { 50% { opacity: .05; } }
