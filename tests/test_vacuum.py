@@ -21,7 +21,7 @@ def _vacuum():
     caps.device_type = DeviceType.VACUUM
     caps.fan_speed = None
     caps.water = None
-    caps.clean.action.area = lambda mode, value, cleanings: ("area", mode, value, cleanings)
+    caps.clean.action.area = lambda mode, value, cleanings: ("area", mode, ",".join(str(i) for i in value), cleanings)
     caps.custom.set = lambda name, args: ("custom", name, args)
     device = FakeDevice(capabilities=caps)
     vac = YeediVacuum(device, YeediSuction(device))
@@ -50,8 +50,15 @@ async def test_send_command_spot_and_custom_area() -> None:
     device, vac = _vacuum()
     await vac.async_send_command("spot_area", {"rooms": [2, 1], "cleanings": 2})
     assert device.commands[-1] == ("area", CleanMode.SPOT_AREA, "2,1", 2)
-    await vac.async_send_command("custom_area", {"coordinates": "0,0,1000,1000"})
+    # A coordinates string must reach the robot as four numbers, not as characters.
+    await vac.async_send_command("custom_area", {"coordinates": "-350,1050,3000,6000"})
+    assert device.commands[-1] == ("area", CleanMode.CUSTOM_AREA, "-350,1050,3000,6000", 1)
+    await vac.async_send_command("custom_area", {"coordinates": [0, 0, 1000.4, 1000]})
     assert device.commands[-1] == ("area", CleanMode.CUSTOM_AREA, "0,0,1000,1000", 1)
+    with pytest.raises(ServiceValidationError):
+        await vac.async_send_command("custom_area", {"coordinates": "0,0,1000"})
+    await vac.async_send_command("spot_area", {"rooms": "12,3"})
+    assert device.commands[-1] == ("area", CleanMode.SPOT_AREA, "12,3", 1)
     await vac.async_send_command("setMopMute", {"enable": 1})
     assert device.commands[-1] == ("custom", "setMopMute", {"enable": 1})
     with pytest.raises(ServiceValidationError):

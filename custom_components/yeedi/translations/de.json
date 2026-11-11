@@ -171,6 +171,9 @@
     },
     "unknown_room": {
       "message": "Unbekannter Raum „{room}“: Raumnummer oder einen auf der Karte angezeigten Namen verwenden."
+    },
+    "zone_four_values": {
+      "message": "Die Zone braucht vier Werte: x1, y1, x2, y2."
     }
   },
   "services": {

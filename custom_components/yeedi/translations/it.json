@@ -171,6 +171,9 @@
     },
     "unknown_room": {
       "message": "Stanza sconosciuta «{room}»: usare un numero di stanza o un nome mostrato sulla mappa."
+    },
+    "zone_four_values": {
+      "message": "La zona richiede quattro valori: x1, y1, x2, y2."
     }
   },
   "services": {

@@ -171,6 +171,9 @@
     },
     "unknown_room": {
       "message": "Pièce inconnue « {room} » : utilisez un numéro de pièce ou un nom affiché sur la carte."
+    },
+    "zone_four_values": {
+      "message": "La zone doit avoir quatre valeurs : x1, y1, x2, y2."
     }
   },
   "services": {

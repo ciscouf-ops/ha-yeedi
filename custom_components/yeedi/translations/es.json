@@ -171,6 +171,9 @@
     },
     "unknown_room": {
       "message": "Habitación desconocida «{room}»: use un número de habitación o un nombre mostrado en el mapa."
+    },
+    "zone_four_values": {
+      "message": "La zona necesita cuatro valores: x1, y1, x2, y2."
     }
   },
   "services": {

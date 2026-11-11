@@ -258,20 +258,26 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
                     raise ServiceValidationError(
                         translation_domain=DOMAIN, translation_key="rooms_required"
                     )
-                if isinstance(rooms, list):
-                    rooms = ",".join(str(r) for r in rooms)
-                self._plan([int(r) for r in str(rooms).split(",") if r.strip().isdigit()])
+                if not isinstance(rooms, list):
+                    rooms = str(rooms).split(",")
+                room_ids = [int(r) for r in rooms if str(r).strip().lstrip("-").isdigit()]
+                self._plan(room_ids)
+                # CleanArea joins the list itself: never hand it a string.
                 await self._device.execute_command(
-                    area(CleanMode.SPOT_AREA, str(rooms), int(params.get("cleanings", 1)))
+                    area(CleanMode.SPOT_AREA, room_ids, int(params.get("cleanings", 1)))
                 )
             else:
+                coords = params["coordinates"]
+                if not isinstance(coords, list):
+                    coords = str(coords).split(",")
+                values = [int(round(float(v))) for v in coords]
+                if len(values) != 4:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN, translation_key="zone_four_values"
+                    )
                 self._plan([])
                 await self._device.execute_command(
-                    area(
-                        CleanMode.CUSTOM_AREA,
-                        str(params["coordinates"]),
-                        int(params.get("cleanings", 1)),
-                    )
+                    area(CleanMode.CUSTOM_AREA, values, int(params.get("cleanings", 1)))
                 )
             return
         await self._device.execute_command(self._capability.custom.set(command, params))
@@ -303,8 +309,7 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
         area = self._area_capability()
         room_ids = [self._room_id(r) for r in rooms]
         self._plan(room_ids)
-        ids = ",".join(str(i) for i in room_ids)
-        await self._device.execute_command(area(CleanMode.SPOT_AREA, ids, cleanings))
+        await self._device.execute_command(area(CleanMode.SPOT_AREA, room_ids, cleanings))
 
     async def async_clean_zone(self, zone: list[float], cleanings: int = 1) -> None:
         """Action yeedi.clean_zone: clean a rectangle given in metres [x1, y1, x2, y2]."""
@@ -315,7 +320,7 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
         # widen each side to at least 1 m, around the rectangle given.
         min_x, max_x = _min_side(x1, x2, MIN_ZONE_SIDE_M)
         min_y, max_y = _min_side(y1, y2, MIN_ZONE_SIDE_M)
-        coords = ",".join(str(round(v * 1000)) for v in (min_x, min_y, max_x, max_y))
+        coords = [int(round(v * 1000)) for v in (min_x, min_y, max_x, max_y)]
         self._plan([])
         await self._device.execute_command(area(CleanMode.CUSTOM_AREA, coords, cleanings))
 
@@ -344,13 +349,13 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
         for cid in segment_ids:
             _, sep, room_id = str(cid).rpartition(_SEGMENTS_SEPARATOR)
             if sep and room_id.isdigit():
-                room_ids.append(room_id)
+                room_ids.append(int(room_id))
         if not room_ids:
             _LOGGER.warning("No valid room to clean in %s", segment_ids)
             return
         if TYPE_CHECKING:
             assert self._capability.clean.action.area is not None
-        self._plan([int(i) for i in room_ids])
+        self._plan(room_ids)
         await self._device.execute_command(
-            self._capability.clean.action.area(CleanMode.SPOT_AREA, ",".join(room_ids), 1)
+            self._capability.clean.action.area(CleanMode.SPOT_AREA, room_ids, 1)
         )
