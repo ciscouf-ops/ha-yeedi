@@ -4,6 +4,7 @@
 - **Fix: zone cleaning (and `clean_rooms` with two-digit room numbers) sent garbage to the robot.** deebot-client's `CleanArea` joins the coordinates itself, and the integration handed it a string, which was split character by character: the robot received a rectangle like `0,1,3,6` instead of the zone drawn, cleaned a few strips near the dock and went back. Lists are passed now; `custom_area` checks it gets four values.
 - New sensors during a cleaning: current room, remaining time and estimated end. The integration learns how long each room takes (kept in storage) and the order of a full cleaning; the map card shows the room, the end time and a progress bar under the controls.
 - Map card: room outlines cleaned up (steps shorter than 22 cm absorbed, angles kept straight), room labels sized to the room and split on two lines when needed, map capped at 560 px wide on large screens.
+- Map card: after Clean / Pause / Resume / Dock, the button is greyed out with a spinner until the robot reports its new state (15 s at most), so it cannot be tapped twice.
 - Map card: the trace is a single band as wide as the robot on a smoothed path, and the robot glides between two reported positions instead of jumping; while cleaning, the card updates the robot, the trace and the footer in place rather than rebuilding itself.
 
 ## 0.2.7

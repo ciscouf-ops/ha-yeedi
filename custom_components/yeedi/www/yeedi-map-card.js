@@ -241,22 +241,39 @@ class YeediMapCard extends HTMLElement {
     this._hass.callService('vacuum', service, { entity_id: this._config.entity, ...data });
   }
 
+  // The robot takes a few seconds to report its new state after a command:
+  // grey the main button out meanwhile, so it cannot be tapped twice.
+  _wait() {
+    const st = this._hass.states[this._config.entity];
+    clearTimeout(this._pendingTimer);
+    this._pending = { state: st ? st.state : null, since: Date.now() };
+    this._pendingTimer = setTimeout(() => { this._pending = null; this._render(); }, 15000);
+    this._render();
+  }
+
+  _isPending() {
+    if (!this._pending) return false;
+    const st = this._hass.states[this._config.entity];
+    if (st && st.state !== this._pending.state) { this._pending = null; clearTimeout(this._pendingTimer); return false; }
+    return true;
+  }
+
   _cleanSelected() {
     if (this._zone) {
       const z = this._zone;
       const c = [Math.min(z.x1, z.x2), Math.min(z.y1, z.y2), Math.max(z.x1, z.x2), Math.max(z.y1, z.y2)].map((v) => Math.round(v));
       this._call('send_command', { command: 'custom_area', params: { coordinates: c.join(','), cleanings: 1 } });
       this._zone = null; this._zoneMode = false;
-      this._render();
+      this._wait();
       return;
     }
-    if (!this._selected.length) { this._call('start'); return; }
+    if (!this._selected.length) { this._call('start'); this._wait(); return; }
     this._call('send_command', {
       command: 'spot_area',
       params: { rooms: this._selected.join(','), cleanings: 1 },
     });
     this._selected = [];
-    this._render();
+    this._wait();
   }
 
   _toggleRoom(id) {
@@ -522,14 +539,17 @@ class YeediMapCard extends HTMLElement {
       if (room) roomsLabel = `${text.clean} ${esc(this._roomName(room))}`;
     }
     let main;
-    if (moving) main = `<button class="btn main" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${text.pause}</button>`;
-    else if (paused) main = `<button class="btn main" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${text.resume}</button>`;
-    else main = `<button class="btn main" data-act="clean"><ha-icon icon="mdi:play"></ha-icon>${this._zone ? text.clean_zone : roomsLabel}</button>`;
+    const pending = this._isPending();
+    const dis = pending ? ' disabled' : '';
+    const icon = (i) => `<ha-icon icon="${pending ? 'mdi:loading' : i}"${pending ? ' class="spin"' : ''}></ha-icon>`;
+    if (moving) main = `<button class="btn main" data-act="pause"${dis}>${icon('mdi:pause')}${text.pause}</button>`;
+    else if (paused) main = `<button class="btn main" data-act="resume"${dis}>${icon('mdi:play')}${text.resume}</button>`;
+    else main = `<button class="btn main" data-act="clean"${dis}>${icon('mdi:play')}${this._zone ? text.clean_zone : roomsLabel}</button>`;
     const clear = (n || this._zone) && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
     const hasMap = this._data && this._data.rooms && this._data.rooms.some((r) => r.outline && r.outline.length > 2);
     const zone = !moving && !paused && hasMap && !n
       ? `<button class="btn flat${this._zoneMode ? ' on' : ''}" data-act="zone" title="${esc(text.zone_help)}"><ha-icon icon="mdi:selection-drag"></ha-icon>${text.zone}</button>` : '';
-    const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
+    const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"${dis}><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
 
     // Suction and water: one icon per level (the label is the tooltip), the current
     // level written next to the row title.
@@ -696,9 +716,9 @@ class YeediMapCard extends HTMLElement {
       if (['cleaning', 'returning'].includes(st?.state) || this._zoneMode) return;
       this._toggleRoom(Number(el.dataset.room));
     } else if (el.dataset.act === 'clean') this._cleanSelected();
-    else if (el.dataset.act === 'pause') this._call('pause');
-    else if (el.dataset.act === 'resume') this._call('start');
-    else if (el.dataset.act === 'dock') this._call('return_to_base');
+    else if (el.dataset.act === 'pause') { this._call('pause'); this._wait(); }
+    else if (el.dataset.act === 'resume') { this._call('start'); this._wait(); }
+    else if (el.dataset.act === 'dock') { this._call('return_to_base'); this._wait(); }
     else if (el.dataset.act === 'clear') { this._selected = []; this._zone = null; this._render(); }
     else if (el.dataset.act === 'zone') { this._zoneMode = !this._zoneMode; if (!this._zoneMode) this._zone = null; this._render(); }
     else if (el.dataset.fan) {
@@ -765,6 +785,9 @@ const STYLE = `
   .msg.small { padding: 8px 16px 4px; }
   .actions { display: flex; gap: 8px; padding: 10px 16px 6px; }
   .btn.main { flex: 1 1 auto; justify-content: center; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .spin { animation: yeedi-spin 1s linear infinite; }
+  @keyframes yeedi-spin { to { transform: rotate(360deg); } }
   .btn { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 18px; padding: 8px 16px;
          font: 500 14px var(--paper-font-body1_-_font-family, inherit); cursor: pointer;
          background: var(--primary-color); color: var(--text-primary-color, #fff); }
