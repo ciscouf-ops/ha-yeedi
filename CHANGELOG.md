@@ -1,7 +1,9 @@
 # Changelog
 
-## 0.2.6
+## 0.2.7
 - Zones: the robot does a rectangle thinner than ~1 m in one straight line, so the card and `yeedi.clean_zone` widen each side to at least 1 m around the rectangle drawn.
+
+## 0.2.6
 - Map card: with one room selected, the button names it ("Clean Kitchen").
 - Option *Auto-empty station* (integration → Configure, off by default): the "Empty the dustbin" button and the auto-empty select exist only when it is on, since the station is optional on the vac max and others.
 - Durations shown rounded (minutes without decimals, hours with one).
