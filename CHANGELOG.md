@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.9 (unreleased)
+## 0.2.9
 
 ### Map card
 - The surface of a drawn zone is shown in its middle, counting only the floor inside the rooms (not the empty space around the map).
