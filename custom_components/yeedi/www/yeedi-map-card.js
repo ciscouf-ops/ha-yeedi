@@ -468,6 +468,7 @@ class YeediMapCard extends HTMLElement {
       const font = Math.round(u * 2.5);
       const choose = !moving;
       const paths = {};
+      const job = this._activeJob();
       rooms.forEach((room) => { paths[room.id] = this._roomPath(room.outline, X, Y); });
       const hasSel = choose && this._selected.length > 0;
       this._geo = { x0, y1 }; // to turn pointer positions back into robot coordinates
@@ -479,7 +480,7 @@ class YeediMapCard extends HTMLElement {
           d="${paths[room.id]}" style="--c:${PALETTE[i % PALETTE.length]}"/>`;
       });
       // Selected rooms get a coloured outline on top of the others.
-      if (hasSel) rooms.forEach((room) => {
+      if (hasSel || (job && job.rooms.length)) rooms.forEach((room) => {
         if (this._selected.includes(room.id) || (job && job.rooms.includes(room.id))) s += `<path class="selring" data-room="${room.id}" d="${paths[room.id]}"/>`;
       });
       if (moving && d.trace && d.trace.length > 1) {
@@ -496,7 +497,6 @@ class YeediMapCard extends HTMLElement {
         (d.no_mop || []).forEach((z) => { if (z.points.length > 1) s += `<polygon class="nomop" points="${P(z.points)}"/>`; });
         (d.walls || []).forEach((w) => { if (w.points.length > 1) s += `<polyline class="wall" points="${P(w.points)}"/>`; });
       }
-      const job = this._activeJob();
       const shownZone = this._zone || (job && job.zone);
       if (shownZone) {
         const z = shownZone;
