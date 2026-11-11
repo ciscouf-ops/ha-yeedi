@@ -276,6 +276,67 @@ class YeediMapCard extends HTMLElement {
       </ha-card>`;
   }
 
+  // The robot reports room outlines as coarse staircases. Steps shorter than
+  // TOL are absorbed into the neighbouring edge, keeping every angle straight.
+  _roomPath(outline, X, Y) {
+    let p = outline.map(([x, y]) => [X(x), Y(y)]);
+    if (p.length > 2 && p[0][0] === p[p.length - 1][0] && p[0][1] === p[p.length - 1][1]) p = p.slice(0, -1);
+    const TOL = 220;
+    const len = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const dedupe = () => {
+      // Drop repeated points and points on a straight line.
+      for (let k = 0; k < p.length && p.length > 3; k++) {
+        const a = p[(k + p.length - 1) % p.length], b = p[k], c = p[(k + 1) % p.length];
+        const cross = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
+        if (len(a, b) < 1 || Math.abs(cross) < 1) { p.splice(k, 1); k = -1; }
+      }
+    };
+    dedupe();
+    for (let pass = 0; pass < 20 && p.length > 4; pass++) {
+      // Shortest edge below TOL whose neighbours are parallel (a step).
+      let best = -1, bl = TOL;
+      for (let k = 0; k < p.length; k++) {
+        const a = p[(k + p.length - 1) % p.length], b = p[k], c = p[(k + 1) % p.length], d = p[(k + 2) % p.length];
+        const l = len(b, c);
+        if (l >= bl) continue;
+        const v1 = [b[0] - a[0], b[1] - a[1]], v2 = [d[0] - c[0], d[1] - c[1]];
+        if (v1[0] * v2[0] + v1[1] * v2[1] > 0) { best = k; bl = l; }
+      }
+      if (best < 0) break;
+      const n = p.length, ia = (best + n - 1) % n, ib = best, ic = (best + 1) % n, id = (best + 2) % n;
+      // Move the shorter neighbour onto the line of the longer one.
+      const la = len(p[ia], p[ib]), lc = len(p[ic], p[id]);
+      const horiz = Math.abs(p[ib][1] - p[ic][1]) < Math.abs(p[ib][0] - p[ic][0]); // step edge is horizontal → neighbours vertical
+      if (la >= lc) {
+        if (horiz) { p[ic][0] = p[ib][0]; p[id][0] = p[ib][0]; } else { p[ic][1] = p[ib][1]; p[id][1] = p[ib][1]; }
+      } else if (horiz) { p[ib][0] = p[ic][0]; p[ia][0] = p[ic][0]; } else { p[ib][1] = p[ic][1]; p[ia][1] = p[ic][1]; }
+      dedupe();
+    }
+    if (p.length < 3) return '';
+    return 'M' + p.map(([x, y]) => `${x.toFixed(0)},${y.toFixed(0)}`).join(' L') + ' Z';
+  }
+
+  // Room label: shrink to fit the room, split on a space when needed.
+  _roomLabel(label, widthMm, u) {
+    const fit = (txt, size) => txt.length * size * 0.56 <= widthMm * 0.92;
+    const max = u * 2.5, min = u * 1.5;
+    let lines = [label], font = max;
+    const need = (ls) => Math.max(...ls.map((l) => l.length)) * 0.56;
+    font = Math.min(max, (widthMm * 0.92) / need(lines));
+    if (font < max * 0.8 && label.includes(' ')) {
+      const words = label.split(' ');
+      let best = null;
+      for (let k = 1; k < words.length; k++) {
+        const cand = [words.slice(0, k).join(' '), words.slice(k).join(' ')];
+        if (!best || need(cand) < need(best)) best = cand;
+      }
+      lines = best;
+      font = Math.min(max, (widthMm * 0.92) / need(lines));
+    }
+    font = Math.max(min, Math.round(font));
+    return { lines, font, fits: fit(lines[0], font) && fit(lines[lines.length - 1], font) };
+  }
+
   _map(moving) {
     const { text } = this._t();
     const d = this._data;
@@ -302,23 +363,25 @@ class YeediMapCard extends HTMLElement {
       const X = (x) => (x - x0), Y = (y) => (y1 - y); // robot y goes up, SVG y goes down
       const P = (list) => list.map(([x, y]) => `${X(x).toFixed(0)},${Y(y).toFixed(0)}`).join(' ');
       const u = Math.max(W, H) / 100; // drawing unit: 1 % of the map
-      const font = Math.round(u * 2.6);
+      const font = Math.round(u * 2.5);
       const choose = !moving;
+      const paths = {};
+      rooms.forEach((room) => { paths[room.id] = this._roomPath(room.outline, X, Y); });
       const hasSel = choose && this._selected.length > 0;
       this._geo = { x0, y1 }; // to turn pointer positions back into robot coordinates
       const zoning = choose && this._zoneMode;
       let s = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" preserveAspectRatio="xMidYMid meet" class="plan${hasSel ? ' has-sel' : ''}${zoning ? ' zoning' : ''}">`;
       rooms.forEach((room, i) => {
         const sel = this._selected.indexOf(room.id);
-        s += `<polygon class="room${choose ? ' pick' : ''}${sel >= 0 ? ' sel' : ''}" data-room="${room.id}"
-          points="${P(room.outline)}" style="--c:${PALETTE[i % PALETTE.length]}"/>`;
+        s += `<path class="room${choose ? ' pick' : ''}${sel >= 0 ? ' sel' : ''}" data-room="${room.id}"
+          d="${paths[room.id]}" style="--c:${PALETTE[i % PALETTE.length]}"/>`;
       });
       // Selected rooms get a coloured outline on top of the others.
       if (hasSel) rooms.forEach((room) => {
-        if (this._selected.includes(room.id)) s += `<polygon class="selring" data-room="${room.id}" points="${P(room.outline)}"/>`;
+        if (this._selected.includes(room.id)) s += `<path class="selring" data-room="${room.id}" d="${paths[room.id]}"/>`;
       });
       if (moving && d.trace && d.trace.length > 1) {
-        if (rooms.length) s += `<clipPath id="inside">${rooms.map((x) => `<polygon points="${P(x.outline)}"/>`).join('')}</clipPath>`;
+        if (rooms.length) s += `<clipPath id="inside">${rooms.map((x) => `<path d="${paths[x.id]}"/>`).join('')}</clipPath>`;
         const clip = rooms.length ? ' clip-path="url(#inside)"' : '';
         s += `<polyline class="band" points="${P(d.trace)}"${clip}/>`;
         s += `<polyline class="line" points="${P(d.trace)}"${clip}/>`;
@@ -339,15 +402,16 @@ class YeediMapCard extends HTMLElement {
         const rx = room.outline.map((p) => p[0]), ry = room.outline.map((p) => p[1]);
         const cx = X((Math.min(...rx) + Math.max(...rx)) / 2), cy = Y((Math.min(...ry) + Math.max(...ry)) / 2);
         const sel = this._selected.indexOf(room.id);
-        const label = this._roomName(room);
+        const lab = this._roomLabel(this._roomName(room), Math.max(...rx) - Math.min(...rx), u);
+        const lh = lab.font * 1.15, nl = lab.lines.length;
+        const block = (y0) => lab.lines.map((l, k) => `<text class="name" x="${cx}" y="${(y0 + (k - (nl - 1) / 2) * lh).toFixed(0)}" font-size="${lab.font}">${esc(l)}</text>`).join('');
         if (sel >= 0) {
           // Order badge above the name.
-          const r = font * 0.8, by = cy - font * 1.25;
+          const r = font * 0.8, by = cy - font * 0.7 - (nl * lh) / 2;
           s += `<circle class="badge" cx="${cx}" cy="${by}" r="${r}" data-room="${room.id}"/>
-            <text class="badgetxt" x="${cx}" y="${by}" font-size="${Math.round(font * 1.05)}" data-room="${room.id}">${sel + 1}</text>
-            <text class="name" x="${cx}" y="${cy + font * 0.6}" font-size="${font}">${esc(label)}</text>`;
+            <text class="badgetxt" x="${cx}" y="${by}" font-size="${Math.round(font * 1.05)}" data-room="${room.id}">${sel + 1}</text>` + block(cy + font * 0.5);
         } else {
-          s += `<text class="name" x="${cx}" y="${cy}" font-size="${font}">${esc(label)}</text>`;
+          s += block(cy);
         }
       });
       if (d.dock) {
@@ -607,7 +671,7 @@ const STYLE = `
   .status .bat.low { --bat-color: var(--warning-color, #ffa600); }
   .status .bat.empty { --bat-color: var(--error-color, #db4437); }
   .map { padding: 4px 12px; }
-  svg { width: 100%; height: auto; max-height: 420px; display: block; }
+  svg { width: 100%; max-width: 560px; height: auto; max-height: 420px; display: block; margin: 0 auto; }
   .room { fill: var(--c); fill-opacity: .28; stroke: var(--card-background-color, #fff); stroke-width: 40; stroke-linejoin: round; transition: fill-opacity .2s; }
   .room.pick { cursor: pointer; }
   .room.pick:hover { fill-opacity: .4; }
