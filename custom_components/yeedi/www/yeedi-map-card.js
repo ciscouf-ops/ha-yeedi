@@ -13,7 +13,7 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.7';
+const CARD_VERSION = '0.2.8';
 
 const TEXT = {
   en: {
@@ -139,7 +139,7 @@ class YeediMapCard extends HTMLElement {
     this._subscribing = true;
     try {
       this._unsub = await this._hass.connection.subscribeMessage(
-        (data) => { this._data = data; this._error = null; this._render(); },
+        (data) => { this._data = data; this._error = null; if (!this._patch()) this._render(); },
         { type: 'yeedi/map/subscribe', entity_id: this._config.entity },
       );
     } catch (err) {
@@ -154,6 +154,49 @@ class YeediMapCard extends HTMLElement {
     if (this._unsub) { try { this._unsub(); } catch (e) { /* closed */ } }
     this._unsub = null;
     this._data = null;
+  }
+
+  // While the robot cleans, a new position arrives every few seconds. When
+  // only the robot and its trace changed, move them in place (the robot
+  // glides there with a CSS transition) instead of rebuilding the card.
+  _patch() {
+    const d = this._data, root = this.shadowRoot;
+    if (!d || !root || !this._geo || !this._mapKey) return false;
+    const svg = root.querySelector('svg.plan');
+    const st = this._hass && this._hass.states[this._config.entity];
+    if (!svg || !st || st.state !== 'cleaning' || !d.robot) return false;
+    const rooms = d.rooms.filter((x) => x.outline && x.outline.length > 2);
+    const vb = svg.viewBox.baseVal;
+    const X = (x) => x - this._geo.x0, Y = (y) => this._geo.y1 - y;
+    const rx = X(d.robot.x), ry = Y(d.robot.y);
+    if (rx < 0 || ry < 0 || rx > vb.width || ry > vb.height) return false; // map must grow: full render
+    const key = JSON.stringify([d.map_id, rooms.map((r) => [r.id, r.outline]), d.dock, d.no_mop, d.walls, this._geo.x0, this._geo.y1, true, this._zoneMode, this._zone, this._selected]);
+    if (key !== this._mapKey) return false;
+    const g = svg.querySelector('.robotg');
+    if (!g) return false;
+    g.style.transform = `translate(${rx.toFixed(0)}px,${ry.toFixed(0)}px) scale(${this._scale})`;
+    const a = ((d.robot.a || 0) * Math.PI) / 180;
+    const line = g.querySelector('.heading');
+    if (line) { line.setAttribute('x2', (Math.cos(a) * 120).toFixed(0)); line.setAttribute('y2', (-Math.sin(a) * 120).toFixed(0)); }
+    if (d.trace && d.trace.length > 1) {
+      let band = svg.querySelector('.band');
+      if (!band) return false;
+      band.setAttribute('d', this._smoothPath(d.trace, X, Y));
+    }
+    // Footer (room, end time, time left) and progress bar.
+    const foot = root.querySelector('.foot');
+    if (d.progress) {
+      const html = this._progressFoot();
+      if (!foot || !html) return false;
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      const newFoot = tmp.querySelector('.foot'), newBar = tmp.querySelector('.bar');
+      const bar = foot.nextElementSibling && foot.nextElementSibling.classList.contains('bar') ? foot.nextElementSibling : null;
+      if (newFoot) foot.textContent = newFoot.textContent;
+      if (bar && newBar) bar.firstElementChild.style.width = newBar.firstElementChild.style.width;
+      else if (!!bar !== !!newBar) return false;
+    }
+    return true;
   }
 
   _t() {
@@ -316,6 +359,26 @@ class YeediMapCard extends HTMLElement {
     return 'M' + p.map(([x, y]) => `${x.toFixed(0)},${y.toFixed(0)}`).join(' L') + ' Z';
   }
 
+  // Trace of the robot: positions averaged over a short window, then joined
+  // with quadratic curves through the midpoints (no overshoot).
+  _smoothPath(trace, X, Y) {
+    const pts = trace.map(([x, y]) => [X(x), Y(y)]);
+    if (pts.length < 2) return '';
+    const sm = pts.map((p, i) => {
+      if (i === 0 || i === pts.length - 1) return p;
+      const a = pts[i - 1], c = pts[i + 1];
+      return [(a[0] + 2 * p[0] + c[0]) / 4, (a[1] + 2 * p[1] + c[1]) / 4];
+    });
+    const f = (v) => v.toFixed(0);
+    let d = `M${f(sm[0][0])},${f(sm[0][1])}`;
+    for (let i = 1; i < sm.length - 1; i++) {
+      const mx = (sm[i][0] + sm[i + 1][0]) / 2, my = (sm[i][1] + sm[i + 1][1]) / 2;
+      d += ` Q${f(sm[i][0])},${f(sm[i][1])} ${f(mx)},${f(my)}`;
+    }
+    const l = sm[sm.length - 1];
+    return d + ` L${f(l[0])},${f(l[1])}`;
+  }
+
   // Room label: shrink to fit the room, split on a space when needed.
   _roomLabel(label, widthMm, u) {
     const fit = (txt, size) => txt.length * size * 0.56 <= widthMm * 0.92;
@@ -383,8 +446,9 @@ class YeediMapCard extends HTMLElement {
       if (moving && d.trace && d.trace.length > 1) {
         if (rooms.length) s += `<clipPath id="inside">${rooms.map((x) => `<path d="${paths[x.id]}"/>`).join('')}</clipPath>`;
         const clip = rooms.length ? ' clip-path="url(#inside)"' : '';
-        s += `<polyline class="band" points="${P(d.trace)}"${clip}/>`;
-        s += `<polyline class="line" points="${P(d.trace)}"${clip}/>`;
+        // One band as wide as the robot, on a lightly smoothed path: a single
+        // stroke keeps the same opacity where strips overlap.
+        s += `<path class="band" d="${this._smoothPath(d.trace, X, Y)}"${clip}/>`;
       }
       // Restrictions set in the yeedi app: no-mop zones (hatched) and virtual walls (red).
       if ((d.no_mop && d.no_mop.length) || (d.walls && d.walls.length)) {
@@ -425,10 +489,12 @@ class YeediMapCard extends HTMLElement {
       if (rob) {
         const a = ((rob.a || 0) * Math.PI) / 180;
         const hx = Math.cos(a) * 120, hy = -Math.sin(a) * 120;
-        s += `<g transform="translate(${X(rob.x)},${Y(rob.y)}) scale(${(u / 75).toFixed(3)})">
+        s += `<g class="robotg" style="transform:translate(${X(rob.x).toFixed(0)}px,${Y(rob.y).toFixed(0)}px) scale(${(u / 75).toFixed(3)})">
           ${moving ? '<circle r="320" class="halo"/>' : ''}
           <circle r="170" class="robot"/><line x1="0" y1="0" x2="${hx.toFixed(0)}" y2="${hy.toFixed(0)}" class="heading"/></g>`;
       }
+      this._mapKey = JSON.stringify([d.map_id, rooms.map((r) => [r.id, r.outline]), d.dock, d.no_mop, d.walls, x0, y1, moving, this._zoneMode, this._zone, this._selected]);
+      this._scale = (u / 75).toFixed(3);
       s += '</svg>';
       svg = `<div class="map">${s}</div>`;
     }
@@ -682,9 +748,9 @@ const STYLE = `
   .badgetxt { fill: #fff; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
   .name { text-anchor: middle; dominant-baseline: middle; fill: var(--primary-text-color); font-weight: 500;
           paint-order: stroke; stroke: var(--card-background-color, #fff); stroke-width: 40; stroke-linejoin: round; pointer-events: none; }
-  .band { fill: none; stroke: var(--primary-color); stroke-opacity: .16; stroke-width: 260; stroke-linecap: round; stroke-linejoin: round; }
-  .line { fill: none; stroke: var(--primary-color); stroke-opacity: .7; stroke-width: 22; stroke-linecap: round; stroke-linejoin: round; }
+  .band { fill: none; stroke: var(--primary-color); stroke-opacity: .28; stroke-width: 330; stroke-linecap: round; stroke-linejoin: round; }
   .dock { fill: #43a047; stroke: #fff; stroke-width: 35; }
+  .robotg { transition: transform 2.5s linear; }
   .robot { fill: var(--primary-color); stroke: #fff; stroke-width: 40; }
   .heading { stroke: #fff; stroke-width: 40; stroke-linecap: round; }
   .halo { fill: var(--primary-color); opacity: .18; animation: pulse 2s ease-in-out infinite; }
