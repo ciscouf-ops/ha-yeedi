@@ -86,3 +86,20 @@ async def test_clean_zone_thin_rectangle_widened_to_one_metre() -> None:
     # 20 cm wide, 3 m long: widened to 1 m around its middle (x = 0.1).
     await vac.async_clean_zone([0.0, 0.0, 0.2, 3.0])
     assert device.commands == [("area", CleanMode.CUSTOM_AREA, "-400,0,600,3000", 1)]
+
+
+async def test_cleaning_plans_reach_the_map() -> None:
+    from unittest.mock import MagicMock as _M
+
+    device, vac = _vacuum()
+    vac._map_data = _M()
+    await vac.async_clean_segments(["m1_3", "m1_1"])
+    vac._map_data.set_plan.assert_called_with([3, 1])
+    await vac.async_clean_rooms([2])
+    vac._map_data.set_plan.assert_called_with([2])
+    await vac.async_clean_zone([0.0, 0.0, 2.0, 2.0])
+    vac._map_data.set_plan.assert_called_with([])
+    await vac.async_send_command("spot_area", {"rooms": "4,0"})
+    vac._map_data.set_plan.assert_called_with([4, 0])
+    await vac.async_start()
+    vac._map_data.set_plan.assert_called_with(None)

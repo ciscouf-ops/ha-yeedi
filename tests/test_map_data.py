@@ -142,3 +142,83 @@ def test_listeners(hass, device) -> None:
     remove()
     data._notify()
     assert calls == [1]
+
+
+# ---------------------------------------------------------------- progress
+
+from custom_components.yeedi.map_data import _point_in_polygon, _polygon_area_m2  # noqa: E402
+
+FAR_SQUARE = "5000,0;6000,0;6000,1000;5000,1000"  # a second room, 1 m² too
+
+
+def test_geometry() -> None:
+    square = _parse_outline(SQUARE)
+    assert _point_in_polygon(500, 500, square)
+    assert not _point_in_polygon(1500, 500, square)
+    assert not _point_in_polygon(500, 500, square[:2])
+    assert _polygon_area_m2(square) == 1.0
+    assert _polygon_area_m2([]) == 0.0
+
+
+async def test_progress_room_and_estimate(hass, device, monkeypatch) -> None:
+    data = YeediMapData(hass, device)
+    await data.async_start()
+    await device.events.emit(RoomsEvent("m1", [Room("Living Room", 2, SQUARE), Room("Bedroom", 3, FAR_SQUARE)]))
+
+    clock = [1000.0]
+    monkeypatch.setattr("custom_components.yeedi.map_data.time.time", lambda: clock[0])
+
+    def pos(x, y):
+        return PositionsEvent([Position(PositionType.DEEBOT, x, y, 0)])
+
+    assert data.estimate() is None
+    data.set_plan([2, 3])
+    await device.events.emit(StateEvent(State.CLEANING))
+    await device.events.emit(pos(100, 100))
+    p = data.estimate()
+    assert p["room"] == "Living Room" and p["room_id"] == 2
+    # Nothing learned yet: 1 m² rooms at the default rate are floored to 2 min each.
+    assert p["remaining_minutes"] == 4 and p["planned"] == [2, 3]
+
+    # Three minutes in the living room, one position every 5 s.
+    for i in range(36):
+        clock[0] += 5
+        await device.events.emit(pos(100 + i, 100))
+    p = data.estimate()
+    assert p["room_id"] == 2 and p["elapsed_minutes"] == 3.0
+    # The living room is over its estimate (1 min floor), the bedroom still 2 min.
+    assert p["remaining_minutes"] == 3
+    assert p["end"] == clock[0] + 3 * 60
+
+    # Over to the bedroom, 2 minutes there.
+    for i in range(24):
+        clock[0] += 5
+        await device.events.emit(pos(5500 + i, 500))
+    assert data.estimate()["room"] == "Bedroom"
+
+    # Back on the dock: durations learned (3 min and 2 min), order kept (not a full cleaning).
+    await device.events.emit(StateEvent(State.RETURNING))
+    await device.events.emit(StateEvent(State.DOCKED))
+    assert data.estimate() is None
+    assert data._durations == {2: 3.0, 3: 2.0}
+    assert data._full_order == []
+    saved = data._to_save()
+    assert saved["durations"] == {"2": 3.0, "3": 2.0}
+
+    # Next cleaning of the whole home: the learned minutes drive the estimate.
+    data.set_plan(None)
+    await device.events.emit(StateEvent(State.CLEANING))
+    await device.events.emit(pos(100, 100))
+    assert data.estimate()["remaining_minutes"] == 5  # 3 (living) + 2 (bedroom)
+    data.stop()
+
+
+async def test_zone_has_no_room_estimate(hass, device) -> None:
+    data = YeediMapData(hass, device)
+    await data.async_start()
+    await device.events.emit(RoomsEvent("m1", [Room("Living Room", 2, SQUARE)]))
+    data.set_plan([])
+    await device.events.emit(StateEvent(State.CLEANING))
+    p = data.estimate()
+    assert p["remaining_minutes"] is None and p["end"] is None and p["planned"] == []
+    data.stop()

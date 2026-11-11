@@ -88,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Side brush lifespan"
+      },
+      "current_room": {
+        "name": "Current room"
+      },
+      "remaining_time": {
+        "name": "Remaining time"
+      },
+      "cleaning_end": {
+        "name": "Estimated end"
       }
     },
     "vacuum": {

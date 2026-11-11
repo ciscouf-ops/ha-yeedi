@@ -27,6 +27,7 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
 - Actions **`yeedi.clean_rooms`** (by room number *or name*) and **`yeedi.clean_zone`** (a rectangle in metres), plus `vacuum.send_command` with `spot_area` / `custom_area`
 - Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
+- During a cleaning: **current room**, **remaining time** and **estimated end** sensors, learned from the time the robot spent in each room on previous cleanings (the map card shows them under the controls, with a progress bar)
 - Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**
 - Switches: **continuous cleaning**, **carpet boost**, **advanced mode**; number: **volume**
 - Buttons: **relocate**, **reset** of each consumable counter, **clear the map** (disabled by default); with the *auto-empty station* option (integration → Configure): **empty the dustbin** button and **auto-empty** select
@@ -132,6 +133,7 @@ yeedi robots only send the outline of their rooms now and then, mostly while cle
 - Only the yeedi vac max has been tested. Other models may expose different settings or report their map differently.
 - Room names are the generic ones reported by the robot (Living room, Bedroom…). Custom names from the yeedi app are not available through the cloud API.
 - No map image (walls and floor) as in the yeedi app: the card draws the outline of the rooms reported by the robot.
+- The remaining time is an estimate: it starts from the room areas (1.2 min/m²) and improves with each cleaning, as the integration learns how long each room takes. A zone cleaning has no estimate.
 - The robot does not report the mop-only setting: the integration keeps the last one set from Home Assistant. Changing the suction level in the yeedi app turns mop only off in Home Assistant.
 - The account must not require a device verification e-mail more than once; if yeedi asks for a code, the flow will prompt for it.
 

@@ -88,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Spazzola laterale"
+      },
+      "current_room": {
+        "name": "Stanza attuale"
+      },
+      "remaining_time": {
+        "name": "Tempo rimanente"
+      },
+      "cleaning_end": {
+        "name": "Fine stimata"
       }
     },
     "vacuum": {

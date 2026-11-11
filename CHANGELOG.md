@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.8
+- New sensors during a cleaning: current room, remaining time and estimated end. The integration learns how long each room takes (kept in storage) and the order of a full cleaning; the map card shows the room, the end time and a progress bar under the controls.
+
 ## 0.2.7
 - Zones: the robot does a rectangle thinner than ~1 m in one straight line, so the card and `yeedi.clean_zone` widen each side to at least 1 m around the rectangle drawn.
 

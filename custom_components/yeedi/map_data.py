@@ -48,6 +48,14 @@ _NOTIFY_DELAY = 0.5  # seconds, to group bursts of events
 _MOVING = (State.CLEANING, State.RETURNING)
 _ROOMS_RETRY_DELAYS = (0, 45, 150, 400)  # seconds after a cleaning starts
 _STORAGE_VERSION = 1
+# Progress and estimated end of a cleaning (see ``estimate``).
+_MAX_POSITION_GAP = 20.0  # seconds: a longer silence is not counted as time in a room
+_DEFAULT_RATE = 1.2  # min/m² before anything is learned (a first-pass robot)
+_MIN_ROOM_MINUTES = 2.0
+_LEARN_MIN_MINUTES = 1.0  # a shorter stay is a room merely crossed
+_LEARN_MIN_RATE = 0.3  # min/m²: below this the room was crossed, not cleaned
+_DONE_FRACTION = 0.5  # a planned room with this share of its estimate is done
+_MAX_CLEANING_HOURS = 4
 
 
 def _parse_outline(coordinates: str | None) -> list[list[float]]:
@@ -55,6 +63,37 @@ def _parse_outline(coordinates: str | None) -> list[list[float]]:
     if not coordinates:
         return []
     return [[float(x), float(y)] for x, y in _NUMBER_PAIR.findall(coordinates)]
+
+
+def _point_in_polygon(x: float, y: float, polygon: list[list[float]]) -> bool:
+    """Ray casting: is (x, y) inside the polygon?"""
+    inside = False
+    n = len(polygon)
+    if n < 3:
+        return False
+    j = n - 1
+    for i in range(n):
+        xi, yi = polygon[i]
+        xj, yj = polygon[j]
+        if (yi > y) != (yj > y):
+            x_cross = (xj - xi) * (y - yi) / (yj - yi) + xi
+            if x < x_cross:
+                inside = not inside
+        j = i
+    return inside
+
+
+def _polygon_area_m2(polygon: list[list[float]]) -> float:
+    """Area of an outline given in millimetres, in square metres (shoelace)."""
+    n = len(polygon)
+    if n < 3:
+        return 0.0
+    total = 0.0
+    for i in range(n):
+        x1, y1 = polygon[i]
+        x2, y2 = polygon[(i + 1) % n]
+        total += x1 * y2 - x2 * y1
+    return abs(total) / 2 / 1_000_000
 
 
 def _position_kind(position: Any) -> str:
@@ -84,6 +123,18 @@ class YeediMapData:
         self._trace: list[list[float]] = []
         self._trace_start: float | None = None
         self._state: State | None = None
+        # Progress of the current cleaning: the rooms asked for (None = the whole
+        # home, [] = a zone: no room estimate), the room the robot is in, the time
+        # spent in each room and the order they were entered.
+        self._plan: list[int] | None = None
+        self._room_id: int | None = None
+        self._room_time: dict[int, float] = {}
+        self._room_order: list[int] = []
+        self._last_position_at: float | None = None
+        self._learned = False
+        # What a cleaning taught: minutes per room and the order of a full cleaning.
+        self._durations: dict[int, float] = {}
+        self._full_order: list[int] = []
         self._listeners: list[Callable[[], None]] = []
         self._unsubscribers: list[Callable[[], None]] = []
         self._notify_handle: asyncio.TimerHandle | None = None
@@ -123,6 +174,14 @@ class YeediMapData:
                     "name": room.get("name", ""),
                     "outline": room.get("outline") or [],
                 }
+            for key, value in (saved.get("durations") or {}).items():
+                try:
+                    self._durations[int(key)] = float(value)
+                except (TypeError, ValueError):
+                    continue
+            self._full_order = [
+                int(i) for i in saved.get("full_order") or [] if str(i).lstrip("-").isdigit()
+            ]
         events = self._device.events
         self._unsubscribers += [
             events.subscribe(StateEvent, self._on_state),
@@ -209,13 +268,22 @@ class YeediMapData:
             State.PAUSED,
             State.RETURNING,
         ):
-            # A new cleaning: start a new trace.
+            # A new cleaning: start a new trace and a new progress record.
             self._trace = []
             self._trace_start = time.time()
+            self._room_id = None
+            self._room_time = {}
+            self._room_order = []
+            self._last_position_at = None
+            self._learned = False
             if any(not r["outline"] for r in self._rooms.values()) or not self._rooms:
                 self._start_rooms_refresh()
         if event.state in _MOVING:
             self._start_polling()
+        else:
+            self._last_position_at = None
+        if event.state is State.DOCKED and previous in _MOVING + (State.PAUSED,):
+            self._learn()
         self._schedule_notify()
 
     async def _on_positions(self, event: PositionsEvent) -> None:
@@ -230,7 +298,117 @@ class YeediMapData:
                 self._robot = point
                 if self._state in (State.CLEANING, State.RETURNING):
                     self._add_to_trace(position.x, position.y)
+                if self._state is State.CLEANING:
+                    self._track_room(position.x, position.y)
         self._schedule_notify()
+
+    # -------------------------------------------------------------- progress
+
+    def set_plan(self, rooms: list[int] | None) -> None:
+        """Remember what the next cleaning covers: room ids, None (all) or [] (a zone)."""
+        self._plan = None if rooms is None else [int(r) for r in rooms]
+
+    def _room_at(self, x: float, y: float) -> int | None:
+        """The room containing the point, the current one first (no flicker on an edge)."""
+        if self._room_id is not None:
+            current = self._rooms.get(self._room_id)
+            if current and _point_in_polygon(x, y, current["outline"]):
+                return self._room_id
+        for room in self._rooms.values():
+            if _point_in_polygon(x, y, room["outline"]):
+                return room["id"]
+        return None
+
+    def _track_room(self, x: float, y: float) -> None:
+        now = time.time()
+        room_id = self._room_at(x, y)
+        if room_id is not None and self._last_position_at is not None:
+            elapsed = min(now - self._last_position_at, _MAX_POSITION_GAP)
+            if elapsed > 0:
+                self._room_time[room_id] = self._room_time.get(room_id, 0.0) + elapsed
+        self._last_position_at = now
+        if room_id is not None:
+            if room_id != self._room_id:
+                self._room_id = room_id
+            if room_id not in self._room_order:
+                self._room_order.append(room_id)
+
+    def _learn(self) -> None:
+        """Back on the dock: remember how long each room took (once per cleaning)."""
+        if self._learned or not self._room_time:
+            return
+        self._learned = True
+        changed = False
+        for room_id, seconds in self._room_time.items():
+            minutes = seconds / 60
+            area = self._room_area(room_id)
+            if minutes < _LEARN_MIN_MINUTES or (area and minutes / area < _LEARN_MIN_RATE):
+                continue  # only crossed, not cleaned
+            old = self._durations.get(room_id)
+            self._durations[room_id] = round((old + minutes) / 2 if old else minutes, 1)
+            changed = True
+        if self._plan is None and len(self._room_order) >= 2:
+            if self._room_order != self._full_order:
+                self._full_order = list(self._room_order)
+                changed = True
+        if changed:
+            self._schedule_save()
+
+    def _room_area(self, room_id: int) -> float:
+        room = self._rooms.get(room_id)
+        return _polygon_area_m2(room["outline"]) if room else 0.0
+
+    def _estimate_minutes(self, room_id: int) -> float:
+        """Minutes to clean a room: learned, else from its area and the learned rate."""
+        if (learned := self._durations.get(room_id)) is not None:
+            return max(_MIN_ROOM_MINUTES, learned)
+        known = [(self._room_area(i), m) for i, m in self._durations.items()]
+        known = [(a, m) for a, m in known if a > 0]
+        rate = sum(m for _, m in known) / sum(a for a, _ in known) if known else _DEFAULT_RATE
+        area = self._room_area(room_id)
+        return max(_MIN_ROOM_MINUTES, area * rate) if area else 8.0
+
+    def estimate(self) -> dict[str, Any] | None:
+        """Where the cleaning stands: room, minutes left, estimated end; None when idle."""
+        if self._state is not State.CLEANING or self._trace_start is None:
+            return None
+        if self._plan == []:
+            planned: list[int] = []  # a zone: no room to count
+        elif self._plan is not None:
+            planned = [i for i in self._plan if i in self._rooms]
+        elif self._full_order:
+            planned = [i for i in self._full_order if i in self._rooms]
+            planned += [i for i in sorted(self._rooms) if i not in planned]
+        else:
+            planned = sorted(self._rooms)
+        now = time.time()
+        elapsed = (now - self._trace_start) / 60
+        remaining: float | None = None
+        if planned:
+            remaining = 0.0
+            for room_id in planned:
+                est = self._estimate_minutes(room_id)
+                spent = self._room_time.get(room_id, 0.0) / 60
+                if room_id == self._room_id:
+                    remaining += max(1.0, est - spent)
+                elif spent >= est * _DONE_FRACTION:
+                    continue  # done
+                else:
+                    remaining += est
+        room = self._rooms.get(self._room_id) if self._room_id is not None else None
+        result: dict[str, Any] = {
+            "room_id": self._room_id,
+            "room": (room or {}).get("name") or None,
+            "started": self._trace_start,
+            "elapsed_minutes": round(elapsed, 1),
+            "remaining_minutes": None if remaining is None else round(remaining),
+            "end": None if remaining is None else now + remaining * 60,
+            "progress": None,
+            "planned": planned,
+        }
+        if remaining is not None and elapsed + remaining > 0:
+            result["progress"] = min(99, round(elapsed / (elapsed + remaining) * 100))
+        return result
 
     def _add_to_trace(self, x: float, y: float) -> None:
         if self._trace:
@@ -292,6 +470,8 @@ class YeediMapData:
             ],
             "walls": [{"id": i, "points": p} for i, p in self._walls.items()],
             "no_mop": [{"id": i, "points": p} for i, p in self._no_mop.items()],
+            "durations": {str(i): m for i, m in self._durations.items()},
+            "full_order": list(self._full_order),
         }
 
     @callback
@@ -342,5 +522,6 @@ class YeediMapData:
             "trace": self._trace,
             "trace_start": self._trace_start,
             "state": self._state.name.lower() if self._state is not None else None,
+            "progress": self.estimate(),
             "updated": self._updated,
         }

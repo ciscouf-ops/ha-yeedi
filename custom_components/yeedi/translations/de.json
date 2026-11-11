@@ -88,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Seitenbürste"
+      },
+      "current_room": {
+        "name": "Aktueller Raum"
+      },
+      "remaining_time": {
+        "name": "Restzeit"
+      },
+      "cleaning_end": {
+        "name": "Voraussichtliches Ende"
       }
     },
     "vacuum": {

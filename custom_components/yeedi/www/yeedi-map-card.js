@@ -23,7 +23,7 @@ const TEXT = {
     not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water', mop_only_short: 'Off',
     states: { cleaning: 'Cleaning', returning: 'Returning to the dock', docked: 'Docked',
       idle: 'Idle', paused: 'Paused', error: 'Error' },
-    since: 'started at',
+    since: 'started at', end_at: 'ends around', left: (n) => `~${n} min left`,
   },
   fr: {
     clean: 'Nettoyer', clean_rooms: (n) => `Nettoyer ${n} pièce${n > 1 ? 's' : ''}`, pause: 'Pause',
@@ -32,7 +32,7 @@ const TEXT = {
     not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau', mop_only_short: 'Coupée',
     states: { cleaning: 'Nettoyage', returning: 'Retour à la base', docked: 'Sur la base',
       idle: 'À l’arrêt', paused: 'En pause', error: 'Erreur' },
-    since: 'commencé à',
+    since: 'commencé à', end_at: 'fin vers', left: (n) => `reste ~${n} min`,
   },
   de: {
     clean: 'Reinigen', clean_rooms: (n) => `${n} ${n > 1 ? 'Räume' : 'Raum'} reinigen`, pause: 'Pause',
@@ -41,7 +41,7 @@ const TEXT = {
     not_yeedi: 'Diese Entität ist kein yeedi-Staubsauger.', fan: 'Saugkraft', water: 'Wasser', mop_only_short: 'Aus',
     states: { cleaning: 'Reinigt', returning: 'Rückkehr zur Station', docked: 'An der Station',
       idle: 'Bereit', paused: 'Pausiert', error: 'Fehler' },
-    since: 'gestartet um',
+    since: 'gestartet um', end_at: 'Ende gegen', left: (n) => `noch ~${n} Min.`,
   },
   es: {
     clean: 'Limpiar', clean_rooms: (n) => `Limpiar ${n} habitaci${n > 1 ? 'ones' : 'ón'}`, pause: 'Pausa',
@@ -50,7 +50,7 @@ const TEXT = {
     not_yeedi: 'Esta entidad no es una aspiradora yeedi.', fan: 'Succión', water: 'Agua', mop_only_short: 'Apagada',
     states: { cleaning: 'Limpiando', returning: 'Volviendo a la base', docked: 'En la base',
       idle: 'Inactiva', paused: 'En pausa', error: 'Error' },
-    since: 'iniciada a las',
+    since: 'iniciada a las', end_at: 'fin hacia las', left: (n) => `quedan ~${n} min`,
   },
   it: {
     clean: 'Pulisci', clean_rooms: (n) => `Pulisci ${n} stanz${n > 1 ? 'e' : 'a'}`, pause: 'Pausa',
@@ -59,7 +59,7 @@ const TEXT = {
     not_yeedi: 'Questa entità non è un aspirapolvere yeedi.', fan: 'Aspirazione', water: 'Acqua', mop_only_short: 'Spenta',
     states: { cleaning: 'Pulizia', returning: 'Ritorno alla base', docked: 'Alla base',
       idle: 'Inattivo', paused: 'In pausa', error: 'Errore' },
-    since: 'iniziata alle',
+    since: 'iniziata alle', end_at: 'fine verso le', left: (n) => `mancano ~${n} min`,
   },
 };
 
@@ -436,7 +436,7 @@ class YeediMapCard extends HTMLElement {
 
   // "Last cleaning: 32 min · 18 m² · 2 h ago", from the statistics sensors.
   _lastClean(related, moving) {
-    if (moving) return '';
+    if (moving) return this._progressFoot();
     const { text } = this._t();
     const lang = this._hass?.locale?.language || 'en';
     const parts = [];
@@ -463,6 +463,28 @@ class YeediMapCard extends HTMLElement {
       parts.push(ago);
     }
     return `<div class="foot">${esc(text.last_clean)} · ${esc(parts.join(' · '))}</div>`;
+  }
+
+  // While cleaning: the room the robot is in, the estimated end and the time left
+  // (computed by the integration from the durations learned on previous cleanings).
+  _progressFoot() {
+    const p = this._data?.progress;
+    if (!p) return '';
+    const { text } = this._t();
+    const lang = this._hass?.locale?.language || 'en';
+    const parts = [];
+    if (p.room_id != null) {
+      const room = (this._data.rooms || []).find((r) => r.id === p.room_id) || { id: p.room_id, name: p.room || '' };
+      parts.push(this._roomName(room));
+    }
+    if (p.end) {
+      const hm = new Date(p.end * 1000).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+      parts.push(`${text.end_at} ${hm}`);
+    }
+    if (p.remaining_minutes != null) parts.push(text.left(p.remaining_minutes));
+    if (!parts.length) return '';
+    const bar = p.progress != null ? `<div class="bar"><div style="width:${p.progress}%"></div></div>` : '';
+    return `<div class="foot">${esc(parts.join(' · '))}</div>${bar}`;
   }
 
   _levelRow(title, icon, levels, current, labelOf, attr) {
@@ -622,6 +644,8 @@ const STYLE = `
   .row { display: flex; align-items: center; gap: 10px; padding: 4px 16px; }
   .row:last-child { padding-bottom: 14px; }
   .foot { padding: 2px 16px 12px; font-size: 12px; color: var(--secondary-text-color); }
+  .bar { height: 3px; margin: -8px 16px 12px; border-radius: 2px; background: color-mix(in srgb, var(--primary-color) 18%, transparent); overflow: hidden; }
+  .bar > div { height: 100%; border-radius: 2px; background: var(--primary-color); transition: width 1s linear; }
   .row:last-child + .foot { margin-top: -8px; }
   .lbl { font-size: 12px; color: var(--secondary-text-color); min-width: 84px; flex: 0 0 auto; display: flex; flex-direction: column; line-height: 1.2; }
   .lbl small { font-size: 12px; color: var(--primary-text-color); font-weight: 500; }

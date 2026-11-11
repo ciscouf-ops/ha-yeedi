@@ -35,6 +35,7 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 from .controller import YeediConfigEntry
 from .entity import YeediEntity
+from .map_data import YeediMapData
 from .suction import YeediSuction
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +94,11 @@ async def async_setup_entry(
     )
     controller = entry.runtime_data
     async_add_entities(
-        YeediVacuum(device, controller.suction[device.device_info["did"]])
+        YeediVacuum(
+            device,
+            controller.suction[device.device_info["did"]],
+            controller.map_data.get(device.device_info["did"]),
+        )
         for device in controller.devices
         if device.capabilities.device_type is DeviceType.VACUUM
     )
@@ -116,10 +121,16 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
         key="vacuum", translation_key="vacuum", name=None
     )
 
-    def __init__(self, device: Device, suction: YeediSuction) -> None:
+    def __init__(
+        self,
+        device: Device,
+        suction: YeediSuction,
+        map_data: YeediMapData | None = None,
+    ) -> None:
         """Initialize the vacuum."""
         super().__init__(device, device.capabilities)
         self._suction = suction
+        self._map_data = map_data
         self._rooms: RoomsEvent | None = None
         self._maps: dict[str, Map] = {}
         self._error: str | None = None
@@ -207,7 +218,13 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
         if self._attr_activity is VacuumActivity.PAUSED:
             await self._clean_command(CleanAction.RESUME)
         else:
+            self._plan(None)
             await self._clean_command(CleanAction.START)
+
+    def _plan(self, rooms: list[int] | None) -> None:
+        """Tell the map what the next cleaning covers (for the progress estimate)."""
+        if self._map_data is not None:
+            self._map_data.set_plan(rooms)
 
     async def _clean_command(self, action: CleanAction) -> None:
         await self._device.execute_command(self._capability.clean.action.command(action))
@@ -243,10 +260,12 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
                     )
                 if isinstance(rooms, list):
                     rooms = ",".join(str(r) for r in rooms)
+                self._plan([int(r) for r in str(rooms).split(",") if r.strip().isdigit()])
                 await self._device.execute_command(
                     area(CleanMode.SPOT_AREA, str(rooms), int(params.get("cleanings", 1)))
                 )
             else:
+                self._plan([])
                 await self._device.execute_command(
                     area(
                         CleanMode.CUSTOM_AREA,
@@ -282,7 +301,9 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
     async def async_clean_rooms(self, rooms: list[int | str], cleanings: int = 1) -> None:
         """Action yeedi.clean_rooms: clean rooms by number or name, in the given order."""
         area = self._area_capability()
-        ids = ",".join(str(self._room_id(r)) for r in rooms)
+        room_ids = [self._room_id(r) for r in rooms]
+        self._plan(room_ids)
+        ids = ",".join(str(i) for i in room_ids)
         await self._device.execute_command(area(CleanMode.SPOT_AREA, ids, cleanings))
 
     async def async_clean_zone(self, zone: list[float], cleanings: int = 1) -> None:
@@ -295,6 +316,7 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
         min_x, max_x = _min_side(x1, x2, MIN_ZONE_SIDE_M)
         min_y, max_y = _min_side(y1, y2, MIN_ZONE_SIDE_M)
         coords = ",".join(str(round(v * 1000)) for v in (min_x, min_y, max_x, max_y))
+        self._plan([])
         await self._device.execute_command(area(CleanMode.CUSTOM_AREA, coords, cleanings))
 
     def _get_segments(self) -> list[Segment]:
@@ -328,6 +350,7 @@ class YeediVacuum(YeediEntity[Capabilities], StateVacuumEntity, RestoreEntity):
             return
         if TYPE_CHECKING:
             assert self._capability.clean.action.area is not None
+        self._plan([int(i) for i in room_ids])
         await self._device.execute_command(
             self._capability.clean.action.area(CleanMode.SPOT_AREA, ",".join(room_ids), 1)
         )

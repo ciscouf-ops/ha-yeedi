@@ -88,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Brosse latérale"
+      },
+      "current_room": {
+        "name": "Pièce en cours"
+      },
+      "remaining_time": {
+        "name": "Temps restant"
+      },
+      "cleaning_end": {
+        "name": "Fin estimée"
       }
     },
     "vacuum": {

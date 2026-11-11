@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
+
 from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan
 from deebot_client.device import Device
 from deebot_client.events import (
@@ -23,7 +26,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -35,6 +38,7 @@ from .entity import (
     YeediEntity,
     get_supported_entities,
 )
+from .map_data import YeediMapData
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -148,7 +152,56 @@ async def async_setup_entry(
         for description in LIFESPAN_ENTITY_DESCRIPTIONS
         if description.component in device.capabilities.life_span.types
     )
+    map_data = entry.runtime_data.map_data
+    entities.extend(
+        YeediProgressSensor(device, map_data[device.device_info["did"]], description)
+        for device in devices
+        if device.device_info["did"] in map_data
+        for description in PROGRESS_DESCRIPTIONS
+    )
     async_add_entities(entities)
+
+
+@dataclass(kw_only=True, frozen=True)
+class YeediProgressSensorEntityDescription(SensorEntityDescription):
+    """Sensor built from the progress of the current cleaning (see YeediMapData)."""
+
+    value_fn: Callable[[dict[str, Any] | None], StateType | datetime]
+    attributes_fn: Callable[[dict[str, Any] | None], dict[str, Any]] = lambda _: {}
+
+
+def _end(progress: dict[str, Any] | None) -> datetime | None:
+    end = (progress or {}).get("end")
+    return datetime.fromtimestamp(end, UTC) if end else None
+
+
+PROGRESS_DESCRIPTIONS: tuple[YeediProgressSensorEntityDescription, ...] = (
+    YeediProgressSensorEntityDescription(
+        key="current_room",
+        translation_key="current_room",
+        value_fn=lambda p: (p or {}).get("room"),
+        attributes_fn=lambda p: {"room_id": (p or {}).get("room_id")},
+    ),
+    YeediProgressSensorEntityDescription(
+        key="remaining_time",
+        translation_key="remaining_time",
+        value_fn=lambda p: (p or {}).get("remaining_minutes"),
+        attributes_fn=lambda p: {
+            "progress": (p or {}).get("progress"),
+            "elapsed_minutes": (p or {}).get("elapsed_minutes"),
+            "planned_rooms": (p or {}).get("planned"),
+        },
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        suggested_display_precision=0,
+    ),
+    YeediProgressSensorEntityDescription(
+        key="cleaning_end",
+        translation_key="cleaning_end",
+        value_fn=_end,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+)
 
 
 class YeediSensor(YeediDescriptionEntity[CapabilityEvent], SensorEntity):
@@ -186,3 +239,34 @@ class YeediLifespanSensor(YeediDescriptionEntity[CapabilityLifeSpan], SensorEnti
                 self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)
+
+
+class YeediProgressSensor(YeediDescriptionEntity[YeediMapData], SensorEntity):
+    """Room, time left or end of the current cleaning, from the map data."""
+
+    entity_description: YeediProgressSensorEntityDescription
+
+    def __init__(
+        self,
+        device: Device,
+        map_data: YeediMapData,
+        description: YeediProgressSensorEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(device, map_data, description)
+        self._refresh()
+
+    async def async_added_to_hass(self) -> None:
+        """Follow the map data."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self._capability.async_add_listener(self._on_map_data))
+
+    @callback
+    def _on_map_data(self) -> None:
+        self._refresh()
+        self.async_write_ha_state()
+
+    def _refresh(self) -> None:
+        progress = self._capability.estimate()
+        self._attr_native_value = self.entity_description.value_fn(progress)
+        self._attr_extra_state_attributes = self.entity_description.attributes_fn(progress)

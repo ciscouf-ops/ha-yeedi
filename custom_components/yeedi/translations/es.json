@@ -88,6 +88,15 @@
       },
       "lifespan_side_brush": {
         "name": "Cepillo lateral"
+      },
+      "current_room": {
+        "name": "Habitación actual"
+      },
+      "remaining_time": {
+        "name": "Tiempo restante"
+      },
+      "cleaning_end": {
+        "name": "Fin estimado"
       }
     },
     "vacuum": {
