@@ -105,27 +105,36 @@ from deebot_client.events.auto_empty import AutoEmptyEvent
 from deebot_client.events.network import NetworkInfoEvent
 from deebot_client.models import StaticDeviceInfo
 
-from .commands import GetMapInfoV2
+from .commands import EmptyDustbin, GetMapInfoV2
 
 
-def _station() -> CapabilityStation:
-    """Auto-empty station capabilities."""
+def _station(*, act_start: bool = False) -> CapabilityStation:
+    """Auto-empty station capabilities.
+
+    With ``act_start`` (yeedi vac station) the dustbin is emptied with
+    ``setAutoEmpty act:start`` and auto-empty is only on or off, without a frequency.
+    """
     return CapabilityStation(
         action=CapabilityExecuteTypes(
-            station_action.StationAction, types=(StationAction.EMPTY_DUSTBIN,)
+            EmptyDustbin if act_start else station_action.StationAction,
+            types=(StationAction.EMPTY_DUSTBIN,),
         ),
         auto_empty=CapabilitySetTypes(
             event=AutoEmptyEvent,
             get=[GetAutoEmpty()],
             set=SetAutoEmpty,
-            types=(auto_empty.Frequency.AUTO, auto_empty.Frequency.SMART),
+            types=()
+            if act_start
+            else (auto_empty.Frequency.AUTO, auto_empty.Frequency.SMART),
         ),
         # The yeedi stations do not answer getStationState: nothing to poll.
         state=CapabilityEvent(StationEvent, []),
     )
 
 
-def yeedi_950_capabilities(*, station: bool = True) -> StaticDeviceInfo:
+def yeedi_950_capabilities(
+    *, station: bool = True, act_start: bool = False
+) -> StaticDeviceInfo:
     """Return the capabilities of a Yeedi 950-type robot."""
     return StaticDeviceInfo(
         DataType.JSON,
@@ -197,7 +206,7 @@ def yeedi_950_capabilities(*, station: bool = True) -> StaticDeviceInfo:
                 volume=CapabilitySet(VolumeEvent, [GetVolume()], SetVolume),
             ),
             state=CapabilityEvent(StateEvent, [GetChargeState(), GetCleanInfo()]),
-            station=_station() if station else None,
+            station=_station(act_start=act_start) if station else None,
             stats=CapabilityStats(
                 clean=CapabilityEvent(StatsEvent, [GetStats()]),
                 report=CapabilityEvent(ReportStatsEvent, []),
@@ -235,6 +244,9 @@ def yeedi_950_capabilities(*, station: bool = True) -> StaticDeviceInfo:
 #              entities are created only when the "station" option of the entry is on.
 #   "mop"    - mop-washing/drying station: no auto-empty, so no station entities (yet).
 #   "none"   - plain charging dock.
+# Stations emptied with ``setAutoEmpty act:start`` instead of ``stationAction``
+# (checked on a real yeedi vac station, firmware 1.2.9).
+_EMPTY_WITH_ACT = {"mnx7f4"}
 YEEDI_MODELS: dict[str, tuple[str, str]] = {
     "04z443": ("yeedi vac max", "empty"),  # station sold separately: entities behind the option
     "h041es": ("yeedi vac hybrid", "empty"),
@@ -259,5 +271,7 @@ def register_yeedi_models() -> None:
 
     for model, (_name, dock) in YEEDI_MODELS.items():
         if model not in hardware._DEVICES:  # noqa: SLF001
-            hardware._DEVICES[model] = yeedi_950_capabilities(station=dock == "empty")  # noqa: SLF001
+            hardware._DEVICES[model] = yeedi_950_capabilities(  # noqa: SLF001
+                station=dock == "empty", act_start=model in _EMPTY_WITH_ACT
+            )
         hardware._NOT_FOUND.discard(model)  # noqa: SLF001

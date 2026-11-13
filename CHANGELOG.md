@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- **Fix: emptying the dustbin did nothing on the yeedi vac station (`mnx7f4`).** This robot does not know `stationAction`; it empties with `setAutoEmpty` and `act: start`. Its auto-empty has no frequency either, so the select offers only Off / On there.
+- The auto-empty select asks the robot again after a change, so it no longer keeps showing the old value.
+
 ## 0.2.9
 
 ### Map card
