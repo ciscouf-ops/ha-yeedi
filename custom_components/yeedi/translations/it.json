@@ -53,6 +53,7 @@
         "name": "Svuotamento automatico",
         "state": {
           "off": "Disattivato",
+          "on": "Attivo",
           "auto": "Automatico",
           "smart": "Intelligente",
           "min_10": "Ogni 10 minuti",

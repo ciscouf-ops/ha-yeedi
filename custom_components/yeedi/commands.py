@@ -11,7 +11,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from deebot_client.commands.json.common import JsonCommandWithMessageHandling
+from deebot_client.commands.json.common import (
+    ExecuteCommand,
+    JsonCommandWithMessageHandling,
+)
 from deebot_client.commands.json.map import GetMapSet
 from deebot_client.events import MapSetType
 from deebot_client.events.map import CachedMapInfoEvent, Map
@@ -19,6 +22,7 @@ from deebot_client.message import HandlingResult, HandlingState, MessageBodyData
 from deebot_client.rs.map import RotationAngle
 
 if TYPE_CHECKING:
+    from deebot_client.commands import StationAction
     from deebot_client.event_bus import EventBus
 
 
@@ -57,3 +61,16 @@ class GetMapInfoV2(JsonCommandWithMessageHandling, MessageBodyDataDict):
                 GetMapSet(result.args["map_id"], MapSetType.ROOMS)
             )
         return result
+
+
+class EmptyDustbin(ExecuteCommand):
+    """Empty the dustbin into the station (yeedi vac station, class mnx7f4).
+
+    This robot does not know ``stationAction``: emptying is ``setAutoEmpty`` with
+    ``act: start``.
+    """
+
+    NAME = "setAutoEmpty"
+
+    def __init__(self, _action: StationAction) -> None:
+        super().__init__({"act": "start"})

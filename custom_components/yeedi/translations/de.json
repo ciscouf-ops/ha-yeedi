@@ -53,6 +53,7 @@
         "name": "Automatische Entleerung",
         "state": {
           "off": "Aus",
+          "on": "An",
           "auto": "Automatisch",
           "smart": "Intelligent",
           "min_10": "Alle 10 Minuten",

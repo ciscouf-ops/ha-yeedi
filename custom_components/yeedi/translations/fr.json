@@ -53,6 +53,7 @@
         "name": "Auto-vidage",
         "state": {
           "off": "Désactivé",
+          "on": "Activé",
           "auto": "Automatique",
           "smart": "Intelligent",
           "min_10": "Toutes les 10 minutes",
