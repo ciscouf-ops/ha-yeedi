@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.10
+- **Fix: after a Home Assistant restart, "Last cleaning" showed the restart time and 0 min.** When it connects, the robot reports the statistics of an empty session (0 m², a few seconds). These are now ignored (under 60 s with no area), and the last cleaning's area and duration are restored after a restart, with the time it ended in an `end` attribute.
+- Map card: "Last cleaning" uses that `end` attribute when it is there.
+
 ## 0.2.9
 
 ### Map card

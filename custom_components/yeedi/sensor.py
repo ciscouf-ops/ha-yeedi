@@ -25,10 +25,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.components.sensor import RestoreSensor
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import SUPPORTED_LIFESPANS
 from .controller import YeediConfigEntry
@@ -39,6 +41,11 @@ from .entity import (
     get_supported_entities,
 )
 from .map_data import YeediMapData
+
+# Attribute holding when the last real cleaning ended (stats sensors).
+ATTR_END = "end"
+# Below this, with no area, the stats are an empty session, not a cleaning.
+MIN_CLEANING_SECONDS = 60
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -204,7 +211,7 @@ PROGRESS_DESCRIPTIONS: tuple[YeediProgressSensorEntityDescription, ...] = (
 )
 
 
-class YeediSensor(YeediDescriptionEntity[CapabilityEvent], SensorEntity):
+class YeediSensor(YeediDescriptionEntity[CapabilityEvent], RestoreSensor):
     """A sensor fed by one robot event."""
 
     entity_description: YeediSensorEntityDescription
@@ -212,13 +219,37 @@ class YeediSensor(YeediDescriptionEntity[CapabilityEvent], SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to the event."""
         await super().async_added_to_hass()
+        # When it (re)connects, the robot reports the stats of an empty session
+        # (0 m2, a few seconds). Keep the last real cleaning instead (value and its
+        # end time in the "end" attribute, restored across restarts).
+        stats = self.entity_description.key in ("stats_area", "stats_time")
+        if stats:
+            last = await self.async_get_last_sensor_data()
+            old = await self.async_get_last_state()
+            if (
+                last is not None
+                and last.native_value is not None
+                and old is not None
+                and old.attributes.get(ATTR_END)
+            ):
+                self._attr_native_value = last.native_value
+                self._attr_extra_state_attributes = {ATTR_END: old.attributes[ATTR_END]}
 
         async def on_event(event: Event) -> None:
+            if (
+                stats
+                and isinstance(event, StatsEvent)
+                and (event.time or 0) < MIN_CLEANING_SECONDS
+                and not event.area
+            ):
+                return
             value = self.entity_description.value_fn(event)
             if value is not None:
                 self._attr_native_value = value
                 if isinstance(event, ErrorEvent):
                     self._attr_extra_state_attributes = {"description": event.description}
+                if stats:
+                    self._attr_extra_state_attributes = {ATTR_END: dt_util.utcnow().isoformat()}
                 self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)

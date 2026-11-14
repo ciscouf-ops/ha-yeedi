@@ -632,7 +632,8 @@ class YeediMapCard extends HTMLElement {
         v = Math.round(v);
       } else v = Math.round(v * 10) / 10;
       parts.push(`${v.toLocaleString(lang)} ${u}`);
-      const t = new Date(st.last_changed).getTime();
+      // End of the last real cleaning (kept across restarts), else the state change.
+      const t = new Date(st.attributes.end || st.last_changed).getTime();
       if (!when || t > when) when = t;
     }
     if (!parts.length) return '';
