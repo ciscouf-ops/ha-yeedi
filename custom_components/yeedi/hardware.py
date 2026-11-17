@@ -105,7 +105,7 @@ from deebot_client.events.auto_empty import AutoEmptyEvent
 from deebot_client.events.network import NetworkInfoEvent
 from deebot_client.models import StaticDeviceInfo
 
-from .commands import GetMapInfoV2
+from .commands import GetMapInfoV2, OnYeediMapInfoV2
 
 
 def _station() -> CapabilityStation:
@@ -256,7 +256,9 @@ def model_name(class_: str) -> str | None:
 def register_yeedi_models() -> None:
     """Make the Yeedi models known to deebot-client (without shadowing its own sheets)."""
     from deebot_client import hardware  # noqa: PLC0415
+    from deebot_client.messages.json import MESSAGES  # noqa: PLC0415
 
+    MESSAGES[OnYeediMapInfoV2.NAME] = OnYeediMapInfoV2
     for model, (_name, dock) in YEEDI_MODELS.items():
         if model not in hardware._DEVICES:  # noqa: SLF001
             hardware._DEVICES[model] = yeedi_950_capabilities(station=dock == "empty")  # noqa: SLF001
