@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- **Fix: no room outlines on the vac station (class mnx7f4), so the map card stayed empty.** This model always answers `getMapSubSet` with an empty outline and sends the outlines in an `onMapInfo_V2` message instead, after every `getMapInfo_V2`. That message is now read. Ecovacs robots send a message of the same name in another format: it is still left to deebot-client.
+
 ## 0.2.10
 - **Fix: after a Home Assistant restart, "Last cleaning" showed the restart time and 0 min.** When it connects, the robot reports the statistics of an empty session (0 m², a few seconds). These are now ignored (under 60 s with no area), and the last cleaning's area and duration are restored after a restart, with the time it ended in an `end` attribute.
 - Map card: "Last cleaning" uses that `end` attribute when it is there.
