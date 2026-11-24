@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.11
+- **License: the integration is now GPL-3.0-or-later** (it was MIT). `auth.py` adapts login methods from deebot-client, which is GPL-3.0, so the project has to follow that license.
+- A `NOTICE` file and file headers credit the code derived from deebot-client (GPL-3.0) and from the Home Assistant Ecovacs integration (Apache-2.0, Copyright Home Assistant authors).
+- No functional change.
+
 ## 0.2.10
 - **Fix: after a Home Assistant restart, "Last cleaning" showed the restart time and 0 min.** When it connects, the robot reports the statistics of an empty session (0 m², a few seconds). These are now ignored (under 60 s with no area), and the last cleaning's area and duration are restored after a restart, with the time it ended in an `end` attribute.
 - Map card: "Last cleaning" uses that `end` attribute when it is there.

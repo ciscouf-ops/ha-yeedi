@@ -159,6 +159,15 @@ yeedi robots only send the outline of their rooms now and then, mostly while cle
 - [deebot-client](https://github.com/DeebotUniverse/client.py) and the Home Assistant Ecovacs integration, which this integration is built on.
 - [ecovacs-deebot.js](https://github.com/mrbungle64/ecovacs-deebot.js), whose yeedi support documented the login differences.
 
+## License
+
+This integration is licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0-or-later).
+
+- `auth.py` adapts the login methods of [deebot-client](https://github.com/DeebotUniverse/client.py) (GPL-3.0).
+- `controller.py`, `entity.py` and parts of `config_flow.py` are derived from the Home Assistant Ecovacs integration, Copyright Home Assistant authors, licensed under the Apache License 2.0.
+
+See [NOTICE](NOTICE) for details.
+
 ## Disclaimer
 
 This is a community project, not affiliated with, endorsed by or supported by yeedi or Ecovacs. yeedi and Ecovacs are trademarks of their respective owners; the brand images are used only to identify the devices this integration works with.
