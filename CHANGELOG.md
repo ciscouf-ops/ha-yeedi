@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.2.13b1 (test version)
-- **Test: the yeedi M16 Infinity (class `4e64gs`) is recognised**, as a 950-type robot with an auto-empty station. Not checked on a real robot yet: feedback welcome in #2.
+- **Test: the yeedi M16 Infinity (class `4e64gs`) is recognised.** It has the hardware of the Ecovacs DEEBOT T90 Omni (OZMO Roller 3.0 mop, omni station), so it uses the deebot-client capabilities of the DEEBOT T90 Pro Omni. Not checked on a real robot yet: feedback welcome in #2.
 
 ## 0.2.12
 - **Fix: emptying the dustbin did nothing on the yeedi vac station (`mnx7f4`).** This robot does not know `stationAction`; it empties with `setAutoEmpty` and `act: start`. Its auto-empty has no frequency either, so the select offers only Off / On there. Thanks @slevin-7 (#1).

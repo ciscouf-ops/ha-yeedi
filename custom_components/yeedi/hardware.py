@@ -105,6 +105,8 @@ from deebot_client.events.auto_empty import AutoEmptyEvent
 from deebot_client.events.network import NetworkInfoEvent
 from deebot_client.models import StaticDeviceInfo
 
+from deebot_client.hardware import cgkjbx as _deebot_t90_pro_omni
+
 from .commands import EmptyDustbin, GetMapInfoV2, OnYeediMapInfoV2
 
 
@@ -247,6 +249,12 @@ def yeedi_950_capabilities(
 # Stations emptied with ``setAutoEmpty act:start`` instead of ``stationAction``
 # (checked on a real yeedi vac station, firmware 1.2.9).
 _EMPTY_WITH_ACT = {"mnx7f4"}
+# Recent models built on an Ecovacs DEEBOT: they reuse its deebot-client sheet instead of
+# the 950-type one. The M16 Infinity has the hardware of the DEEBOT T90 Omni (OZMO Roller
+# 3.0 mop, TruEdge 3.0, omni station with hot-water washing and hot-air drying); its
+# sheet (class cgkjbx, same as 7fpaed and k2iwaq) is the starting point until the robot
+# is checked.
+_BASED_ON = {"4e64gs": _deebot_t90_pro_omni.get_device_info}
 YEEDI_MODELS: dict[str, tuple[str, str]] = {
     "04z443": ("yeedi vac max", "empty"),  # station sold separately: entities behind the option
     "h041es": ("yeedi vac hybrid", "empty"),
@@ -257,8 +265,7 @@ YEEDI_MODELS: dict[str, tuple[str, str]] = {
     "p5nx9u": ("yeedi 2 hybrid", "none"),
     "vthpeg": ("yeedi mop station", "mop"),
     "zwvyi2": ("yeedi mop station pro", "mop"),
-    # Not checked on a real robot yet (issue #2): declared as a 950-type robot with an
-    # auto-empty station, to see what it supports.
+    # Not checked on a real robot yet (issue #2): see _BASED_ON.
     "4e64gs": ("yeedi M16 Infinity", "empty"),
 }
 
@@ -276,7 +283,11 @@ def register_yeedi_models() -> None:
     MESSAGES[OnYeediMapInfoV2.NAME] = OnYeediMapInfoV2
     for model, (_name, dock) in YEEDI_MODELS.items():
         if model not in hardware._DEVICES:  # noqa: SLF001
-            hardware._DEVICES[model] = yeedi_950_capabilities(  # noqa: SLF001
-                station=dock == "empty", act_start=model in _EMPTY_WITH_ACT
+            hardware._DEVICES[model] = (  # noqa: SLF001
+                _BASED_ON[model]()
+                if model in _BASED_ON
+                else yeedi_950_capabilities(
+                    station=dock == "empty", act_start=model in _EMPTY_WITH_ACT
+                )
             )
         hardware._NOT_FOUND.discard(model)  # noqa: SLF001

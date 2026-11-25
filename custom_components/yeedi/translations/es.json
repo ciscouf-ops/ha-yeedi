@@ -148,6 +148,9 @@
     "number": {
       "volume": {
         "name": "Volumen"
+      },
+      "water_amount": {
+        "name": "Caudal de agua"
       }
     }
   },
