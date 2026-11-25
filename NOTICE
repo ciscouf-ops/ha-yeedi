@@ -1,0 +1,26 @@
+ha-yeedi
+Copyright (C) 2026 ciscouf-ops
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. See the LICENSE file.
+
+This project contains code derived from the following works.
+
+1. deebot-client
+   https://github.com/DeebotUniverse/client.py
+   Licensed under the GNU General Public License v3.0.
+   custom_components/yeedi/auth.py contains methods adapted from
+   deebot_client/authentication.py (the private API, auth API and
+   login-by-it-token calls), with the yeedi application keys, organisation
+   codes and app metadata changed.
+
+2. Home Assistant - Ecovacs integration
+   https://github.com/home-assistant/core/tree/dev/homeassistant/components/ecovacs
+   Copyright Home Assistant authors.
+   Licensed under the Apache License, Version 2.0
+   (http://www.apache.org/licenses/LICENSE-2.0).
+   custom_components/yeedi/controller.py, custom_components/yeedi/entity.py and
+   parts of custom_components/yeedi/config_flow.py are derived from that
+   integration and have been modified for yeedi accounts.

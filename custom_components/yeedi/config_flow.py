@@ -1,3 +1,8 @@
+# Partly derived from the Home Assistant Ecovacs integration
+# (https://github.com/home-assistant/core/tree/dev/homeassistant/components/ecovacs),
+# Copyright Home Assistant authors, licensed under the Apache License, Version 2.0
+# (http://www.apache.org/licenses/LICENSE-2.0). Modified for yeedi accounts.
+# This file is distributed as part of ha-yeedi under the GNU GPL v3.0 or later; see NOTICE.
 """Config flow for the Yeedi integration."""
 
 from __future__ import annotations
