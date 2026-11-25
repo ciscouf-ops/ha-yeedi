@@ -148,6 +148,9 @@
     "number": {
       "volume": {
         "name": "Lautstärke"
+      },
+      "water_amount": {
+        "name": "Wassermenge"
       }
     }
   },

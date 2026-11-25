@@ -222,3 +222,31 @@ async def test_zone_has_no_room_estimate(hass, device) -> None:
     p = data.estimate()
     assert p["remaining_minutes"] is None and p["end"] is None and p["planned"] == []
     data.stop()
+
+
+async def test_outlines_from_the_ecovacs_map_info(hass, device) -> None:
+    """M16 Infinity: the outlines come in an Ecovacs-marked onMapInfo_V2 (MapInfoEvent)."""
+    import base64
+    import json
+    import lzma
+
+    from deebot_client.events.map import MapInfoEvent
+
+    def info(sections: list) -> str:
+        data = json.dumps(sections).encode()
+        raw = lzma.compress(data, format=lzma.FORMAT_ALONE)
+        return base64.b64encode(raw[:5] + len(data).to_bytes(4, "little") + raw[13:]).decode()
+
+    data = YeediMapData(hass, device)
+    await data.async_start()
+    await device.events.emit(RoomsEvent("m1", [Room("", 2, ""), Room("", 5, "")]))
+    outlines = info([["2", "2;0,0;1000,0;1000,1000;0,1000", "5;0,0;50,0;50,50"], ["5"]])
+    await device.events.emit(MapInfoEvent(map_id="other", info=outlines))
+    assert all(r["outline"] == [] for r in data.as_dict()["rooms"])  # not the current map
+    await device.events.emit(MapInfoEvent(map_id="m1", info=outlines))
+    rooms = {r["id"]: r for r in data.as_dict()["rooms"]}
+    assert len(rooms[2]["outline"]) == 4
+    assert len(rooms[5]["outline"]) == 3
+    await device.events.emit(MapInfoEvent(map_id="m1", info="not base64"))  # ignored
+    data.stop()
+

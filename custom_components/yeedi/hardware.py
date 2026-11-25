@@ -10,6 +10,8 @@ auto_empty_station, clean_speed, map_image_supported). Vitesses : Standard / Max
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from deebot_client.capabilities import (
     Capabilities,
     CapabilityClean,
@@ -36,11 +38,10 @@ from deebot_client.commands.json.carpet import (
     SetCarpetAutoFanBoost,
 )
 from deebot_client.commands import StationAction
-from deebot_client.commands.json import station_action
 from deebot_client.commands.json.auto_empty import GetAutoEmpty, SetAutoEmpty
 from deebot_client.commands.json.charge import Charge
 from deebot_client.commands.json.charge_state import GetChargeState
-from deebot_client.commands.json.clean import Clean, CleanArea, GetCleanInfo
+from deebot_client.commands.json.clean import GetCleanInfo
 from deebot_client.commands.json.clean_logs import GetCleanLogs
 from deebot_client.commands.json.clear_map import ClearMap
 from deebot_client.commands.json.continuous_cleaning import (
@@ -105,7 +106,20 @@ from deebot_client.events.auto_empty import AutoEmptyEvent
 from deebot_client.events.network import NetworkInfoEvent
 from deebot_client.models import StaticDeviceInfo
 
-from .commands import EmptyDustbin, GetMapInfoV2, OnYeediMapInfoV2
+from deebot_client.commands.json.clean import CleanAreaV2, CleanV2
+from deebot_client.hardware import cgkjbx as _deebot_t90_pro_omni
+from deebot_client.models import StaticDeviceInfo
+
+from .commands import (
+    CleanAreaOrCleanAreaV2,
+    CleanOrCleanV2,
+    CleanV2OrClean,
+    CleanAreaV2OrCleanArea,
+    EmptyDustbin,
+    GetMapInfoV2,
+    OnYeediMapInfoV2,
+    StationActionOrEmptyDustbin,
+)
 
 
 def _station(*, act_start: bool = False) -> CapabilityStation:
@@ -116,7 +130,8 @@ def _station(*, act_start: bool = False) -> CapabilityStation:
     """
     return CapabilityStation(
         action=CapabilityExecuteTypes(
-            EmptyDustbin if act_start else station_action.StationAction,
+            # Other stations: stationAction, or the vac station way if not supported.
+            EmptyDustbin if act_start else StationActionOrEmptyDustbin,
             types=(StationAction.EMPTY_DUSTBIN,),
         ),
         auto_empty=CapabilitySetTypes(
@@ -146,7 +161,10 @@ def yeedi_950_capabilities(
             battery=CapabilityEvent(BatteryEvent, [GetBattery()]),
             charge=CapabilityExecute(Charge),
             clean=CapabilityClean(
-                action=CapabilityCleanAction(command=Clean, area=CleanArea),
+                # clean, or clean_V2 on a robot that only knows the latter.
+                action=CapabilityCleanAction(
+                    command=CleanOrCleanV2, area=CleanAreaOrCleanAreaV2
+                ),
                 continuous=CapabilitySetEnable(
                     ContinuousCleaningEvent,
                     [GetContinuousCleaning()],
@@ -247,6 +265,49 @@ def yeedi_950_capabilities(
 # Stations emptied with ``setAutoEmpty act:start`` instead of ``stationAction``
 # (checked on a real yeedi vac station, firmware 1.2.9).
 _EMPTY_WITH_ACT = {"mnx7f4"}
+# Recent models built on an Ecovacs DEEBOT: they reuse its deebot-client sheet instead of
+# the 950-type one. The M16 Infinity has the hardware of the DEEBOT T90 Omni (OZMO Roller
+# 3.0 mop, TruEdge 3.0, omni station with hot-water washing and hot-air drying); its
+# sheet (class cgkjbx, same as 7fpaed and k2iwaq) is the base. Checked on a real M16
+# (issue #2): it answers "rcp not support" to ``clean``, so it cleans with ``clean_V2``
+# like the DEEBOT T80 Omni.
+
+
+def _on_t90_omni(action: CapabilityCleanAction) -> StaticDeviceInfo:
+    info = _deebot_t90_pro_omni.get_device_info()
+    caps = info.capabilities
+    station = caps.station
+    if station is not None:
+        station = replace(
+            station,
+            action=replace(station.action, execute=StationActionOrEmptyDustbin),
+        )
+    return replace(
+        info,
+        capabilities=replace(
+            caps, clean=replace(caps.clean, action=action), station=station
+        ),
+    )
+
+
+def _m16_infinity() -> StaticDeviceInfo:
+    return _on_t90_omni(CapabilityCleanAction(command=CleanV2, area=CleanAreaV2))
+
+
+def experimental_device_info() -> StaticDeviceInfo:
+    """Sheet for a yeedi model nobody has reported yet (unknown class).
+
+    The recent yeedi models are built on recent Ecovacs DEEBOTs, so they start from
+    the M16 Infinity base (DEEBOT T90 Omni), with the fallbacks of ``commands``
+    (``clean_V2`` first, as recent robots expect it, or ``clean``; ``stationAction`` or
+    ``setAutoEmpty act:start``): what the robot does not support stays unavailable.
+    """
+    return _on_t90_omni(
+        CapabilityCleanAction(command=CleanV2OrClean, area=CleanAreaV2OrCleanArea)
+    )
+
+
+_BASED_ON = {"4e64gs": _m16_infinity}
 YEEDI_MODELS: dict[str, tuple[str, str]] = {
     "04z443": ("yeedi vac max", "empty"),  # station sold separately: entities behind the option
     "h041es": ("yeedi vac hybrid", "empty"),
@@ -257,6 +318,8 @@ YEEDI_MODELS: dict[str, tuple[str, str]] = {
     "p5nx9u": ("yeedi 2 hybrid", "none"),
     "vthpeg": ("yeedi mop station", "mop"),
     "zwvyi2": ("yeedi mop station pro", "mop"),
+    # Not checked on a real robot yet (issue #2): see _BASED_ON.
+    "4e64gs": ("yeedi M16 Infinity", "empty"),
 }
 
 
@@ -273,7 +336,11 @@ def register_yeedi_models() -> None:
     MESSAGES[OnYeediMapInfoV2.NAME] = OnYeediMapInfoV2
     for model, (_name, dock) in YEEDI_MODELS.items():
         if model not in hardware._DEVICES:  # noqa: SLF001
-            hardware._DEVICES[model] = yeedi_950_capabilities(  # noqa: SLF001
-                station=dock == "empty", act_start=model in _EMPTY_WITH_ACT
+            hardware._DEVICES[model] = (  # noqa: SLF001
+                _BASED_ON[model]()
+                if model in _BASED_ON
+                else yeedi_950_capabilities(
+                    station=dock == "empty", act_start=model in _EMPTY_WITH_ACT
+                )
             )
         hardware._NOT_FOUND.discard(model)  # noqa: SLF001

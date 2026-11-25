@@ -148,6 +148,9 @@
     "number": {
       "volume": {
         "name": "Volume"
+      },
+      "water_amount": {
+        "name": "Water flow"
       }
     }
   },

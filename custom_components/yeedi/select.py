@@ -49,7 +49,12 @@ ENTITY_DESCRIPTIONS: tuple[YeediSelectEntityDescription, ...] = (
     YeediSelectEntityDescription[WaterAmountEvent](
         key="water_amount",
         translation_key="water_amount",
-        capability_fn=lambda caps: caps.water.amount if caps.water else None,
+        # Recent models (M16 Infinity) set the water flow with a number instead: see number.py.
+        capability_fn=lambda caps: (
+            caps.water.amount
+            if caps.water and isinstance(caps.water.amount, CapabilitySetTypes)
+            else None
+        ),
         current_option_fn=lambda e: _name_key(e.value),
         options_fn=lambda cap: [_name_key(t) for t in cap.types],
         entity_category=EntityCategory.CONFIG,
@@ -117,6 +122,15 @@ class YeediSelect(YeediDescriptionEntity[CapabilitySetTypes], SelectEntity):
         await super().async_added_to_hass()
 
         async def on_event(event: Event) -> None:
+            # A station that reports auto-empty on without a frequency has none (seen on
+            # the yeedi vac station): offer only off / on.
+            if (
+                isinstance(event, AutoEmptyEvent)
+                and event.enabled
+                and event.frequency is None
+                and self._attr_options != ["off", "on"]
+            ):
+                self._attr_options = ["off", "on"]
             self._attr_current_option = self.entity_description.current_option_fn(event)
             self.async_write_ha_state()
 

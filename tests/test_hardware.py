@@ -42,3 +42,11 @@ def test_vac_station_empties_with_set_auto_empty() -> None:
     other = dc_hardware._DEVICES["04z443"].capabilities.station  # noqa: SLF001
     assert not isinstance(other.action.execute(StationAction.EMPTY_DUSTBIN), EmptyDustbin)
     assert other.auto_empty.types
+
+
+def test_m16_infinity_uses_the_t90_omni_sheet() -> None:
+    register_yeedi_models()
+    m16 = dc_hardware._DEVICES["4e64gs"]  # noqa: SLF001
+    assert m16.capabilities.station is not None
+    assert m16.capabilities.water is not None
+    assert model_name("4e64gs") == "yeedi M16 Infinity"
