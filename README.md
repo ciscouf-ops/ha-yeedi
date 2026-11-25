@@ -2,13 +2,13 @@
 
 A Home Assistant integration for **yeedi** robot vacuums, through the yeedi cloud account.
 
-> **Only tested with a yeedi vac max** (class `04z443`), on Home Assistant 2026.11. Other yeedi models are declared on a best-effort basis and have not been tried: please open an issue (with the diagnostics file, see Troubleshooting) to report what works or not.
+> **Tested with a yeedi vac max** (class `04z443`, on Home Assistant 2026.11) **and, by a user, with a yeedi vac station** (class `mnx7f4`). Other yeedi models are declared on a best-effort basis and have not been tried: please open an issue (with the diagnostics file, see Troubleshooting) to report what works or not.
 
 | Model | Class | Dock | Status |
 |---|---|---|---|
 | yeedi vac max | `04z443` | auto-empty station | tested |
 | yeedi vac hybrid | `h041es` | auto-empty station | declared |
-| yeedi vac station | `mnx7f4` | auto-empty station | declared |
+| yeedi vac station | `mnx7f4` | auto-empty station | tested by a user (#1, #3) |
 | yeedi vac 2 | `9t30w8` | auto-empty station | declared |
 | yeedi vac 2 pro | `aaxesz` | auto-empty station (optional bundle) | declared |
 | yeedi cube | `6r6dbt` | auto-empty station | declared |
@@ -130,7 +130,7 @@ yeedi robots only send the outline of their rooms now and then, mostly while cle
 
 ## Known limitations
 
-- Only the yeedi vac max has been tested. Other models may expose different settings or report their map differently.
+- Only the yeedi vac max and the yeedi vac station have been tested. Other models may expose different settings or report their map differently.
 - Room names are the generic ones reported by the robot (Living room, Bedroom…). Custom names from the yeedi app are not available through the cloud API.
 - No map image (walls and floor) as in the yeedi app: the card draws the outline of the rooms reported by the robot.
 - The remaining time is an estimate: it starts from the room areas (1.2 min/m²) and improves with each cleaning, as the integration learns how long each room takes. A zone cleaning has no estimate.
