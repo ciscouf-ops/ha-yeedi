@@ -14,8 +14,11 @@ after every ``getMapInfo_V2``. ``OnYeediMapInfoV2`` reads them.
 from __future__ import annotations
 
 import json
+import logging
 from typing import TYPE_CHECKING, Any
 
+from deebot_client.commands.json import station_action
+from deebot_client.commands.json.clean import Clean, CleanArea, CleanAreaV2, CleanV2
 from deebot_client.commands.json.common import (
     ExecuteCommand,
     JsonCommandWithMessageHandling,
@@ -29,8 +32,12 @@ from deebot_client.rs.map import RotationAngle
 from deebot_client.rs.util import decompress_base64_data
 
 if TYPE_CHECKING:
+    from deebot_client.command import Command
     from deebot_client.commands import StationAction
     from deebot_client.event_bus import EventBus
+    from deebot_client.models import CleanAction, CleanMode
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class GetMapInfoV2(JsonCommandWithMessageHandling, MessageBodyDataDict):
@@ -128,3 +135,80 @@ class EmptyDustbin(ExecuteCommand):
 
     def __init__(self, _action: StationAction) -> None:
         super().__init__({"act": "start"})
+
+
+# A robot answers ``{"code": 20003, "msg": "rcp not support"}`` to a command it does not
+# know. The commands below then run their fallback instead, so a model declared on a
+# best-effort basis adapts by itself (seen on the M16 Infinity for ``clean``).
+_NOT_SUPPORTED = 20003
+
+
+def _not_supported(response: dict[str, Any]) -> bool:
+    if response.get("ret") != "ok":
+        return False
+    resp = response.get("resp", response)
+    body = resp.get("body") if isinstance(resp, dict) else None
+    return isinstance(body, dict) and body.get("code") == _NOT_SUPPORTED
+
+
+class _WithFallback:
+    """Mixin, before an ``ExecuteCommand``: run ``_fallback()`` when the robot does not
+    support the command."""
+
+    NAME: str
+
+    def _fallback(self) -> Command:
+        raise NotImplementedError
+
+    @classmethod
+    def _handle_body(cls, event_bus: EventBus, body: dict[str, Any]) -> HandlingResult:
+        if body.get("code") == _NOT_SUPPORTED:
+            _LOGGER.debug('"%s" not supported by the robot, using the fallback', cls.NAME)
+            return HandlingResult(HandlingState.FAILED)
+        return super()._handle_body(event_bus, body)  # type: ignore[misc]
+
+    def _handle_response(
+        self, event_bus: EventBus, response: dict[str, Any]
+    ) -> HandlingResult:
+        result = super()._handle_response(event_bus, response)  # type: ignore[misc]
+        if result.state == HandlingState.FAILED and _not_supported(response):
+            # SUCCESS so that deebot-client runs the requested command.
+            return HandlingResult(
+                HandlingState.SUCCESS, requested_commands=[self._fallback()]
+            )
+        return result
+
+
+class StationActionOrEmptyDustbin(_WithFallback, station_action.StationAction):
+    """``stationAction``, or ``setAutoEmpty act:start`` (yeedi vac station way)."""
+
+    def __init__(self, action: StationAction) -> None:
+        super().__init__(action)
+        self._action = action
+
+    def _fallback(self) -> Command:
+        return EmptyDustbin(self._action)
+
+
+class CleanOrCleanV2(_WithFallback, Clean):
+    """``clean``, or ``clean_V2`` on the robots that only know the latter."""
+
+    def __init__(self, action: CleanAction) -> None:
+        super().__init__(action)
+        self._action = action
+
+    def _fallback(self) -> Command:
+        return CleanV2(self._action)
+
+
+class CleanAreaOrCleanAreaV2(_WithFallback, CleanArea):
+    """Area cleaning with ``clean``, or with ``clean_V2``."""
+
+    def __init__(
+        self, mode: CleanMode, area: list[int | float], cleanings: int = 1
+    ) -> None:
+        super().__init__(mode, area, cleanings)
+        self._area_args = (mode, list(area), cleanings)
+
+    def _fallback(self) -> Command:
+        return CleanAreaV2(*self._area_args)

@@ -38,11 +38,10 @@ from deebot_client.commands.json.carpet import (
     SetCarpetAutoFanBoost,
 )
 from deebot_client.commands import StationAction
-from deebot_client.commands.json import station_action
 from deebot_client.commands.json.auto_empty import GetAutoEmpty, SetAutoEmpty
 from deebot_client.commands.json.charge import Charge
 from deebot_client.commands.json.charge_state import GetChargeState
-from deebot_client.commands.json.clean import Clean, CleanArea, GetCleanInfo
+from deebot_client.commands.json.clean import GetCleanInfo
 from deebot_client.commands.json.clean_logs import GetCleanLogs
 from deebot_client.commands.json.clear_map import ClearMap
 from deebot_client.commands.json.continuous_cleaning import (
@@ -111,7 +110,14 @@ from deebot_client.commands.json.clean import CleanAreaV2, CleanV2
 from deebot_client.hardware import cgkjbx as _deebot_t90_pro_omni
 from deebot_client.models import StaticDeviceInfo
 
-from .commands import EmptyDustbin, GetMapInfoV2, OnYeediMapInfoV2
+from .commands import (
+    CleanAreaOrCleanAreaV2,
+    CleanOrCleanV2,
+    EmptyDustbin,
+    GetMapInfoV2,
+    OnYeediMapInfoV2,
+    StationActionOrEmptyDustbin,
+)
 
 
 def _station(*, act_start: bool = False) -> CapabilityStation:
@@ -122,7 +128,8 @@ def _station(*, act_start: bool = False) -> CapabilityStation:
     """
     return CapabilityStation(
         action=CapabilityExecuteTypes(
-            EmptyDustbin if act_start else station_action.StationAction,
+            # Other stations: stationAction, or the vac station way if not supported.
+            EmptyDustbin if act_start else StationActionOrEmptyDustbin,
             types=(StationAction.EMPTY_DUSTBIN,),
         ),
         auto_empty=CapabilitySetTypes(
@@ -152,7 +159,10 @@ def yeedi_950_capabilities(
             battery=CapabilityEvent(BatteryEvent, [GetBattery()]),
             charge=CapabilityExecute(Charge),
             clean=CapabilityClean(
-                action=CapabilityCleanAction(command=Clean, area=CleanArea),
+                # clean, or clean_V2 on a robot that only knows the latter.
+                action=CapabilityCleanAction(
+                    command=CleanOrCleanV2, area=CleanAreaOrCleanAreaV2
+                ),
                 continuous=CapabilitySetEnable(
                     ContinuousCleaningEvent,
                     [GetContinuousCleaning()],

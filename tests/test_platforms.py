@@ -93,6 +93,23 @@ async def test_auto_empty_select_without_frequencies() -> None:
     assert device.commands == [("auto_empty", True, None), ("auto_empty", False, None)]
     assert device.events.refreshed == [AutoEmptyEvent, AutoEmptyEvent]
 
+async def test_auto_empty_select_learns_there_is_no_frequency() -> None:
+    """A station declared with frequencies that reports none is only off / on."""
+    device = FakeDevice(capabilities=_caps())
+    (sel,) = [
+        e
+        for e in get_supported_entities([device], select.YeediSelect, select.ENTITY_DESCRIPTIONS)
+        if e.entity_description.key == "auto_empty"
+    ]
+    _ready(sel)
+    await sel.async_added_to_hass()
+    await device.events.emit(AutoEmptyEvent(False, None))
+    assert sel.options == ["off", "auto", "smart"]  # off says nothing about frequencies
+    await device.events.emit(AutoEmptyEvent(True, None))
+    assert sel.options == ["off", "on"]
+    assert sel.current_option == "on"
+
+
 async def test_switch_and_volume() -> None:
     device = FakeDevice(capabilities=_caps())
     (sw,) = [

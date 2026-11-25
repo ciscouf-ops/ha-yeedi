@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.13b3 (test version)
+Lessons from the yeedi vac station and the M16 Infinity, applied to the models nobody has tested yet:
+- **Cleaning**: a robot that answers "rcp not support" to `clean` is sent `clean_V2` instead (start, pause, stop, rooms, zones).
+- **Emptying the dustbin**: a station that does not know `stationAction` is emptied with `setAutoEmpty act:start`, the yeedi vac station way.
+- **Auto-empty**: a station that reports auto-empty on without a frequency gets an Off / On select instead of the frequencies.
+These only kick in when the robot rejects the usual command: nothing changes for the models that already work.
+
 ## 0.2.13b2 (test version)
 - **M16 Infinity: starting a cleaning or cleaning rooms failed** (`rcp not support`): it now uses `clean_V2`, like the recent Ecovacs DEEBOT. Thanks @majorbig4 for testing (#2).
 - **Fix: downloading the diagnostics failed** on robots whose water flow is a number (M16 Infinity).
