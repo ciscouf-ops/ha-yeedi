@@ -59,11 +59,14 @@ ENTITY_DESCRIPTIONS: tuple[YeediSelectEntityDescription, ...] = (
         key="auto_empty",
         translation_key="auto_empty",
         capability_fn=lambda caps: caps.station.auto_empty if caps.station else None,
+        # Stations without frequencies (yeedi vac station) are only "off" or "on".
         current_option_fn=lambda e: (
-            _name_key(e.frequency) if e.enabled and e.frequency else "off"
+            "off" if not e.enabled else _name_key(e.frequency) if e.frequency else "on"
         ),
-        options_fn=lambda cap: ["off", *(_name_key(t) for t in cap.types)],
-        set_args_fn=lambda option: (False, None) if option == "off" else (True, Frequency[option.upper()]),
+        options_fn=lambda cap: ["off", *(_name_key(t) for t in cap.types)] if cap.types else ["off", "on"],
+        set_args_fn=lambda option: (
+            (False, None) if option == "off" else (True, None) if option == "on" else (True, Frequency[option.upper()])
+        ),
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -124,6 +127,9 @@ class YeediSelect(YeediDescriptionEntity[CapabilitySetTypes], SelectEntity):
         await self._device.execute_command(
             self._capability.set(*self.entity_description.set_args_fn(option))
         )
+        # setAutoEmpty is not linked to its get command: ask the robot again.
+        if self.entity_description.key == "auto_empty":
+            self._device.events.request_refresh(self._capability.event)
 
 
 class YeediSuctionSelect(YeediEntity[YeediSuction], SelectEntity, RestoreEntity):

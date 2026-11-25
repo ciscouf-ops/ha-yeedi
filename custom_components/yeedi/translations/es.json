@@ -53,6 +53,7 @@
         "name": "Autovaciado",
         "state": {
           "off": "Desactivado",
+          "on": "Activado",
           "auto": "Automático",
           "smart": "Inteligente",
           "min_10": "Cada 10 minutos",

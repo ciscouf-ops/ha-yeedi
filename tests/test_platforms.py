@@ -71,6 +71,28 @@ async def test_auto_empty_select() -> None:
     assert device.commands == [("auto_empty", False, None), ("auto_empty", True, Frequency.AUTO)]
 
 
+
+async def test_auto_empty_select_without_frequencies() -> None:
+    caps = _caps()
+    caps.station.auto_empty.types = ()
+    device = FakeDevice(capabilities=caps)
+    (sel,) = [
+        e
+        for e in get_supported_entities([device], select.YeediSelect, select.ENTITY_DESCRIPTIONS)
+        if e.entity_description.key == "auto_empty"
+    ]
+    _ready(sel)
+    assert sel.options == ["off", "on"]
+    await sel.async_added_to_hass()
+    await device.events.emit(AutoEmptyEvent(True, None))
+    assert sel.current_option == "on"
+    await device.events.emit(AutoEmptyEvent(False, None))
+    assert sel.current_option == "off"
+    await sel.async_select_option("on")
+    await sel.async_select_option("off")
+    assert device.commands == [("auto_empty", True, None), ("auto_empty", False, None)]
+    assert device.events.refreshed == [AutoEmptyEvent, AutoEmptyEvent]
+
 async def test_switch_and_volume() -> None:
     device = FakeDevice(capabilities=_caps())
     (sw,) = [

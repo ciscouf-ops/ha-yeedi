@@ -53,6 +53,7 @@
         "name": "Auto-empty",
         "state": {
           "off": "Off",
+          "on": "On",
           "auto": "Automatic",
           "smart": "Smart",
           "min_10": "Every 10 minutes",

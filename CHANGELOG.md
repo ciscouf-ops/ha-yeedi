@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.12
+- **Fix: emptying the dustbin did nothing on the yeedi vac station (`mnx7f4`).** This robot does not know `stationAction`; it empties with `setAutoEmpty` and `act: start`. Its auto-empty has no frequency either, so the select offers only Off / On there. Thanks @slevin-7 (#1).
+- The auto-empty select asks the robot again after a change, so it no longer keeps showing the old value.
+- **Fix: no room outlines on the map of the yeedi vac station.** This model always answers `getMapSubSet` with an empty outline and sends the outlines in an `onMapInfo_V2` message instead, which is now read. Ecovacs messages are left to deebot-client. Thanks @slevin-7 (#3).
+
 ## 0.2.11
 - **License: the integration is now GPL-3.0-or-later** (it was MIT). `auth.py` adapts login methods from deebot-client, which is GPL-3.0, so the project has to follow that license.
 - A `NOTICE` file and file headers credit the code derived from deebot-client (GPL-3.0) and from the Home Assistant Ecovacs integration (Apache-2.0, Copyright Home Assistant authors).
