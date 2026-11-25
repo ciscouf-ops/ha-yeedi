@@ -257,6 +257,9 @@ YEEDI_MODELS: dict[str, tuple[str, str]] = {
     "p5nx9u": ("yeedi 2 hybrid", "none"),
     "vthpeg": ("yeedi mop station", "mop"),
     "zwvyi2": ("yeedi mop station pro", "mop"),
+    # Not checked on a real robot yet (issue #2): declared as a 950-type robot with an
+    # auto-empty station, to see what it supports.
+    "4e64gs": ("yeedi M16 Infinity", "empty"),
 }
 
 
