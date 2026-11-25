@@ -14,6 +14,7 @@ A Home Assistant integration for **yeedi** robot vacuums, through the yeedi clou
 | yeedi cube | `6r6dbt` | auto-empty station | declared |
 | yeedi 2 hybrid | `p5nx9u` | charging dock | declared |
 | yeedi mop station / mop station pro | `vthpeg`, `zwvyi2` | mop-washing station (no station entities yet) | declared |
+| yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying) | being tested by a user (#2), pre-release |
 | yeedi Floor 3 Station / Floor 3+ | `t5e5o6`, `kd0una`, `t6kipw`, `u3bsxq`, `rwp09o` | mop-washing station | supported natively by deebot-client |
 
 Models not in this table (for example the older yeedi K650 and the first yeedi vac, which use the legacy XML protocol) are logged as *not supported yet* at setup.
