@@ -33,10 +33,13 @@ from deebot_client.events import (
     RoomsEvent,
     StateEvent,
 )
+from deebot_client.events.map import MapInfoEvent
 from deebot_client.models import State
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+
+from .commands import _room_outlines
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -189,6 +192,7 @@ class YeediMapData:
             events.subscribe(RoomsEvent, self._on_rooms),
             events.subscribe(MapSubsetEvent, self._on_map_subset),
             events.subscribe(CachedMapInfoEvent, self._on_map_info),
+            events.subscribe(MapInfoEvent, self._on_outlines),
         ]
 
     def stop(self) -> None:
@@ -240,6 +244,23 @@ class YeediMapData:
             self._rooms.pop(room_id)
             self._schedule_save()
         self._schedule_notify()
+
+    async def _on_outlines(self, event: MapInfoEvent) -> None:
+        """Room outlines of the robots built on recent Ecovacs (M16 Infinity).
+
+        Like the yeedi vac station, they send the outlines in ``onMapInfo_V2``, but
+        marked as an Ecovacs message (``outlineVer``): deebot-client turns it into a
+        ``MapInfoEvent`` for its own map, in the same format as the yeedi one.
+        """
+        if self._map_id and str(event.map_id) != str(self._map_id):
+            return
+        try:
+            outlines = _room_outlines(event.info)
+        except Exception:  # noqa: BLE001 - a damaged message must not break the map
+            _LOGGER.debug("Could not read the room outlines of map %s", event.map_id)
+            return
+        for room_id, coordinates in outlines.items():
+            await self._on_map_subset(MapSubsetEvent(room_id, MapSetType.ROOMS, coordinates))
 
     async def _on_map_subset(self, event: MapSubsetEvent) -> None:
         if event.type in (MapSetType.VIRTUAL_WALLS, MapSetType.NO_MOP_ZONES):

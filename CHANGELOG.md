@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.2.13b5 (test version)
+## 0.2.13b6 (test version)
+- **M16 Infinity: no room outlines on the map.** Same cause as on the yeedi vac station: the outlines come in `onMapInfo_V2`, in the same format, but marked as an Ecovacs message, which ha-yeedi left to deebot-client. They are now read too, for every robot built on a recent Ecovacs.
+
 Lessons from the yeedi vac station and the M16 Infinity, applied to the models nobody has tested yet:
 - **Cleaning**: a robot that answers "rcp not support" to `clean` is sent `clean_V2` instead (start, pause, stop, rooms, zones).
 - **Emptying the dustbin**: a station that does not know `stationAction` is emptied with `setAutoEmpty act:start`, the yeedi vac station way.
