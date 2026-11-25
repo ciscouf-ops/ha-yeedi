@@ -2,7 +2,7 @@
 
 A Home Assistant integration for **yeedi** robot vacuums, through the yeedi cloud account.
 
-> **Tested with a yeedi vac max** (class `04z443`, on Home Assistant 2026.11) **and, by a user, with a yeedi vac station** (class `mnx7f4`). Other yeedi models are declared on a best-effort basis and have not been tried: please open an issue (with the diagnostics file, see Troubleshooting) to report what works or not.
+> **Tested with a yeedi vac max** (class `04z443`, on Home Assistant 2026.11) **and, by users, with a yeedi vac station** (class `mnx7f4`) **and a yeedi M16 Infinity** (class `4e64gs`). Other yeedi models are declared on a best-effort basis and have not been tried: please open an issue (with the diagnostics file, see Troubleshooting) to report what works or not.
 
 | Model | Class | Dock | Status |
 |---|---|---|---|
@@ -14,7 +14,7 @@ A Home Assistant integration for **yeedi** robot vacuums, through the yeedi clou
 | yeedi cube | `6r6dbt` | auto-empty station | declared |
 | yeedi 2 hybrid | `p5nx9u` | charging dock | declared |
 | yeedi mop station / mop station pro | `vthpeg`, `zwvyi2` | mop-washing station (no station entities yet) | declared |
-| yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying) | being tested by a user (#2), pre-release |
+| yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying; no station entities yet) | tested by a user (#2) |
 | yeedi Floor 3 Station / Floor 3+ | `t5e5o6`, `kd0una`, `t6kipw`, `u3bsxq`, `rwp09o` | mop-washing station | supported natively by deebot-client |
 
 Recent models not in this table (for example the M12 Pro+ or the S20 Infinity Ultra, whose class nobody has reported yet) are set up in **experimental mode**, from the M16 Infinity base: some entities may stay unavailable. Please open an issue with the class shown in the log and the diagnostics, so the model can be added. The older models using the legacy XML protocol (yeedi K650, first yeedi vac) are logged as *not supported yet*.
@@ -131,7 +131,7 @@ yeedi robots only send the outline of their rooms now and then, mostly while cle
 
 ## Known limitations
 
-- Only the yeedi vac max and the yeedi vac station have been tested. Other models may expose different settings or report their map differently.
+- Only the yeedi vac max, the yeedi vac station and the yeedi M16 Infinity have been tested. Other models may expose different settings or report their map differently.
 - Room names are the generic ones reported by the robot (Living room, Bedroom…). Custom names from the yeedi app are not available through the cloud API.
 - No map image (walls and floor) as in the yeedi app: the card draws the outline of the rooms reported by the robot.
 - The remaining time is an estimate: it starts from the room areas (1.2 min/m²) and improves with each cleaning, as the integration learns how long each room takes. A zone cleaning has no estimate.

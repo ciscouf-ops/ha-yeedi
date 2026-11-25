@@ -1,24 +1,24 @@
 # Changelog
 
-## 0.2.13b7 (test version)
-- **HACS shows the number of downloads**: each release now carries a `yeedi.zip`, built by GitHub, which HACS installs and counts.
+## 0.2.13
 
-## 0.2.13b6 (test version)
-- **M16 Infinity: no room outlines on the map.** Same cause as on the yeedi vac station: the outlines come in `onMapInfo_V2`, in the same format, but marked as an Ecovacs message, which ha-yeedi left to deebot-client. They are now read too, for every robot built on a recent Ecovacs.
+### yeedi M16 Infinity (class `4e64gs`)
+- **Now supported.** It has the hardware of the Ecovacs DEEBOT T90 Omni (OZMO Roller 3.0 mop, omni station), so it uses the deebot-client capabilities of the DEEBOT T90 Pro Omni, cleaning with `clean_V2`. Tested by @majorbig4 on two robots: cleaning, return to dock, suction levels and mop only, water flow, battery, consumables and statistics work (#2).
+- **Room outlines on the map.** Same cause as on the yeedi vac station: the outlines come in `onMapInfo_V2`, in the same format, but marked as an Ecovacs message, which ha-yeedi left to deebot-client. They are now read too, for every robot built on a recent Ecovacs.
+- New **Water flow** number (0-50) for robots that set the water with a number instead of levels; the water select stays for the others.
+- **Fix: downloading the diagnostics failed** on these robots.
 
-Lessons from the yeedi vac station and the M16 Infinity, applied to the models nobody has tested yet:
+### Models nobody has tested yet
+Lessons from the yeedi vac station and the M16 Infinity:
 - **Cleaning**: a robot that answers "rcp not support" to `clean` is sent `clean_V2` instead (start, pause, stop, rooms, zones).
 - **Emptying the dustbin**: a station that does not know `stationAction` is emptied with `setAutoEmpty act:start`, the yeedi vac station way.
 - **Auto-empty**: a station that reports auto-empty on without a frequency gets an Off / On select instead of the frequencies.
+
 These only kick in when the robot rejects the usual command: nothing changes for the models that already work.
-- **Unknown models are set up in experimental mode** instead of being left out: a yeedi robot whose class nobody has reported yet (for example a recent M12 Pro+ or S20 Infinity Ultra) starts from the M16 Infinity base with the fallbacks above (cleaning with `clean_V2` first, as recent robots expect it, then `clean`), and the log asks its owner to open an issue.
+- **Unknown models are set up in experimental mode** instead of being left out: a yeedi robot whose class nobody has reported yet (for example a recent M12 Pro+ or S20 Infinity Ultra) starts from the M16 Infinity base, cleaning with `clean_V2` first then `clean`, and the log asks its owner to open an issue.
 
-## 0.2.13b2 (test version)
-- **M16 Infinity: starting a cleaning or cleaning rooms failed** (`rcp not support`): it now uses `clean_V2`, like the recent Ecovacs DEEBOT. Thanks @majorbig4 for testing (#2).
-- **Fix: downloading the diagnostics failed** on robots whose water flow is a number (M16 Infinity).
-
-## 0.2.13b1 (test version)
-- **Test: the yeedi M16 Infinity (class `4e64gs`) is recognised.** It has the hardware of the Ecovacs DEEBOT T90 Omni (OZMO Roller 3.0 mop, omni station), so it uses the deebot-client capabilities of the DEEBOT T90 Pro Omni. Not checked on a real robot yet: feedback welcome in #2.
+### HACS
+- **HACS shows the number of downloads**: each release now carries a `yeedi.zip`, built by GitHub, which HACS installs and counts.
 
 ## 0.2.12
 - **Fix: emptying the dustbin did nothing on the yeedi vac station (`mnx7f4`).** This robot does not know `stationAction`; it empties with `setAutoEmpty` and `act: start`. Its auto-empty has no frequency either, so the select offers only Off / On there. Thanks @slevin-7 (#1).
