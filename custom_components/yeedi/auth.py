@@ -1,3 +1,6 @@
+# Contains methods adapted from deebot-client (deebot_client/authentication.py,
+# https://github.com/DeebotUniverse/client.py), licensed under the GNU GPL v3.0.
+# This file is distributed as part of ha-yeedi under the GNU GPL v3.0 or later; see NOTICE.
 """Yeedi authentication on top of deebot-client.
 
 Yeedi is an Ecovacs brand: the portal (ecouser.net) and the MQTT broker are shared with
