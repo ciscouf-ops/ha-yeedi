@@ -218,3 +218,28 @@ class CleanAreaOrCleanAreaV2(_WithFallback, CleanArea):
 
     def _fallback(self) -> Command:
         return CleanAreaV2(*self._area_args)
+
+
+class CleanV2OrClean(_WithFallback, CleanV2):
+    """``clean_V2`` first (recent robots), or ``clean`` (unknown models)."""
+
+    def __init__(self, action: CleanAction) -> None:
+        super().__init__(action)
+        self._action = action
+
+    def _fallback(self) -> Command:
+        return Clean(self._action)
+
+
+class CleanAreaV2OrCleanArea(_WithFallback, CleanAreaV2):
+    """Area cleaning with ``clean_V2`` first, or with ``clean``."""
+
+    def __init__(
+        self, mode: CleanMode, area: list[int | float], cleanings: int = 1
+    ) -> None:
+        super().__init__(mode, area, cleanings)
+        self._area_args = (mode, list(area), cleanings)
+
+    def _fallback(self) -> Command:
+        return CleanArea(*self._area_args)
+

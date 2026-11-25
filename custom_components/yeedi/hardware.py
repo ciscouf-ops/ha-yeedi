@@ -113,6 +113,8 @@ from deebot_client.models import StaticDeviceInfo
 from .commands import (
     CleanAreaOrCleanAreaV2,
     CleanOrCleanV2,
+    CleanV2OrClean,
+    CleanAreaV2OrCleanArea,
     EmptyDustbin,
     GetMapInfoV2,
     OnYeediMapInfoV2,
@@ -297,11 +299,11 @@ def experimental_device_info() -> StaticDeviceInfo:
 
     The recent yeedi models are built on recent Ecovacs DEEBOTs, so they start from
     the M16 Infinity base (DEEBOT T90 Omni), with the fallbacks of ``commands``
-    (``clean`` or ``clean_V2``, ``stationAction`` or ``setAutoEmpty act:start``): what
-    the robot does not support just stays unavailable.
+    (``clean_V2`` first, as recent robots expect it, or ``clean``; ``stationAction`` or
+    ``setAutoEmpty act:start``): what the robot does not support stays unavailable.
     """
     return _on_t90_omni(
-        CapabilityCleanAction(command=CleanOrCleanV2, area=CleanAreaOrCleanAreaV2)
+        CapabilityCleanAction(command=CleanV2OrClean, area=CleanAreaV2OrCleanArea)
     )
 
 

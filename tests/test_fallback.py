@@ -8,7 +8,9 @@ from deebot_client.message import HandlingState
 
 from custom_components.yeedi.commands import (
     CleanAreaOrCleanAreaV2,
+    CleanAreaV2OrCleanArea,
     CleanOrCleanV2,
+    CleanV2OrClean,
     StationActionOrEmptyDustbin,
 )
 
@@ -78,3 +80,17 @@ async def test_fallback_runs_through_deebot_client(monkeypatch) -> None:
     )
     assert sent == ["clean", "clean_V2"]
     assert result.device_reached
+
+
+def test_clean_v2_first_falls_back_to_clean() -> None:
+    """Unknown models: clean_V2 first, clean if the robot does not know it."""
+    command = CleanV2OrClean(CleanAction.START)
+    assert command.NAME == "clean_V2"
+    (fallback,) = command._handle_response(FakeEventBus(), NOT_SUPPORTED).requested_commands
+    assert fallback.NAME == "clean"
+    assert fallback._args == {"act": "start", "type": "auto"}
+    area = CleanAreaV2OrCleanArea(CleanMode.SPOT_AREA, [4], 1)
+    assert area.NAME == "clean_V2"
+    (fallback,) = area._handle_response(FakeEventBus(), NOT_SUPPORTED).requested_commands
+    assert (fallback.NAME, fallback._args["content"]) == ("clean", "4")
+

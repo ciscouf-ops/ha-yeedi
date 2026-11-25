@@ -84,15 +84,15 @@ def test_unknown_model_gets_the_experimental_sheet() -> None:
     from deebot_client.commands import StationAction
 
     from custom_components.yeedi.commands import (
-        CleanAreaOrCleanAreaV2,
-        CleanOrCleanV2,
+        CleanAreaV2OrCleanArea,
+        CleanV2OrClean,
         StationActionOrEmptyDustbin,
     )
     from custom_components.yeedi.hardware import experimental_device_info
 
     caps = experimental_device_info().capabilities
-    assert caps.clean.action.command is CleanOrCleanV2
-    assert caps.clean.action.area is CleanAreaOrCleanAreaV2
+    assert caps.clean.action.command is CleanV2OrClean
+    assert caps.clean.action.area is CleanAreaV2OrCleanArea
     empty = caps.station.action.execute(StationAction.EMPTY_DUSTBIN)
     assert isinstance(empty, StationActionOrEmptyDustbin)
     # Washing the mop has no other way: no fallback.
