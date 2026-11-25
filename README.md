@@ -17,7 +17,7 @@ A Home Assistant integration for **yeedi** robot vacuums, through the yeedi clou
 | yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying) | being tested by a user (#2), pre-release |
 | yeedi Floor 3 Station / Floor 3+ | `t5e5o6`, `kd0una`, `t6kipw`, `u3bsxq`, `rwp09o` | mop-washing station | supported natively by deebot-client |
 
-Models not in this table (for example the older yeedi K650 and the first yeedi vac, which use the legacy XML protocol) are logged as *not supported yet* at setup.
+Recent models not in this table (for example the M12 Pro+ or the S20 Infinity Ultra, whose class nobody has reported yet) are set up in **experimental mode**, from the M16 Infinity base: some entities may stay unavailable. Please open an issue with the class shown in the log and the diagnostics, so the model can be added. The older models using the legacy XML protocol (yeedi K650, first yeedi vac) are logged as *not supported yet*.
 
 yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, but the official Ecovacs integration cannot log into a yeedi account. This integration logs in with the yeedi application identity and reuses [deebot-client](https://github.com/DeebotUniverse/client.py), the library behind the official integration, with the yeedi specifics added (login, model sheets, map discovery).
 

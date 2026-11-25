@@ -17,6 +17,7 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any
 
+from deebot_client.commands import StationAction as _StationAction
 from deebot_client.commands.json import station_action
 from deebot_client.commands.json.clean import Clean, CleanArea, CleanAreaV2, CleanV2
 from deebot_client.commands.json.common import (
@@ -157,7 +158,7 @@ class _WithFallback:
 
     NAME: str
 
-    def _fallback(self) -> Command:
+    def _fallback(self) -> Command | None:
         raise NotImplementedError
 
     @classmethod
@@ -171,11 +172,13 @@ class _WithFallback:
         self, event_bus: EventBus, response: dict[str, Any]
     ) -> HandlingResult:
         result = super()._handle_response(event_bus, response)  # type: ignore[misc]
-        if result.state == HandlingState.FAILED and _not_supported(response):
+        if (
+            result.state == HandlingState.FAILED
+            and _not_supported(response)
+            and (fallback := self._fallback()) is not None
+        ):
             # SUCCESS so that deebot-client runs the requested command.
-            return HandlingResult(
-                HandlingState.SUCCESS, requested_commands=[self._fallback()]
-            )
+            return HandlingResult(HandlingState.SUCCESS, requested_commands=[fallback])
         return result
 
 
@@ -186,8 +189,11 @@ class StationActionOrEmptyDustbin(_WithFallback, station_action.StationAction):
         super().__init__(action)
         self._action = action
 
-    def _fallback(self) -> Command:
-        return EmptyDustbin(self._action)
+    def _fallback(self) -> Command | None:
+        # Only emptying has a known other way; washing or drying the mop has none.
+        if self._action is _StationAction.EMPTY_DUSTBIN:
+            return EmptyDustbin(self._action)
+        return None
 
 
 class CleanOrCleanV2(_WithFallback, Clean):

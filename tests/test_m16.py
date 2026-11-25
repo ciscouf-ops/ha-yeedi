@@ -77,3 +77,25 @@ def test_m16_infinity_diagnostics() -> None:
     assert dump["capabilities"]["water"] == {"min": 0, "max": 50}
     assert dump["capabilities"]["clean_area"]
 
+
+
+def test_unknown_model_gets_the_experimental_sheet() -> None:
+    """An unknown yeedi class starts from the M16 base, with the fallbacks."""
+    from deebot_client.commands import StationAction
+
+    from custom_components.yeedi.commands import (
+        CleanAreaOrCleanAreaV2,
+        CleanOrCleanV2,
+        StationActionOrEmptyDustbin,
+    )
+    from custom_components.yeedi.hardware import experimental_device_info
+
+    caps = experimental_device_info().capabilities
+    assert caps.clean.action.command is CleanOrCleanV2
+    assert caps.clean.action.area is CleanAreaOrCleanAreaV2
+    empty = caps.station.action.execute(StationAction.EMPTY_DUSTBIN)
+    assert isinstance(empty, StationActionOrEmptyDustbin)
+    # Washing the mop has no other way: no fallback.
+    assert caps.station.action.execute(StationAction.WASH_MOP)._fallback() is None
+    device = FakeDevice(capabilities=caps)
+    assert get_supported_entities([device], number.YeediWaterAmount, number.WATER_DESCRIPTIONS)

@@ -21,7 +21,7 @@ from deebot_client.exceptions import (
     DeviceVerificationRequiredError,
     InvalidAuthenticationError,
 )
-from deebot_client.models import AccountCredentials
+from deebot_client.models import AccountCredentials, DeviceInfo
 from deebot_client.mqtt_client import MqttClient, create_mqtt_config
 from deebot_client.util import md5
 
@@ -38,7 +38,7 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .auth import YeediAuthenticator, create_yeedi_rest_config
 from .const import CONF_ACCOUNT_CREDENTIALS, DOMAIN
-from .hardware import register_yeedi_models
+from .hardware import experimental_device_info, register_yeedi_models
 from .map_data import YeediMapData
 from .suction import YeediSuction
 
@@ -93,11 +93,27 @@ class YeediController:
         """Connect to the account and the robots."""
         try:
             devices = await self._api_client.get_devices()
-            if devices.mqtt:
+            # A model nobody has reported yet: try it with the recent yeedi base rather
+            # than leaving it out, and ask its owner to report it.
+            experimental = [
+                d for d in devices.not_supported if d.get("company") == "eco-ng"
+            ]
+            for device_config in experimental:
+                _LOGGER.warning(
+                    "Robot %s (class %s) is not known yet: it is set up in experimental"
+                    " mode, some entities may stay unavailable. Please open an issue at"
+                    " https://github.com/ciscouf-ops/ha-yeedi/issues with its class,"
+                    " its model name and the diagnostics.",
+                    device_config.get("nick") or device_config.get("name"),
+                    device_config.get("class"),
+                )
+            mqtt_infos = [
+                *devices.mqtt,
+                *(DeviceInfo(d, experimental_device_info()) for d in experimental),
+            ]
+            if mqtt_infos:
                 mqtt = await self._get_mqtt_client()
-                mqtt_devices = [
-                    Device(info, self._authenticator) for info in devices.mqtt
-                ]
+                mqtt_devices = [Device(info, self._authenticator) for info in mqtt_infos]
                 async with asyncio.TaskGroup() as tg:
 
                     async def _init(device: Device) -> None:
@@ -128,7 +144,9 @@ class YeediController:
                         translation_domain=DOMAIN, translation_key="setup_error"
                     )
 
-            for device_config in devices.xmpp + devices.not_supported:
+            for device_config in devices.xmpp + [
+                d for d in devices.not_supported if d not in experimental
+            ]:
                 _LOGGER.warning(
                     "Robot %s (class %s) is not supported yet. Please open an issue"
                     " with these details: %s",

@@ -271,12 +271,37 @@ _EMPTY_WITH_ACT = {"mnx7f4"}
 # like the DEEBOT T80 Omni.
 
 
-def _m16_infinity() -> StaticDeviceInfo:
+def _on_t90_omni(action: CapabilityCleanAction) -> StaticDeviceInfo:
     info = _deebot_t90_pro_omni.get_device_info()
     caps = info.capabilities
-    action = CapabilityCleanAction(command=CleanV2, area=CleanAreaV2)
+    station = caps.station
+    if station is not None:
+        station = replace(
+            station,
+            action=replace(station.action, execute=StationActionOrEmptyDustbin),
+        )
     return replace(
-        info, capabilities=replace(caps, clean=replace(caps.clean, action=action))
+        info,
+        capabilities=replace(
+            caps, clean=replace(caps.clean, action=action), station=station
+        ),
+    )
+
+
+def _m16_infinity() -> StaticDeviceInfo:
+    return _on_t90_omni(CapabilityCleanAction(command=CleanV2, area=CleanAreaV2))
+
+
+def experimental_device_info() -> StaticDeviceInfo:
+    """Sheet for a yeedi model nobody has reported yet (unknown class).
+
+    The recent yeedi models are built on recent Ecovacs DEEBOTs, so they start from
+    the M16 Infinity base (DEEBOT T90 Omni), with the fallbacks of ``commands``
+    (``clean`` or ``clean_V2``, ``stationAction`` or ``setAutoEmpty act:start``): what
+    the robot does not support just stays unavailable.
+    """
+    return _on_t90_omni(
+        CapabilityCleanAction(command=CleanOrCleanV2, area=CleanAreaOrCleanAreaV2)
     )
 
 
