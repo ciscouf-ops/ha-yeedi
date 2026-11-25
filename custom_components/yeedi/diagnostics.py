@@ -41,7 +41,7 @@ def _device_dump(device: Any, controller: Any) -> dict[str, Any]:
         "capabilities": {
             "device_type": str(getattr(caps, "device_type", None)),
             "fan_speed": [str(t) for t in caps.fan_speed.types] if caps.fan_speed else None,
-            "water": [str(t) for t in caps.water.amount.types] if caps.water else None,
+            "water": _water_dump(caps.water.amount) if caps.water else None,
             "map": caps.map is not None,
             "clean_area": bool(caps.clean.action.area) if caps.clean else False,
         },
@@ -49,6 +49,13 @@ def _device_dump(device: Any, controller: Any) -> dict[str, Any]:
         "suction": {"current": suction.current, "options": suction.options} if suction else None,
         "map": _map_dump(map_data.as_dict()) if map_data else None,
     }
+
+
+def _water_dump(amount: Any) -> Any:
+    """Levels on most models, a range on recent ones (M16 Infinity)."""
+    if hasattr(amount, "types"):
+        return [str(t) for t in amount.types]
+    return {"min": getattr(amount, "min", None), "max": getattr(amount, "max", None)}
 
 
 def _map_dump(data: dict[str, Any]) -> dict[str, Any]:

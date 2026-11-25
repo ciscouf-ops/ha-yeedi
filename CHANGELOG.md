@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.13b2 (test version)
+- **M16 Infinity: starting a cleaning or cleaning rooms failed** (`rcp not support`): it now uses `clean_V2`, like the recent Ecovacs DEEBOT. Thanks @majorbig4 for testing (#2).
+- **Fix: downloading the diagnostics failed** on robots whose water flow is a number (M16 Infinity).
+
 ## 0.2.13b1 (test version)
 - **Test: the yeedi M16 Infinity (class `4e64gs`) is recognised.** It has the hardware of the Ecovacs DEEBOT T90 Omni (OZMO Roller 3.0 mop, omni station), so it uses the deebot-client capabilities of the DEEBOT T90 Pro Omni. Not checked on a real robot yet: feedback welcome in #2.
 

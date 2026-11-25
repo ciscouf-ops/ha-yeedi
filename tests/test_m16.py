@@ -53,3 +53,27 @@ def test_m16_infinity_entities() -> None:
         e.entity_description.key == "water_amount"
         for e in get_supported_entities([old], select.YeediSelect, select.ENTITY_DESCRIPTIONS)
     )
+
+
+def test_m16_infinity_cleans_with_clean_v2() -> None:
+    """The M16 answers "rcp not support" to ``clean`` (issue #2)."""
+    from deebot_client.models import CleanAction, CleanMode
+
+    register_yeedi_models()
+    action = dc_hardware._DEVICES["4e64gs"].capabilities.clean.action  # noqa: SLF001
+    assert action.command(CleanAction.START).NAME == "clean_V2"
+    assert action.area(CleanMode.SPOT_AREA, [1, 2], 1).NAME == "clean_V2"
+
+
+def test_m16_infinity_diagnostics() -> None:
+    from unittest.mock import MagicMock
+
+    from custom_components.yeedi.diagnostics import _device_dump
+
+    register_yeedi_models()
+    device = FakeDevice(capabilities=dc_hardware._DEVICES["4e64gs"].capabilities)  # noqa: SLF001
+    controller = MagicMock(map_data={}, suction={})
+    dump = _device_dump(device, controller)
+    assert dump["capabilities"]["water"] == {"min": 0, "max": 50}
+    assert dump["capabilities"]["clean_area"]
+

@@ -10,6 +10,8 @@ auto_empty_station, clean_speed, map_image_supported). Vitesses : Standard / Max
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from deebot_client.capabilities import (
     Capabilities,
     CapabilityClean,
@@ -105,7 +107,9 @@ from deebot_client.events.auto_empty import AutoEmptyEvent
 from deebot_client.events.network import NetworkInfoEvent
 from deebot_client.models import StaticDeviceInfo
 
+from deebot_client.commands.json.clean import CleanAreaV2, CleanV2
 from deebot_client.hardware import cgkjbx as _deebot_t90_pro_omni
+from deebot_client.models import StaticDeviceInfo
 
 from .commands import EmptyDustbin, GetMapInfoV2, OnYeediMapInfoV2
 
@@ -252,9 +256,21 @@ _EMPTY_WITH_ACT = {"mnx7f4"}
 # Recent models built on an Ecovacs DEEBOT: they reuse its deebot-client sheet instead of
 # the 950-type one. The M16 Infinity has the hardware of the DEEBOT T90 Omni (OZMO Roller
 # 3.0 mop, TruEdge 3.0, omni station with hot-water washing and hot-air drying); its
-# sheet (class cgkjbx, same as 7fpaed and k2iwaq) is the starting point until the robot
-# is checked.
-_BASED_ON = {"4e64gs": _deebot_t90_pro_omni.get_device_info}
+# sheet (class cgkjbx, same as 7fpaed and k2iwaq) is the base. Checked on a real M16
+# (issue #2): it answers "rcp not support" to ``clean``, so it cleans with ``clean_V2``
+# like the DEEBOT T80 Omni.
+
+
+def _m16_infinity() -> StaticDeviceInfo:
+    info = _deebot_t90_pro_omni.get_device_info()
+    caps = info.capabilities
+    action = CapabilityCleanAction(command=CleanV2, area=CleanAreaV2)
+    return replace(
+        info, capabilities=replace(caps, clean=replace(caps.clean, action=action))
+    )
+
+
+_BASED_ON = {"4e64gs": _m16_infinity}
 YEEDI_MODELS: dict[str, tuple[str, str]] = {
     "04z443": ("yeedi vac max", "empty"),  # station sold separately: entities behind the option
     "h041es": ("yeedi vac hybrid", "empty"),
