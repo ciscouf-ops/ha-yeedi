@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.13b7 (test version)
+- **HACS shows the number of downloads**: each release now carries a `yeedi.zip`, built by GitHub, which HACS installs and counts.
+
 ## 0.2.13b6 (test version)
 - **M16 Infinity: no room outlines on the map.** Same cause as on the yeedi vac station: the outlines come in `onMapInfo_V2`, in the same format, but marked as an Ecovacs message, which ha-yeedi left to deebot-client. They are now read too, for every robot built on a recent Ecovacs.
 
