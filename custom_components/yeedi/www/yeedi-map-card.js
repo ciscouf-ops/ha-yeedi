@@ -20,7 +20,7 @@ const TEXT = {
     clean: 'Clean', clean_all: 'Clean everything', clean_rooms: (n) => `Clean ${n} room${n > 1 ? 's' : ''}`, pause: 'Pause',
     resume: 'Resume', dock: 'Dock', clear: 'Clear', last_clean: 'Last cleaning', zone: 'Zone', clean_zone: 'Clean the zone', zone_help: 'Draw a rectangle on the map.', no_map: 'Waiting for the map…',
     no_outline: 'The robot did not send the outline of the rooms: choose them below.',
-    not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water', mop_only_short: 'Off',
+    not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water', clean_empty: 'Clean water empty', dirty_full: 'Dirty water full', mop_only_short: 'Off',
     states: { cleaning: 'Cleaning', returning: 'Returning to the dock', docked: 'Docked',
       idle: 'Idle', paused: 'Paused', error: 'Error' },
     since: 'started at', end_at: 'ends around', left: (n) => `~${n} min left`,
@@ -29,7 +29,7 @@ const TEXT = {
     clean: 'Nettoyer', clean_all: 'Nettoyer tout', clean_rooms: (n) => `Nettoyer ${n} pièce${n > 1 ? 's' : ''}`, pause: 'Pause',
     resume: 'Reprendre', dock: 'Base', clear: 'Effacer', last_clean: 'Dernier nettoyage', zone: 'Zone', clean_zone: 'Nettoyer la zone', zone_help: 'Trace un rectangle sur le plan.', no_map: 'En attente de la carte…',
     no_outline: "Le robot n'a pas envoyé le contour des pièces : choisis-les ci-dessous.",
-    not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau', mop_only_short: 'Coupée',
+    not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau', clean_empty: 'Eau propre vide', dirty_full: 'Eau sale pleine', mop_only_short: 'Coupée',
     states: { cleaning: 'Nettoyage', returning: 'Retour à la base', docked: 'Sur la base',
       idle: 'À l’arrêt', paused: 'En pause', error: 'Erreur' },
     since: 'commencé à', end_at: 'fin vers', left: (n) => `reste ~${n} min`,
@@ -38,7 +38,7 @@ const TEXT = {
     clean: 'Reinigen', clean_all: 'Alles reinigen', clean_rooms: (n) => `${n} ${n > 1 ? 'Räume' : 'Raum'} reinigen`, pause: 'Pause',
     resume: 'Fortsetzen', dock: 'Station', clear: 'Zurücksetzen', last_clean: 'Letzte Reinigung', zone: 'Zone', clean_zone: 'Zone reinigen', zone_help: 'Ziehe ein Rechteck auf der Karte.', no_map: 'Warte auf die Karte…',
     no_outline: 'Der Roboter hat keine Raumumrisse gesendet: wähle die Räume unten aus.',
-    not_yeedi: 'Diese Entität ist kein yeedi-Staubsauger.', fan: 'Saugkraft', water: 'Wasser', mop_only_short: 'Aus',
+    not_yeedi: 'Diese Entität ist kein yeedi-Staubsauger.', fan: 'Saugkraft', water: 'Wasser', clean_empty: 'Frischwasser leer', dirty_full: 'Schmutzwasser voll', mop_only_short: 'Aus',
     states: { cleaning: 'Reinigt', returning: 'Rückkehr zur Station', docked: 'An der Station',
       idle: 'Bereit', paused: 'Pausiert', error: 'Fehler' },
     since: 'gestartet um', end_at: 'Ende gegen', left: (n) => `noch ~${n} Min.`,
@@ -47,7 +47,7 @@ const TEXT = {
     clean: 'Limpiar', clean_all: 'Limpiar todo', clean_rooms: (n) => `Limpiar ${n} habitaci${n > 1 ? 'ones' : 'ón'}`, pause: 'Pausa',
     resume: 'Reanudar', dock: 'Base', clear: 'Borrar', last_clean: 'Última limpieza', zone: 'Zona', clean_zone: 'Limpiar la zona', zone_help: 'Dibuja un rectángulo en el mapa.', no_map: 'Esperando el mapa…',
     no_outline: 'El robot no envió el contorno de las habitaciones: elígelas abajo.',
-    not_yeedi: 'Esta entidad no es una aspiradora yeedi.', fan: 'Succión', water: 'Agua', mop_only_short: 'Apagada',
+    not_yeedi: 'Esta entidad no es una aspiradora yeedi.', fan: 'Succión', water: 'Agua', clean_empty: 'Agua limpia vacía', dirty_full: 'Agua sucia llena', mop_only_short: 'Apagada',
     states: { cleaning: 'Limpiando', returning: 'Volviendo a la base', docked: 'En la base',
       idle: 'Inactiva', paused: 'En pausa', error: 'Error' },
     since: 'iniciada a las', end_at: 'fin hacia las', left: (n) => `quedan ~${n} min`,
@@ -56,7 +56,7 @@ const TEXT = {
     clean: 'Pulisci', clean_all: 'Pulisci tutto', clean_rooms: (n) => `Pulisci ${n} stanz${n > 1 ? 'e' : 'a'}`, pause: 'Pausa',
     resume: 'Riprendi', dock: 'Base', clear: 'Annulla', last_clean: 'Ultima pulizia', zone: 'Zona', clean_zone: 'Pulisci la zona', zone_help: 'Disegna un rettangolo sulla mappa.', no_map: 'In attesa della mappa…',
     no_outline: 'Il robot non ha inviato il contorno delle stanze: scegline qui sotto.',
-    not_yeedi: 'Questa entità non è un aspirapolvere yeedi.', fan: 'Aspirazione', water: 'Acqua', mop_only_short: 'Spenta',
+    not_yeedi: 'Questa entità non è un aspirapolvere yeedi.', fan: 'Aspirazione', water: 'Acqua', clean_empty: 'Acqua pulita vuota', dirty_full: 'Acqua sporca piena', mop_only_short: 'Spenta',
     states: { cleaning: 'Pulizia', returning: 'Ritorno alla base', docked: 'Alla base',
       idle: 'Inattivo', paused: 'In pausa', error: 'Errore' },
     since: 'iniziata alle', end_at: 'fine verso le', left: (n) => `mancano ~${n} min`,
@@ -214,7 +214,8 @@ class YeediMapCard extends HTMLElement {
     return { text: TEXT[lang] || TEXT.en, rooms: ROOM_NAMES[lang] || {} };
   }
 
-  // Entities of the same robot: battery sensor and water flow select.
+  // Entities of the same robot: battery sensor, water flow (select, or number on the
+  // recent models) and the water tank problems of a mop-washing station.
   _related() {
     const ent = this._hass?.entities?.[this._config.entity];
     if (!ent || !ent.device_id) return {};
@@ -222,17 +223,21 @@ class YeediMapCard extends HTMLElement {
     const battery = same.find((e) => e.entity_id.startsWith('sensor.')
       && this._hass.states[e.entity_id]?.attributes?.device_class === 'battery');
     const water = same.find((e) => e.entity_id.startsWith('select.')
-      && (e.translation_key === 'water_amount' || /water/.test(e.entity_id)));
+      && (e.translation_key === 'water_amount' || /water/.test(e.entity_id)))
+      || same.find((e) => e.entity_id.startsWith('number.') && e.translation_key === 'water_amount');
+    const tank = (key) => same.find((e) => e.entity_id.startsWith('binary_sensor.') && e.translation_key === key)?.entity_id;
     const suction = same.find((e) => e.entity_id.startsWith('select.') && e.translation_key === 'suction');
     const area = same.find((e) => e.entity_id.startsWith('sensor.') && e.translation_key === 'stats_area');
     const time = same.find((e) => e.entity_id.startsWith('sensor.') && e.translation_key === 'stats_time');
     return { battery: battery?.entity_id, water: water?.entity_id, suction: suction?.entity_id,
-      area: area?.entity_id, time: time?.entity_id };
+      area: area?.entity_id, time: time?.entity_id,
+      cleanEmpty: tank('clean_water_empty'), dirtyFull: tank('dirty_water_full') };
   }
 
   _otherStates() {
     const r = this._related();
-    return [r.battery, r.water, r.suction, r.area, r.time].map((e) => (e ? this._hass.states[e]?.state : '')).join('|');
+    return [r.battery, r.water, r.suction, r.area, r.time, r.cleanEmpty, r.dirtyFull]
+      .map((e) => (e ? this._hass.states[e]?.state : '')).join('|');
   }
 
   // Name of a room: the card's own setting, else the Home Assistant area the room is
@@ -339,6 +344,10 @@ class YeediMapCard extends HTMLElement {
         <text x="20" y="12">${pct}%</text>${bolt}
       </svg>`;
     }
+    // Water tanks of a mop-washing station: only shown when something has to be done.
+    const tanks = [[r.cleanEmpty, 'mdi:water-off-outline', text.clean_empty], [r.dirtyFull, 'mdi:water-alert-outline', text.dirty_full]]
+      .filter(([e]) => e && this._hass.states[e]?.state === 'on')
+      .map(([, icon, label]) => `<span class="tank"><ha-icon icon="${icon}"></ha-icon>${esc(label)}</span>`);
     const status = [esc(text.states[st?.state] || st?.state || ''), bat].filter(Boolean).join('<span class="sep">·</span>');
 
     let body;
@@ -353,6 +362,7 @@ class YeediMapCard extends HTMLElement {
           <div class="title">${esc(title)}</div>
           <div class="status">${status}</div>
         </div>
+        ${tanks.length ? `<div class="tanks">${tanks.join('')}</div>` : ''}
         ${body}
         ${this._config.controls !== false && st ? this._controls(st, r, moving) : ''}
       </ha-card>`;
@@ -608,8 +618,18 @@ class YeediMapCard extends HTMLElement {
 
     const wst = related.water ? this._hass.states[related.water] : null;
     const waterLabel = (o) => (this._hass.formatEntityState ? this._hass.formatEntityState(wst, o) : o);
-    const water = wst && wst.attributes.options
-      ? this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', wst.attributes.options, wst.state, waterLabel, 'data-water') : '';
+    let water = '';
+    if (wst && wst.attributes.options) {
+      water = this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', wst.attributes.options, wst.state, waterLabel, 'data-water');
+    } else if (wst && related.water.startsWith('number.')) {
+      // Recent models: a flow from min to max, offered as 5 steps like the levels.
+      const min = Number(wst.attributes.min ?? 0), max = Number(wst.attributes.max ?? 50), v = Number(wst.state);
+      const steps = [1, 2, 3, 4, 5].map((i) => String(Math.round(min + ((max - min) * i) / 5)));
+      const near = isNaN(v) || v <= min ? null
+        : steps.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+      water = this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', steps, near, (o) => o, 'data-waternum')
+        .replace(/<small>[^<]*<\/small>/, `<small>${isNaN(v) ? '' : esc(String(Math.round(v)))}</small>`);
+    }
 
     const hint = this._zoneMode && !this._zone ? `<div class="foot">${esc(text.zone_help)}</div>` : '';
     return `<div class="actions">${main}${clear}${zone}${dock}</div>${hint}${fan}${water}${this._lastClean(related, moving)}`;
@@ -763,7 +783,7 @@ class YeediMapCard extends HTMLElement {
 
   _onClick(ev) {
     const path = ev.composedPath();
-    const el = path.find((n) => n.dataset && (n.dataset.room || n.dataset.act || n.dataset.fan || n.dataset.water));
+    const el = path.find((n) => n.dataset && (n.dataset.room || n.dataset.act || n.dataset.fan || n.dataset.water || n.dataset.waternum));
     if (!el || el.disabled) return;
     const st = this._hass.states[this._config.entity];
     if (el.dataset.room) {
@@ -783,6 +803,9 @@ class YeediMapCard extends HTMLElement {
     else if (el.dataset.water) {
       this._hass.callService('select', 'select_option', { entity_id: this._related().water, option: el.dataset.water });
     }
+    else if (el.dataset.waternum) {
+      this._hass.callService('number', 'set_value', { entity_id: this._related().water, value: Number(el.dataset.waternum) });
+    }
   }
 }
 
@@ -800,6 +823,9 @@ const STYLE = `
   .title { font-size: 16px; font-weight: 500; color: var(--primary-text-color); }
   .status { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; }
   .status .bat { display: inline-block; vertical-align: middle; overflow: visible; }
+  .tanks { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 14px; padding: 0 16px 6px; font-size: 13px; }
+  .tanks .tank { display: inline-flex; align-items: center; gap: 4px; color: var(--warning-color, #ffa600); }
+  .tanks .tank ha-icon { --mdc-icon-size: 16px; }
   .status .bat .shell { fill: none; stroke: var(--secondary-text-color); stroke-opacity: 0.6; }
   .status .bat .tip { fill: var(--secondary-text-color); fill-opacity: 0.6; }
   .status .bat .fill { fill: var(--bat-color); opacity: 0.9; }

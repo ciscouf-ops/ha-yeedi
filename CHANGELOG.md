@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.14b2 (test version)
+- **Map card**: an empty clean water tank or a full dirty water tank shows under the robot state, in orange, only while it lasts.
+- **Map card: the water flow of the M16 Infinity** (a number from 0 to 50) now shows as a 5-step gauge, like the water levels of the other models. It was missing.
+
 ## 0.2.14b1 (test version)
 - **New: "Clean water tank empty" and "Dirty water tank full"** problem sensors, for the stations that wash the mop (M16 Infinity). The station measures no water level, it only reports these as errors (codes 301/322 and 302/305/318/323): the sensors turn on with them and off when the robot reports no error. Suggested by @majorbig4 (#2).
 
