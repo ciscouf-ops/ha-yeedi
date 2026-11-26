@@ -30,6 +30,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "clean_water_empty": {
+        "name": "Clean water tank empty"
+      },
+      "dirty_water_full": {
+        "name": "Dirty water tank full"
+      }
+    },
     "select": {
       "water_amount": {
         "name": "Water flow level",

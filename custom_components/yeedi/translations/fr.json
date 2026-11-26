@@ -30,6 +30,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "clean_water_empty": {
+        "name": "Réservoir d'eau propre vide"
+      },
+      "dirty_water_full": {
+        "name": "Réservoir d'eau sale plein"
+      }
+    },
     "select": {
       "water_amount": {
         "name": "Débit d'eau",

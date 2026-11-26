@@ -23,5 +23,5 @@
   "requirements": [
     "deebot-client>=18.7.0"
   ],
-  "version": "0.2.13"
+  "version": "0.2.14b1"
 }

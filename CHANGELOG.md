@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.14b1 (test version)
+- **New: "Clean water tank empty" and "Dirty water tank full"** problem sensors, for the stations that wash the mop (M16 Infinity). The station measures no water level, it only reports these as errors (codes 301/322 and 302/305/318/323): the sensors turn on with them and off when the robot reports no error. Suggested by @majorbig4 (#2).
+
 ## 0.2.13
 
 ### yeedi M16 Infinity (class `4e64gs`)
