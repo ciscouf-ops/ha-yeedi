@@ -38,13 +38,17 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 
 ### HACS
 
-1. HACS → Integrations → ⋮ → *Custom repositories*, add `https://github.com/ciscouf-ops/ha-yeedi` as an *Integration*.
-2. Install **yeedi**, restart Home Assistant.
+[![Open your Home Assistant instance and open the yeedi repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ciscouf-ops&repository=ha-yeedi&category=integration)
+
+1. In HACS, search for **yeedi** and download it (or use the button above).
+2. Restart Home Assistant.
 3. Settings → Devices & services → *Add integration* → **yeedi**, enter the account used in the yeedi app.
+
+If yeedi does not show up in the search (an older HACS, for example), add it as a custom repository: HACS → ⋮ → *Custom repositories*, add `https://github.com/ciscouf-ops/ha-yeedi` as an *Integration*, then follow the steps above.
 
 ### Manual
 
-Copy `custom_components/yeedi` into your `config/custom_components/` folder and restart Home Assistant.
+Download `yeedi.zip` from the [latest release](https://github.com/ciscouf-ops/ha-yeedi/releases/latest), unzip it into `config/custom_components/yeedi/` and restart Home Assistant.
 
 ## Room and zone cleaning
 
