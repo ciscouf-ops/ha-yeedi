@@ -140,6 +140,12 @@
       },
       "reset_lifespan_side_brush": {
         "name": "Reiniciar desgaste del cepillo lateral"
+      },
+      "station_wash_mop": {
+        "name": "Lavar la mopa"
+      },
+      "station_dry_mop": {
+        "name": "Secar la mopa"
       }
     },
     "switch": {

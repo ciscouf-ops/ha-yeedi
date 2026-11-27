@@ -140,6 +140,12 @@
       },
       "reset_lifespan_side_brush": {
         "name": "Azzera usura spazzola laterale"
+      },
+      "station_wash_mop": {
+        "name": "Lava il panno"
+      },
+      "station_dry_mop": {
+        "name": "Asciuga il panno"
       }
     },
     "switch": {

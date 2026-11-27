@@ -1,4 +1,4 @@
-"""Buttons for Yeedi robots: empty the dustbin, relocate, reset consumables, clear the map."""
+"""Buttons for Yeedi robots: station (empty, wash and dry the mop), relocate, reset consumables, clear the map."""
 
 from __future__ import annotations
 
@@ -80,7 +80,27 @@ STATION_DESCRIPTIONS: tuple[YeediStationButtonEntityDescription, ...] = (
         ),
         action=StationAction.EMPTY_DUSTBIN,
     ),
+    *(
+        YeediStationButtonEntityDescription(
+            key=f"station_{action.name.lower()}",
+            translation_key=f"station_{action.name.lower()}",
+            capability_fn=lambda caps, a=action: (
+                caps.station.action
+                if caps.station and a in caps.station.action.types
+                else None
+            ),
+            action=action,
+        )
+        # Mop-washing stations (M16 Infinity): wash the mop now, dry it now.
+        for action in (StationAction.WASH_MOP, StationAction.DRY_MOP)
+    ),
 )
+
+
+def _has_mop_station(device) -> bool:  # noqa: ANN001
+    """A mop-washing station is built in: no need for the station option."""
+    station = device.capabilities.station
+    return station is not None and StationAction.WASH_MOP in station.action.types
 
 LIFESPAN_DESCRIPTIONS: tuple[YeediLifeSpanButtonEntityDescription, ...] = tuple(
     YeediLifeSpanButtonEntityDescription(
@@ -107,10 +127,15 @@ async def async_setup_entry(
         devices, YeediButton, ENTITY_DESCRIPTIONS
     )
     # The station is optional on several models: only when the user says they have one.
-    if entry.options.get(CONF_STATION, False):
-        entities.extend(
-            get_supported_entities(devices, YeediStationButton, STATION_DESCRIPTIONS)
-        )
+    # A mop-washing station comes with the robot (M16 Infinity): always.
+    station_devices = (
+        devices
+        if entry.options.get(CONF_STATION, False)
+        else [d for d in devices if _has_mop_station(d)]
+    )
+    entities.extend(
+        get_supported_entities(station_devices, YeediStationButton, STATION_DESCRIPTIONS)
+    )
     entities.extend(get_supported_entities(devices, YeediLifeSpanButton, LIFESPAN_DESCRIPTIONS))
     async_add_entities(entities)
 

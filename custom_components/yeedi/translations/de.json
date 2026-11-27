@@ -140,6 +140,12 @@
       },
       "reset_lifespan_side_brush": {
         "name": "Seitenbürste zurücksetzen"
+      },
+      "station_wash_mop": {
+        "name": "Wischmopp waschen"
+      },
+      "station_dry_mop": {
+        "name": "Wischmopp trocknen"
       }
     },
     "switch": {

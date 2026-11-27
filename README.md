@@ -28,7 +28,7 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
 - Actions **`yeedi.clean_rooms`** (by room number *or name*) and **`yeedi.clean_zone`** (a rectangle in metres), plus `vacuum.send_command` with `spot_area` / `custom_area`
 - Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
-- Mop-washing stations (M16 Infinity): "Clean water tank empty" and "Dirty water tank full" problem sensors. The station measures no water level, it only reports these as errors.
+- Mop-washing stations (M16 Infinity): "Wash the mop" and "Dry the mop" buttons, and "Clean water tank empty" and "Dirty water tank full" problem sensors. The station measures no water level, it only reports these as errors.
 - During a cleaning: **current room**, **remaining time** and **estimated end** sensors, learned from the time the robot spent in each room on previous cleanings (the map card shows them under the controls, with a progress bar)
 - Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**
 - Switches: **continuous cleaning**, **carpet boost**, **advanced mode**; number: **volume**

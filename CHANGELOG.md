@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.14b3 (test version)
+- **New: "Wash the mop" and "Dry the mop" buttons** for mop-washing stations (M16 Infinity). Their station is built in, so these buttons and "Empty the dustbin" are created without the station option.
+- **Map card: a "Station" row**, shown only while the robot is docked and only with the actions its station has: empty on auto-empty stations, plus wash and dry on mop-washing stations.
+
 ## 0.2.14b2 (test version)
 - **Map card**: an empty clean water tank or a full dirty water tank shows under the robot state, in orange, only while it lasts.
 - **Map card: the water flow of the M16 Infinity** (a number from 0 to 50) now shows as a 5-step gauge, like the water levels of the other models. It was missing.

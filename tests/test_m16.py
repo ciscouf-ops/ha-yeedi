@@ -99,3 +99,28 @@ def test_unknown_model_gets_the_experimental_sheet() -> None:
     assert caps.station.action.execute(StationAction.WASH_MOP)._fallback() is None
     device = FakeDevice(capabilities=caps)
     assert get_supported_entities([device], number.YeediWaterAmount, number.WATER_DESCRIPTIONS)
+
+
+def test_m16_station_buttons_without_the_station_option() -> None:
+    """Wash and dry the mop: built-in station, so no need for the station option."""
+    from deebot_client.commands import StationAction
+
+    from custom_components.yeedi.button import STATION_DESCRIPTIONS, _has_mop_station
+
+    register_yeedi_models()
+    m16 = FakeDevice(capabilities=dc_hardware._DEVICES["4e64gs"].capabilities)  # noqa: SLF001
+    vac_max = FakeDevice(capabilities=dc_hardware._DEVICES["04z443"].capabilities)  # noqa: SLF001
+    assert _has_mop_station(m16)
+    assert not _has_mop_station(vac_max)
+    keys = {
+        e.entity_description.key
+        for e in get_supported_entities([m16], button.YeediStationButton, STATION_DESCRIPTIONS)
+    }
+    assert keys == {"station_empty_dustbin", "station_wash_mop", "station_dry_mop"}
+    (wash,) = [d for d in STATION_DESCRIPTIONS if d.key == "station_wash_mop"]
+    assert wash.action is StationAction.WASH_MOP
+    # The vac max only empties.
+    assert {
+        e.entity_description.key
+        for e in get_supported_entities([vac_max], button.YeediStationButton, STATION_DESCRIPTIONS)
+    } == {"station_empty_dustbin"}

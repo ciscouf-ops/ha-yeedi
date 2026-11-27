@@ -140,6 +140,12 @@
       },
       "reset_lifespan_side_brush": {
         "name": "Réinitialiser l’usure de la brosse latérale"
+      },
+      "station_wash_mop": {
+        "name": "Laver la serpillière"
+      },
+      "station_dry_mop": {
+        "name": "Sécher la serpillière"
       }
     },
     "switch": {
