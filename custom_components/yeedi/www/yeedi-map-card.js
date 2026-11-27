@@ -6,14 +6,17 @@
  *   title: Vacuum            # optional
  *   room_names:              # optional, room id -> name
  *     2: Living room
- *   controls: true           # optional, buttons and settings under the map
+ *   show:                    # optional, everything is shown by default
+ *     name: false            #   hide one part: name, status, battery, tanks, map,
+ *     trace: false           #   room_names, restrictions, dock, robot, trace, buttons,
+ *                            #   zone, suction, water, station, footer
  *
  * Draws the rooms reported by the robot, the dock, the robot and the trace of the
  * current cleaning. Tap rooms to choose them (the numbers give the order), then
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.9';
+const CARD_VERSION = '0.2.14b4';
 
 const TEXT = {
   en: {
@@ -100,6 +103,17 @@ function pointInPolygon(x, y, poly) {
   return inside;
 }
 
+// Parts of the card that can be hidden (show: {key: false}). The keys of the
+// second group are the ones the older option "controls: false" used to hide.
+const SHOW_KEYS = ['name', 'status', 'battery', 'tanks', 'map', 'room_names', 'restrictions', 'dock', 'robot', 'trace'];
+const CONTROL_KEYS = ['buttons', 'zone', 'suction', 'water', 'station', 'footer'];
+
+function showPart(config, key) {
+  const s = (config && config.show) || {};
+  if (key in s) return s[key] !== false;
+  return !(CONTROL_KEYS.includes(key) && config && config.controls === false);
+}
+
 const MIN_ZONE_MM = 1000; // smallest side of a zone sent to the robot
 const PALETTE = ['#4f8edc', '#e0a04a', '#5bb07a', '#c46fb8', '#d96a5c', '#4fb3bf', '#9a8bd6', '#b5a046'];
 
@@ -112,13 +126,15 @@ class YeediMapCard extends HTMLElement {
     const entity = Object.values(hass.entities || {}).find(
       (e) => e.platform === 'yeedi' && e.entity_id.startsWith('vacuum.'),
     );
-    return { entity: entity ? entity.entity_id : '', controls: true };
+    return { entity: entity ? entity.entity_id : '' };
   }
+
+  _show(key) { return showPart(this._config, key); }
 
   setConfig(config) {
     if (!config || !config.entity) throw new Error('entity is required');
     const changed = !this._config || this._config.entity !== config.entity;
-    this._config = { controls: true, ...config };
+    this._config = { ...config };
     this._selected = [];
     this._zoneMode = false; // drawing a rectangle to clean instead of picking rooms
     this._zone = null; // {x1, y1, x2, y2} in robot coordinates (mm)
@@ -183,19 +199,21 @@ class YeediMapCard extends HTMLElement {
     const key = JSON.stringify([d.map_id, rooms.map((r) => [r.id, r.outline]), d.dock, d.no_mop, d.walls, this._geo.x0, this._geo.y1, true, this._zoneMode, this._zone, this._selected, this._active]);
     if (key !== this._mapKey) return false;
     const g = svg.querySelector('.robotg');
-    if (!g) return false;
+    if (!g && this._show('robot')) return false;
+    if (g) {
     g.style.transform = `translate(${rx.toFixed(0)}px,${ry.toFixed(0)}px) scale(${this._scale})`;
     const a = ((d.robot.a || 0) * Math.PI) / 180;
     const line = g.querySelector('.heading');
     if (line) { line.setAttribute('x2', (Math.cos(a) * 120).toFixed(0)); line.setAttribute('y2', (-Math.sin(a) * 120).toFixed(0)); }
-    if (d.trace && d.trace.length > 1) {
+    }
+    if (this._show('trace') && d.trace && d.trace.length > 1) {
       let band = svg.querySelector('.band');
       if (!band) return false;
       band.setAttribute('d', this._smoothPath(d.trace, X, Y));
     }
     // Footer (room, end time, time left) and progress bar.
     const foot = root.querySelector('.foot');
-    if (d.progress) {
+    if (d.progress && this._show('footer')) {
       const html = this._progressFoot();
       if (!foot || !html) return false;
       const tmp = document.createElement('div');
@@ -353,23 +371,23 @@ class YeediMapCard extends HTMLElement {
     const tanks = [[r.cleanEmpty, 'mdi:water-off-outline', text.clean_empty], [r.dirtyFull, 'mdi:water-alert-outline', text.dirty_full]]
       .filter(([e]) => e && this._hass.states[e]?.state === 'on')
       .map(([, icon, label]) => `<span class="tank"><ha-icon icon="${icon}"></ha-icon>${esc(label)}</span>`);
-    const status = [esc(text.states[st?.state] || st?.state || ''), bat].filter(Boolean).join('<span class="sep">·</span>');
+    const status = [this._show('status') ? esc(text.states[st?.state] || st?.state || '') : '', this._show('battery') ? bat : '']
+      .filter(Boolean).join('<span class="sep">·</span>');
+    const name = this._show('name') ? `<div class="title">${esc(title)}</div>` : '';
 
     let body;
     if (this._error) body = `<div class="msg">${text[this._error]}</div>`;
     else if (!this._data) body = `<div class="msg">${text.no_map}</div>`;
+    else if (!this._show('map')) body = this._show('buttons') ? this._roomChips(moving) : '';
     else body = this._map(moving);
 
     this.shadowRoot.innerHTML = `
       <style>${STYLE}</style>
       <ha-card>
-        <div class="head">
-          <div class="title">${esc(title)}</div>
-          <div class="status">${status}</div>
-        </div>
-        ${tanks.length ? `<div class="tanks">${tanks.join('')}</div>` : ''}
+        ${name || status ? `<div class="head">${name}<div class="status">${status}</div></div>` : ''}
+        ${tanks.length && this._show('tanks') ? `<div class="tanks">${tanks.join('')}</div>` : ''}
         ${body}
-        ${this._config.controls !== false && st ? this._controls(st, r, moving) : ''}
+        ${st ? this._controls(st, r, moving) : ''}
       </ha-card>`;
   }
 
@@ -481,7 +499,7 @@ class YeediMapCard extends HTMLElement {
       const P = (list) => list.map(([x, y]) => `${X(x).toFixed(0)},${Y(y).toFixed(0)}`).join(' ');
       const u = Math.max(W, H) / 100; // drawing unit: 1 % of the map
       const font = Math.round(u * 2.5);
-      const choose = !moving;
+      const choose = !moving && this._show('buttons'); // rooms are picked for the Clean button
       const paths = {};
       const job = this._activeJob();
       rooms.forEach((room) => { paths[room.id] = this._roomPath(room.outline, X, Y); });
@@ -498,7 +516,7 @@ class YeediMapCard extends HTMLElement {
       if (hasSel || (job && job.rooms.length)) rooms.forEach((room) => {
         if (this._selected.includes(room.id) || (job && job.rooms.includes(room.id))) s += `<path class="selring" data-room="${room.id}" d="${paths[room.id]}"/>`;
       });
-      if (moving && d.trace && d.trace.length > 1) {
+      if (moving && this._show('trace') && d.trace && d.trace.length > 1) {
         if (rooms.length) s += `<clipPath id="inside">${rooms.map((x) => `<path d="${paths[x.id]}"/>`).join('')}</clipPath>`;
         const clip = rooms.length ? ' clip-path="url(#inside)"' : '';
         // One band as wide as the robot, on a lightly smoothed path: a single
@@ -506,7 +524,7 @@ class YeediMapCard extends HTMLElement {
         s += `<path class="band" d="${this._smoothPath(d.trace, X, Y)}"${clip}/>`;
       }
       // Restrictions set in the yeedi app: no-mop zones (hatched) and virtual walls (red).
-      if ((d.no_mop && d.no_mop.length) || (d.walls && d.walls.length)) {
+      if (this._show('restrictions') && ((d.no_mop && d.no_mop.length) || (d.walls && d.walls.length))) {
         s += `<defs><pattern id="hatch" width="${(u * 1.2).toFixed(0)}" height="${(u * 1.2).toFixed(0)}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <line x1="0" y1="0" x2="0" y2="${(u * 1.2).toFixed(0)}" class="hatchline"/></pattern></defs>`;
         (d.no_mop || []).forEach((z) => { if (z.points.length > 1) s += `<polygon class="nomop" points="${P(z.points)}"/>`; });
@@ -524,7 +542,7 @@ class YeediMapCard extends HTMLElement {
         const sel = this._selected.indexOf(room.id);
         const lab = this._roomLabel(this._roomName(room), Math.max(...rx) - Math.min(...rx), u);
         const lh = lab.font * 1.15, nl = lab.lines.length;
-        const block = (y0) => lab.lines.map((l, k) => `<text class="name" x="${cx}" y="${(y0 + (k - (nl - 1) / 2) * lh).toFixed(0)}" font-size="${lab.font}">${esc(l)}</text>`).join('');
+        const block = (y0) => (!this._show('room_names') ? '' : lab.lines.map((l, k) => `<text class="name" x="${cx}" y="${(y0 + (k - (nl - 1) / 2) * lh).toFixed(0)}" font-size="${lab.font}">${esc(l)}</text>`).join(''));
         if (sel >= 0) {
           // Order badge above the name.
           const r = font * 0.8, by = cy - font * 0.7 - (nl * lh) / 2;
@@ -539,7 +557,7 @@ class YeediMapCard extends HTMLElement {
         const z = shownZone;
         s += `<text class="zonetxt" x="${X((z.x1 + z.x2) / 2).toFixed(0)}" y="${Y((z.y1 + z.y2) / 2).toFixed(0)}" font-size="${Math.round(font * 1.1)}">${this._zoneArea(z)}</text>`;
       }
-      if (d.dock) {
+      if (d.dock && this._show('dock')) {
         s += `<g transform="translate(${X(d.dock.x)},${Y(d.dock.y)})"><g transform="scale(${(u / 75).toFixed(3)})"><rect x="-190" y="-190" width="380" height="380" rx="90" class="dock"/>
           <path transform="translate(-144,-144) scale(12)" fill="#fff" d="M12 3L2 12h3v8h14v-8h3L12 3z"/></g></g>`;
       }
@@ -547,7 +565,7 @@ class YeediMapCard extends HTMLElement {
       // stops reporting its position once it is charging).
       const docked = st_docked(this) && d.dock;
       const rob = docked ? { ...d.dock, a: (d.robot && d.robot.a) || d.dock.a } : d.robot;
-      if (rob) {
+      if (rob && this._show('robot')) {
         const a = ((rob.a || 0) * Math.PI) / 180;
         const hx = Math.cos(a) * 120, hy = -Math.sin(a) * 120;
         s += `<g class="robotg" style="transform:translate(${X(rob.x).toFixed(0)}px,${Y(rob.y).toFixed(0)}px) scale(${(u / 75).toFixed(3)})">
@@ -562,14 +580,19 @@ class YeediMapCard extends HTMLElement {
 
     // Without outlines, rooms are chosen from a list.
     let list = '';
-    if (!rooms.length && d.rooms.length) {
-      list = `<div class="msg small">${text.no_outline}</div><div class="chips">${d.rooms.map((room) => {
-        const sel = this._selected.indexOf(room.id);
-        return `<button class="chip${sel >= 0 ? ' on' : ''}" data-room="${room.id}" ${moving ? 'disabled' : ''}>${sel >= 0 ? `${sel + 1}. ` : ''}${esc(this._roomName(room))}</button>`;
-      }).join('')}</div>`;
-    }
+    if (!rooms.length && d.rooms.length && this._show('buttons')) list = `<div class="msg small">${text.no_outline}</div>${this._roomChips(moving)}`;
     if (!svg && !list) return `<div class="msg">${text.no_map}</div>`;
     return svg + list;
+  }
+
+  // Rooms as buttons: when the robot sent no outlines, or when the map is hidden.
+  _roomChips(moving) {
+    const rooms = (this._data && this._data.rooms) || [];
+    if (!rooms.length) return '';
+    return `<div class="chips">${rooms.map((room) => {
+      const sel = this._selected.indexOf(room.id);
+      return `<button class="chip${sel >= 0 ? ' on' : ''}" data-room="${room.id}" ${moving ? 'disabled' : ''}>${sel >= 0 ? `${sel + 1}. ` : ''}${esc(this._roomName(room))}</button>`;
+    }).join('')}</div>`;
   }
 
   _controls(st, related, moving) {
@@ -593,7 +616,7 @@ class YeediMapCard extends HTMLElement {
     else main = `<button class="btn main" data-act="clean"${dis}>${icon('mdi:play')}${this._zoneMode ? text.clean_zone : roomsLabel}</button>`;
     const clear = (n || this._zone) && !moving ? `<button class="btn flat" data-act="clear">${text.clear}</button>` : '';
     const hasMap = this._data && this._data.rooms && this._data.rooms.some((r) => r.outline && r.outline.length > 2);
-    const zone = !moving && !paused && hasMap && !n
+    const zone = !moving && !paused && hasMap && !n && this._show('zone') && this._show('map')
       ? `<button class="btn flat${this._zoneMode ? ' on' : ''}" data-act="zone" title="${esc(text.zone_help)}"><ha-icon icon="mdi:selection-drag"></ha-icon>${text.zone}</button>` : '';
     const dock = st.state !== 'docked' ? `<button class="btn flat" data-act="dock"${pending ? ' disabled' : ''}><ha-icon icon="mdi:home-import-outline"></ha-icon>${text.dock}</button>` : '';
 
@@ -618,13 +641,14 @@ class YeediMapCard extends HTMLElement {
       : '<ha-icon icon="mdi:fan"></ha-icon>';
     // Under the row title, "mop only" is too long: show a short word instead.
     const fanShort = (f) => (f === 'mop_only' ? text.mop_only_short : fanLabel(f));
-    const fan = fanList.length
+    const fan = fanList.length && this._show('suction')
       ? this._levelRow(text.fan, mopChip, fanList.filter((f) => f !== 'mop_only'), fanNow, fanShort, 'data-fan') : '';
 
     const wst = related.water ? this._hass.states[related.water] : null;
     const waterLabel = (o) => (this._hass.formatEntityState ? this._hass.formatEntityState(wst, o) : o);
     let water = '';
-    if (wst && wst.attributes.options) {
+    if (!this._show('water')) water = '';
+    else if (wst && wst.attributes.options) {
       water = this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', wst.attributes.options, wst.state, waterLabel, 'data-water');
     } else if (wst && related.water.startsWith('number.')) {
       // Recent models: a flow from min to max, offered as 5 steps like the levels.
@@ -638,11 +662,12 @@ class YeediMapCard extends HTMLElement {
 
     // Station: its actions, only while the robot is on it.
     const stIcons = { station_empty_dustbin: ['mdi:delete-empty-outline', text.st_empty], station_wash_mop: ['mdi:water-sync', text.st_wash], station_dry_mop: ['mdi:weather-windy', text.st_dry] };
-    const station = st.state === 'docked' && related.station.length
+    const station = st.state === 'docked' && related.station.length && this._show('station')
       ? `<div class="row"><span class="lbl">${esc(text.station)}</span><div class="chips">${related.station.map((b) => `<button class="chip" data-station="${esc(b.entity)}"><ha-icon icon="${stIcons[b.key][0]}"></ha-icon>${esc(stIcons[b.key][1])}</button>`).join('')}</div></div>` : '';
 
     const hint = this._zoneMode && !this._zone ? `<div class="foot">${esc(text.zone_help)}</div>` : '';
-    return `<div class="actions">${main}${clear}${zone}${dock}</div>${hint}${fan}${water}${station}${this._lastClean(related, moving)}`;
+    const buttons = this._show('buttons') ? `<div class="actions">${main}${clear}${zone}${dock}</div>${hint}` : '';
+    return `${buttons}${fan}${water}${station}${this._show('footer') ? this._lastClean(related, moving) : ''}`;
   }
 
   // "Last cleaning: 32 min · 18 m² · 2 h ago", from the statistics sensors.
@@ -926,15 +951,25 @@ const STYLE = `
 // ------------------------------------------------------------------ editor
 
 const EDITOR_TEXT = {
-  en: { title: 'Title', controls: 'Buttons and settings under the map', rooms: 'Rename rooms on this card only (optional)',
+  en: { title: "Title", show: "What the card shows",
+    parts: {"name": "Name", "status": "State", "battery": "Battery", "tanks": "Station water tank alerts", "map": "Map", "room_names": "Room names on the map", "restrictions": "No-mop zones and virtual walls", "dock": "Dock on the map", "robot": "Robot on the map", "trace": "Cleaning trace", "buttons": "Clean, pause and dock buttons", "zone": "Zone button", "suction": "Suction", "water": "Water", "station": "Station buttons", "footer": "Last cleaning / progress"},
+    rooms: 'Rename rooms on this card only (optional)',
     rooms_help: 'Normally leave these empty: the card shows the Home Assistant area each room is associated with (vacuum entity settings → Clean rooms), or else the name from the robot. Type a name here only to override it on this card.', waiting: 'Waiting for the robot’s rooms…' },
-  fr: { title: 'Titre', controls: 'Boutons et réglages sous le plan', rooms: 'Renommer les pièces sur cette carte seulement (facultatif)',
+  fr: { title: "Titre", show: "Ce que la carte affiche",
+    parts: {"name": "Nom", "status": "État", "battery": "Batterie", "tanks": "Alertes des réservoirs de la station", "map": "Plan", "room_names": "Noms des pièces sur le plan", "restrictions": "Zones sans serpillière et murs virtuels", "dock": "Base sur le plan", "robot": "Robot sur le plan", "trace": "Trace du nettoyage", "buttons": "Boutons Nettoyer, Pause et Base", "zone": "Bouton Zone", "suction": "Aspiration", "water": "Eau", "station": "Boutons de la station", "footer": "Dernier nettoyage / progression"},
+    rooms: 'Renommer les pièces sur cette carte seulement (facultatif)',
     rooms_help: 'À laisser vide en général : la carte affiche la pièce Home Assistant associée (paramètres de l’entité aspirateur → Nettoyer des pièces), sinon le nom donné par le robot. Ne saisir un nom ici que pour le remplacer sur cette carte.', waiting: 'En attente des pièces du robot…' },
-  de: { title: 'Titel', controls: 'Tasten und Einstellungen unter der Karte', rooms: 'Räume nur auf dieser Karte umbenennen (optional)',
+  de: { title: "Titel", show: "Was die Karte zeigt",
+    parts: {"name": "Name", "status": "Zustand", "battery": "Akku", "tanks": "Wassertank-Hinweise der Station", "map": "Karte", "room_names": "Raumnamen auf der Karte", "restrictions": "No-Mop-Zonen und virtuelle Wände", "dock": "Station auf der Karte", "robot": "Roboter auf der Karte", "trace": "Reinigungsspur", "buttons": "Tasten Reinigen, Pause und Station", "zone": "Taste Zone", "suction": "Saugkraft", "water": "Wasser", "station": "Tasten der Station", "footer": "Letzte Reinigung / Fortschritt"},
+    rooms: 'Räume nur auf dieser Karte umbenennen (optional)',
     rooms_help: 'Normalerweise leer lassen: die Karte zeigt den zugeordneten Home-Assistant-Bereich (Einstellungen der Staubsauger-Entität → Räume reinigen), sonst den Namen vom Roboter. Nur ausfüllen, um ihn auf dieser Karte zu ersetzen.', waiting: 'Warte auf die Räume des Roboters…' },
-  es: { title: 'Título', controls: 'Botones y ajustes bajo el mapa', rooms: 'Renombrar habitaciones solo en esta tarjeta (opcional)',
+  es: { title: "Título", show: "Lo que muestra la tarjeta",
+    parts: {"name": "Nombre", "status": "Estado", "battery": "Batería", "tanks": "Avisos de los depósitos de la estación", "map": "Mapa", "room_names": "Nombres de las habitaciones en el mapa", "restrictions": "Zonas sin fregado y paredes virtuales", "dock": "Base en el mapa", "robot": "Robot en el mapa", "trace": "Rastro de la limpieza", "buttons": "Botones Limpiar, Pausa y Base", "zone": "Botón Zona", "suction": "Succión", "water": "Agua", "station": "Botones de la estación", "footer": "Última limpieza / progreso"},
+    rooms: 'Renombrar habitaciones solo en esta tarjeta (opcional)',
     rooms_help: 'Normalmente déjalo vacío: la tarjeta muestra el área de Home Assistant asociada (ajustes de la entidad aspiradora → Limpiar habitaciones), o si no el nombre del robot. Escribe un nombre solo para sustituirlo en esta tarjeta.', waiting: 'Esperando las habitaciones del robot…' },
-  it: { title: 'Titolo', controls: 'Pulsanti e impostazioni sotto la mappa', rooms: 'Rinomina le stanze solo su questa scheda (facoltativo)',
+  it: { title: "Titolo", show: "Cosa mostra la scheda",
+    parts: {"name": "Nome", "status": "Stato", "battery": "Batteria", "tanks": "Avvisi dei serbatoi della stazione", "map": "Mappa", "room_names": "Nomi delle stanze sulla mappa", "restrictions": "Zone senza lavaggio e muri virtuali", "dock": "Base sulla mappa", "robot": "Robot sulla mappa", "trace": "Traccia della pulizia", "buttons": "Pulsanti Pulisci, Pausa e Base", "zone": "Pulsante Zona", "suction": "Aspirazione", "water": "Acqua", "station": "Pulsanti della stazione", "footer": "Ultima pulizia / avanzamento"},
+    rooms: 'Rinomina le stanze solo su questa scheda (facoltativo)',
     rooms_help: 'Di solito lascia vuoto: la scheda mostra l’area di Home Assistant associata (impostazioni dell’entità aspirapolvere → Pulisci stanze), altrimenti il nome dato dal robot. Scrivi un nome solo per sostituirlo su questa scheda.', waiting: 'In attesa delle stanze del robot…' },
 };
 
@@ -976,6 +1011,12 @@ class YeediMapCardEditor extends HTMLElement {
 
   _changed(patch) {
     const config = { ...this._config, ...patch };
+    if (patch.show) {
+      // Only the hidden parts are written; "controls" is replaced by them.
+      const hidden = Object.fromEntries(Object.entries(patch.show).filter(([, v]) => v === false));
+      delete config.controls;
+      if (Object.keys(hidden).length) config.show = hidden; else delete config.show;
+    }
     for (const k of Object.keys(config)) if (config[k] === '' || config[k] === undefined) delete config[k];
     if (config.room_names && !Object.keys(config.room_names).length) delete config.room_names;
     this._config = config;
@@ -1008,14 +1049,17 @@ class YeediMapCardEditor extends HTMLElement {
       this._list = this.querySelector('.roomlist');
     }
     this._form.hass = this._hass;
-    this._form.data = { entity: this._config.entity || '', title: this._config.title || '', controls: this._config.controls !== false };
+    const keys = [...SHOW_KEYS, ...CONTROL_KEYS];
+    this._form.data = { entity: this._config.entity || '', title: this._config.title || '',
+      show: Object.fromEntries(keys.map((k) => [k, showPart(this._config, k)])) };
     this._form.schema = [
       { name: 'entity', required: true, selector: { entity: { domain: 'vacuum', integration: 'yeedi' } } },
       { name: 'title', selector: { text: {} } },
-      { name: 'controls', selector: { boolean: {} } },
+      { name: 'show', type: 'expandable', title: text.show, icon: 'mdi:eye-outline',
+        schema: keys.map((k) => ({ name: k, selector: { boolean: {} } })) },
     ];
-    this._form.computeLabel = (sch) => ({ entity: this._hass.localize('ui.panel.lovelace.editor.card.generic.entity') || 'Entity',
-      title: text.title, controls: text.controls }[sch.name] || sch.name);
+    this._form.computeLabel = (sch) => (sch.name === 'entity' ? this._hass.localize('ui.panel.lovelace.editor.card.generic.entity') || 'Entity'
+      : sch.name === 'title' ? text.title : text.parts[sch.name] || sch.name);
     this.querySelector('h4').textContent = text.rooms;
     this.querySelector('.help').textContent = text.rooms_help;
 

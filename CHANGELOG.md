@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.14b4 (test version)
+- **Map card: choose what it shows.** Every part can be hidden, from the card editor ("What the card shows") or with `show:` in YAML: name, state, battery, water alerts, map, room names, no-mop zones and walls, dock, robot, trace, buttons, zone, suction, water, station and the last cleaning line. Without the map, the rooms show as buttons. `controls: false` still works.
+
 ## 0.2.14b3 (test version)
 - **New: "Wash the mop" and "Dry the mop" buttons** for mop-washing stations (M16 Infinity). Their station is built in, so these buttons and "Empty the dustbin" are created without the station option.
 - **Map card: a "Station" row**, shown only while the robot is docked and only with the actions its station has: empty on auto-empty stations, plus wash and dry on mop-washing stations.

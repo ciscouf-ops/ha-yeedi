@@ -120,11 +120,15 @@ The integration ships its own Lovelace card, loaded automatically (no extra reso
 type: custom:yeedi-map-card
 entity: vacuum.yeedi_vac_max
 title: Vacuum          # optional
-controls: true         # optional: buttons, suction and water level under the map
 room_names:            # optional: your own room names (room id -> name)
   2: Living room
   3: Bedroom
+show:                  # optional: everything is shown by default, hide what you don't want
+  trace: false
+  station: false
 ```
+
+Parts you can hide with `show`: `name`, `status`, `battery`, `tanks` (station water alerts), `map`, `room_names`, `restrictions` (no-mop zones and virtual walls), `dock`, `robot`, `trace`, `buttons` (clean, pause, dock), `zone`, `suction`, `water`, `station`, `footer` (last cleaning or progress). The card editor has the same switches under "What the card shows". Without the map, the rooms show as buttons. The older `controls: false` still works.
 
 Room names come, in this order, from `room_names`, from the Home Assistant area each room is associated with (vacuum entity settings → segments), and from the robot.
 
