@@ -24,6 +24,7 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 ## Features
 
 - Configuration in the UI (e-mail, password, country), credentials stored by Home Assistant
+- In English, French, German, Spanish, Italian, Dutch and Polish (integration and map card)
 - `vacuum` entity: start, pause, stop, return to dock, locate, fan speed (Standard / Max / Max+) and **mop only** (vacuum motor off)
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
 - Actions **`yeedi.clean_rooms`** (by room number *or name*) and **`yeedi.clean_zone`** (a rectangle in metres), plus `vacuum.send_command` with `spot_area` / `custom_area`

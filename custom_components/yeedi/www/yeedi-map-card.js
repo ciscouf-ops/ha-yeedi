@@ -64,6 +64,24 @@ const TEXT = {
       idle: 'Inattivo', paused: 'In pausa', error: 'Errore' },
     since: 'iniziata alle', end_at: 'fine verso le', left: (n) => `mancano ~${n} min`,
   },
+  nl: {
+    clean: 'Schoonmaken', clean_all: 'Alles schoonmaken', clean_rooms: (n) => `${n} ${n > 1 ? 'kamers' : 'kamer'} schoonmaken`, pause: 'Pauze',
+    resume: 'Hervatten', dock: 'Station', clear: 'Wissen', last_clean: 'Laatste schoonmaakbeurt', history: 'Recente schoonmaakbeurten', zone: 'Zone', clean_zone: 'Zone schoonmaken', zone_help: 'Teken een rechthoek op de kaart.', no_map: 'Wachten op de kaart…',
+    no_outline: 'De robot heeft geen omtrek van de kamers gestuurd: kies ze hieronder.',
+    not_yeedi: 'Deze entiteit is geen yeedi-stofzuiger.', fan: 'Zuigkracht', water: 'Water', station: 'Station', st_empty: 'Legen', st_wash: 'Wassen', st_dry: 'Drogen', clean_empty: 'Schoon water leeg', dirty_full: 'Vuil water vol', mop_only_short: 'Uit',
+    states: { cleaning: 'Schoonmaken', returning: 'Terug naar het station', docked: 'In het station',
+      idle: 'Inactief', paused: 'Gepauzeerd', error: 'Fout' },
+    since: 'gestart om', end_at: 'klaar rond', left: (n) => `nog ~${n} min`,
+  },
+  pl: {
+    clean: 'Sprzątaj', clean_all: 'Posprzątaj wszystko', clean_rooms: (n) => `Posprzątaj ${n} ${n === 1 ? 'pomieszczenie' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'pomieszczenia' : 'pomieszczeń')}`, pause: 'Pauza',
+    resume: 'Wznów', dock: 'Stacja', clear: 'Wyczyść', last_clean: 'Ostatnie sprzątanie', history: 'Ostatnie sprzątania', zone: 'Strefa', clean_zone: 'Posprzątaj strefę', zone_help: 'Narysuj prostokąt na mapie.', no_map: 'Oczekiwanie na mapę…',
+    no_outline: 'Robot nie przesłał obrysu pomieszczeń: wybierz je poniżej.',
+    not_yeedi: 'Ta encja nie jest odkurzaczem yeedi.', fan: 'Ssanie', water: 'Woda', station: 'Stacja', st_empty: 'Opróżnij', st_wash: 'Umyj', st_dry: 'Wysusz', clean_empty: 'Brak czystej wody', dirty_full: 'Brudna woda pełna', mop_only_short: 'Wył.',
+    states: { cleaning: 'Sprzątanie', returning: 'Powrót do stacji', docked: 'W stacji',
+      idle: 'Bezczynny', paused: 'Wstrzymany', error: 'Błąd' },
+    since: 'rozpoczęto o', end_at: 'koniec około', left: (n) => `zostało ~${n} min`,
+  },
 };
 
 // Generic room names sent by the robot (deebot-client), translated.
@@ -85,6 +103,14 @@ const ROOM_NAMES = {
     'Study': 'Studio', 'Kitchen': 'Cucina', 'Bathroom': 'Bagno', 'Laundry': 'Lavanderia', 'Lounge': 'Salotto',
     'Storeroom': 'Ripostiglio', 'Kids room': 'Cameretta', 'Sunroom': 'Veranda', 'Corridor': 'Corridoio',
     'Balcony': 'Balcone', 'Gym': 'Palestra' },
+  nl: { 'Default': 'Kamer', 'Living Room': 'Woonkamer', 'Dining Room': 'Eetkamer', 'Bedroom': 'Slaapkamer',
+    'Study': 'Werkkamer', 'Kitchen': 'Keuken', 'Bathroom': 'Badkamer', 'Laundry': 'Washok', 'Lounge': 'Zitkamer',
+    'Storeroom': 'Berging', 'Kids room': 'Kinderkamer', 'Sunroom': 'Serre', 'Corridor': 'Gang',
+    'Balcony': 'Balkon', 'Gym': 'Fitnessruimte' },
+  pl: { 'Default': 'Pomieszczenie', 'Living Room': 'Salon', 'Dining Room': 'Jadalnia', 'Bedroom': 'Sypialnia',
+    'Study': 'Gabinet', 'Kitchen': 'Kuchnia', 'Bathroom': 'Łazienka', 'Laundry': 'Pralnia', 'Lounge': 'Pokój dzienny',
+    'Storeroom': 'Schowek', 'Kids room': 'Pokój dziecięcy', 'Sunroom': 'Oranżeria', 'Corridor': 'Korytarz',
+    'Balcony': 'Balkon', 'Gym': 'Siłownia' },
 };
 
 // Icons for the suction and water levels (fallbacks by position: _0, _1, …).
@@ -1025,6 +1051,14 @@ const EDITOR_TEXT = {
     parts: {"history": "Ultime pulizie (nascosto per impostazione predefinita)", "name": "Nome", "status": "Stato", "battery": "Batteria", "tanks": "Avvisi dei serbatoi della stazione", "map": "Mappa", "room_names": "Nomi delle stanze sulla mappa", "restrictions": "Zone senza lavaggio e muri virtuali", "dock": "Base sulla mappa", "robot": "Robot sulla mappa", "trace": "Traccia della pulizia", "buttons": "Pulsanti Pulisci, Pausa e Base", "zone": "Pulsante Zona", "suction": "Aspirazione", "water": "Acqua", "station": "Pulsanti della stazione", "footer": "Ultima pulizia / avanzamento"},
     rooms: 'Rinomina le stanze solo su questa scheda (facoltativo)',
     rooms_help: 'Di solito lascia vuoto: la scheda mostra l’area di Home Assistant associata (impostazioni dell’entità aspirapolvere → Pulisci stanze), altrimenti il nome dato dal robot. Scrivi un nome solo per sostituirlo su questa scheda.', waiting: 'In attesa delle stanze del robot…' },
+  nl: { title: "Titel", show: "Wat de kaart toont",
+    parts: {"history": "Recente schoonmaakbeurten (standaard uit)", "name": "Naam", "status": "Status", "battery": "Batterij", "tanks": "Meldingen watertanks van het station", "map": "Kaart", "room_names": "Kamernamen op de kaart", "restrictions": "Dweilvrije zones en virtuele muren", "dock": "Station op de kaart", "robot": "Robot op de kaart", "trace": "Schoonmaakspoor", "buttons": "Knoppen Schoonmaken, Pauze en Station", "zone": "Knop Zone", "suction": "Zuigkracht", "water": "Water", "station": "Knoppen van het station", "footer": "Laatste schoonmaakbeurt / voortgang"},
+    rooms: 'Kamers alleen op deze kaart hernoemen (optioneel)',
+    rooms_help: 'Meestal leeg laten: de kaart toont het Home Assistant-gebied dat aan elke kamer gekoppeld is (instellingen van de stofzuigerentiteit → Kamers schoonmaken), of anders de naam van de robot. Vul hier alleen een naam in om die op deze kaart te vervangen.', waiting: 'Wachten op de kamers van de robot…' },
+  pl: { title: "Tytuł", show: "Co pokazuje karta",
+    parts: {"history": "Ostatnie sprzątania (domyślnie ukryte)", "name": "Nazwa", "status": "Stan", "battery": "Bateria", "tanks": "Alerty zbiorników wody stacji", "map": "Mapa", "room_names": "Nazwy pomieszczeń na mapie", "restrictions": "Strefy bez mopowania i wirtualne ściany", "dock": "Stacja na mapie", "robot": "Robot na mapie", "trace": "Ślad sprzątania", "buttons": "Przyciski Sprzątaj, Pauza i Stacja", "zone": "Przycisk Strefa", "suction": "Ssanie", "water": "Woda", "station": "Przyciski stacji", "footer": "Ostatnie sprzątanie / postęp"},
+    rooms: 'Zmień nazwy pomieszczeń tylko na tej karcie (opcjonalnie)',
+    rooms_help: 'Zwykle zostaw puste: karta pokazuje obszar Home Assistant powiązany z każdym pomieszczeniem (ustawienia encji odkurzacza → Sprzątanie pomieszczeń), a w przeciwnym razie nazwę z robota. Wpisz nazwę tutaj tylko, aby ją zastąpić na tej karcie.', waiting: 'Oczekiwanie na pomieszczenia robota…' },
 };
 
 class YeediMapCardEditor extends HTMLElement {

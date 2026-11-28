@@ -1,0 +1,359 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "yeedi-account",
+        "description": "Voer het account in dat je in de yeedi-app gebruikt.",
+        "data": {
+          "username": "E-mail",
+          "password": "Wachtwoord",
+          "country": "Land"
+        }
+      },
+      "device_verification": {
+        "title": "Apparaatverificatie",
+        "description": "yeedi heeft een verificatiecode naar je e-mailadres gestuurd. Vul die hieronder in.",
+        "data": {
+          "verification_code": "Verificatiecode"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbinden mislukt",
+      "invalid_auth": "Ongeldige authenticatie",
+      "invalid_verification_code": "Ongeldige verificatiecode",
+      "unknown": "Onverwachte fout"
+    },
+    "abort": {
+      "already_configured": "Account is al geconfigureerd",
+      "reauth_successful": "Opnieuw aanmelden gelukt"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "clean_water_empty": {
+        "name": "Schoonwatertank leeg"
+      },
+      "dirty_water_full": {
+        "name": "Vuilwatertank vol"
+      }
+    },
+    "select": {
+      "water_amount": {
+        "name": "Waterniveau",
+        "state": {
+          "low": "Laag",
+          "medium": "Gemiddeld",
+          "high": "Hoog",
+          "ultrahigh": "Zeer hoog"
+        }
+      },
+      "suction": {
+        "name": "Zuigkracht",
+        "state": {
+          "mop_only": "Alleen dweilen",
+          "normal": "Standaard",
+          "max": "Max",
+          "max_plus": "Max+"
+        }
+      },
+      "auto_empty": {
+        "name": "Automatisch legen",
+        "state": {
+          "off": "Uit",
+          "on": "Aan",
+          "auto": "Automatisch",
+          "smart": "Slim",
+          "min_10": "Elke 10 minuten",
+          "min_15": "Elke 15 minuten",
+          "min_25": "Elke 25 minuten"
+        }
+      },
+      "work_mode": {
+        "name": "Schoonmaakmodus",
+        "state": {
+          "vacuum_and_mop": "Zuigen en dweilen",
+          "vacuum": "Alleen zuigen",
+          "mop": "Alleen dweilen",
+          "mop_after_vacuum": "Dweilen na het zuigen"
+        }
+      },
+      "active_map": {
+        "name": "Actieve kaart"
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Fout"
+      },
+      "stats_area": {
+        "name": "Gereinigde oppervlakte"
+      },
+      "stats_time": {
+        "name": "Schoonmaakduur"
+      },
+      "total_stats_area": {
+        "name": "Totaal gereinigde oppervlakte"
+      },
+      "total_stats_time": {
+        "name": "Totale schoonmaakduur"
+      },
+      "total_stats_cleanings": {
+        "name": "Totaal aantal schoonmaakbeurten"
+      },
+      "lifespan_brush": {
+        "name": "Levensduur hoofdborstel"
+      },
+      "lifespan_filter": {
+        "name": "Levensduur filter"
+      },
+      "lifespan_side_brush": {
+        "name": "Levensduur zijborstel"
+      },
+      "current_room": {
+        "name": "Huidige kamer"
+      },
+      "remaining_time": {
+        "name": "Resterende tijd"
+      },
+      "cleaning_end": {
+        "name": "Verwacht einde"
+      },
+      "problem": {
+        "name": "Probleem",
+        "state": {
+          "none": "Geen probleem",
+          "low_battery": "Batterij bijna leeg",
+          "lifted": "Van de vloer getild",
+          "wheel": "Wiel geblokkeerd",
+          "cliff_sensor": "Valsensoren vuil",
+          "stuck": "Vast",
+          "side_brush_worn": "Vervang de zijborstels",
+          "main_brush_worn": "Vervang de hoofdborstel",
+          "filter_worn": "Vervang het filter",
+          "side_brush_tangled": "Zijborstel verward",
+          "main_brush_tangled": "Hoofdborstel verward",
+          "no_dustbin": "Stofbak ontbreekt",
+          "bumper": "Bumper vast",
+          "laser_sensor": "Afstandssensor defect",
+          "dustbin_full": "Stofbak vol",
+          "battery_fault": "Batterijfout",
+          "front_sensor": "Voorsensor defect",
+          "gyroscope": "Gyroscoop defect",
+          "filter_blocked": "Filter verstopt",
+          "fan": "Ventilator defect",
+          "water_tank": "Watertank defect",
+          "no_water_tank": "Watertank ontbreekt",
+          "mop_plate": "Probleem met de dweilpad",
+          "clean_water_empty": "Schoonwatertank leeg",
+          "dirty_water_full": "Vuilwatertank vol",
+          "no_clean_water_tank": "Schoonwatertank ontbreekt",
+          "no_dirty_water_tank": "Vuilwatertank ontbreekt",
+          "no_sink_filter": "Stationfilter ontbreekt",
+          "station_fault": "Storing in het station",
+          "communication": "Communicatiefout",
+          "lid_open": "Deksel van het station open",
+          "dust_bag_full": "Stofzak vol",
+          "no_water_module": "Watermodule ontbreekt",
+          "detergent_low": "Schoonmaakmiddel bijna op",
+          "mop_plugged": "Dweil bevestigd",
+          "replace_mop": "Vervang de dweil",
+          "dock_not_found": "Station niet gevonden",
+          "position_lost": "Positie kwijt",
+          "obstacle": "Obstakel gedetecteerd",
+          "other": "Ander probleem"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Code"
+          },
+          "description": {
+            "name": "Beschrijving"
+          }
+        }
+      },
+      "last_cleaning": {
+        "name": "Laatste schoonmaakbeurt",
+        "state_attributes": {
+          "minutes": {
+            "name": "Duur (min)"
+          },
+          "area": {
+            "name": "Oppervlakte (m²)"
+          },
+          "rooms": {
+            "name": "Kamers"
+          },
+          "result": {
+            "name": "Resultaat"
+          },
+          "history": {
+            "name": "Geschiedenis"
+          }
+        }
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "mop_only": "Alleen dweilen",
+              "normal": "Standaard",
+              "max": "Max",
+              "max_plus": "Max+"
+            }
+          }
+        }
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Opnieuw lokaliseren"
+      },
+      "clear_map": {
+        "name": "Kaart wissen (ook in de yeedi-app!)"
+      },
+      "station_empty_dustbin": {
+        "name": "Stofbak legen"
+      },
+      "reset_lifespan_brush": {
+        "name": "Levensduur hoofdborstel resetten"
+      },
+      "reset_lifespan_filter": {
+        "name": "Levensduur filter resetten"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Levensduur zijborstel resetten"
+      },
+      "station_wash_mop": {
+        "name": "Dweil wassen"
+      },
+      "station_dry_mop": {
+        "name": "Dweil drogen"
+      }
+    },
+    "switch": {
+      "continuous_cleaning": {
+        "name": "Doorgaan met schoonmaken"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Tapijtboost"
+      },
+      "advanced_mode": {
+        "name": "Geavanceerde modus"
+      },
+      "child_lock": {
+        "name": "Kinderslot"
+      },
+      "true_detect": {
+        "name": "Obstakels ontwijken (TrueDetect)"
+      },
+      "voice_assistant": {
+        "name": "Spraakassistent"
+      },
+      "border_switch": {
+        "name": "Randen schoonmaken"
+      },
+      "border_spin": {
+        "name": "Draaien langs randen"
+      },
+      "moveup_warning": {
+        "name": "Waarschuwing bij optillen"
+      },
+      "cross_map_border_warning": {
+        "name": "Waarschuwing buiten de kaart"
+      },
+      "safe_protect": {
+        "name": "Veiligheidsbescherming"
+      },
+      "clean_preference": {
+        "name": "Schoonmaakvoorkeur"
+      },
+      "multi_map": {
+        "name": "Meerdere kaarten"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      },
+      "water_amount": {
+        "name": "Waterdoorvoer"
+      },
+      "clean_count": {
+        "name": "Rondes per schoonmaakbeurt"
+      },
+      "mop_auto_wash_frequency": {
+        "name": "Interval dweil wassen"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Authenticatie mislukt, meld je opnieuw aan."
+    },
+    "device_verification_required": {
+      "message": "yeedi vraagt om dit apparaat te verifiëren, meld je opnieuw aan."
+    },
+    "setup_error": {
+      "message": "De yeedi-cloud is niet bereikbaar."
+    },
+    "params_dict": {
+      "message": "Params moet een dictionary zijn."
+    },
+    "area_not_supported": {
+      "message": "Deze robot ondersteunt geen schoonmaak per gebied."
+    },
+    "rooms_required": {
+      "message": "Het commando spot_area heeft een parameter 'rooms' nodig."
+    },
+    "unknown_room": {
+      "message": "Onbekende kamer \"{room}\": gebruik een kamernummer of een naam van de kaart."
+    },
+    "zone_four_values": {
+      "message": "De zone heeft vier waarden nodig: x1, y1, x2, y2."
+    }
+  },
+  "services": {
+    "clean_rooms": {
+      "name": "Kamers schoonmaken",
+      "description": "Maakt de opgegeven kamers schoon, in de opgegeven volgorde.",
+      "fields": {
+        "rooms": {
+          "name": "Kamers",
+          "description": "Kamernummers of -namen, bijv. [\"Keuken\", 3]."
+        },
+        "cleanings": {
+          "name": "Rondes",
+          "description": "Aantal rondes (1 of 2)."
+        }
+      }
+    },
+    "clean_zone": {
+      "name": "Een zone schoonmaken",
+      "description": "Maakt een rechthoek van de kaart schoon.",
+      "fields": {
+        "zone": {
+          "name": "Zone",
+          "description": "Hoeken in meters vanaf de oorsprong van de kaart: [x1, y1, x2, y2]."
+        },
+        "cleanings": {
+          "name": "Rondes",
+          "description": "Aantal rondes (1 of 2)."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opties",
+        "description": "Heeft de robot een station dat automatisch leegt? Voegt de knop \"Stofbak legen\" en de instelling voor automatisch legen toe.",
+        "data": {
+          "station": "Station met automatisch legen"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,359 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Konto yeedi",
+        "description": "Podaj konto, którego używasz w aplikacji yeedi.",
+        "data": {
+          "username": "E-mail",
+          "password": "Hasło",
+          "country": "Kraj"
+        }
+      },
+      "device_verification": {
+        "title": "Weryfikacja urządzenia",
+        "description": "yeedi wysłało kod weryfikacyjny na Twój adres e-mail. Wpisz go poniżej.",
+        "data": {
+          "verification_code": "Kod weryfikacyjny"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie udało się połączyć",
+      "invalid_auth": "Nieprawidłowe uwierzytelnienie",
+      "invalid_verification_code": "Nieprawidłowy kod weryfikacyjny",
+      "unknown": "Nieoczekiwany błąd"
+    },
+    "abort": {
+      "already_configured": "Konto jest już skonfigurowane",
+      "reauth_successful": "Ponowne uwierzytelnienie powiodło się"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "clean_water_empty": {
+        "name": "Zbiornik czystej wody pusty"
+      },
+      "dirty_water_full": {
+        "name": "Zbiornik brudnej wody pełny"
+      }
+    },
+    "select": {
+      "water_amount": {
+        "name": "Poziom wody",
+        "state": {
+          "low": "Niski",
+          "medium": "Średni",
+          "high": "Wysoki",
+          "ultrahigh": "Bardzo wysoki"
+        }
+      },
+      "suction": {
+        "name": "Moc ssania",
+        "state": {
+          "mop_only": "Tylko mopowanie",
+          "normal": "Standardowa",
+          "max": "Max",
+          "max_plus": "Max+"
+        }
+      },
+      "auto_empty": {
+        "name": "Automatyczne opróżnianie",
+        "state": {
+          "off": "Wyłączone",
+          "on": "Włączone",
+          "auto": "Automatyczne",
+          "smart": "Inteligentne",
+          "min_10": "Co 10 minut",
+          "min_15": "Co 15 minut",
+          "min_25": "Co 25 minut"
+        }
+      },
+      "work_mode": {
+        "name": "Tryb sprzątania",
+        "state": {
+          "vacuum_and_mop": "Odkurzanie i mopowanie",
+          "vacuum": "Tylko odkurzanie",
+          "mop": "Tylko mopowanie",
+          "mop_after_vacuum": "Mopowanie po odkurzaniu"
+        }
+      },
+      "active_map": {
+        "name": "Aktywna mapa"
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Błąd"
+      },
+      "stats_area": {
+        "name": "Posprzątana powierzchnia"
+      },
+      "stats_time": {
+        "name": "Czas sprzątania"
+      },
+      "total_stats_area": {
+        "name": "Łączna posprzątana powierzchnia"
+      },
+      "total_stats_time": {
+        "name": "Łączny czas sprzątania"
+      },
+      "total_stats_cleanings": {
+        "name": "Łączna liczba sprzątań"
+      },
+      "lifespan_brush": {
+        "name": "Żywotność szczotki głównej"
+      },
+      "lifespan_filter": {
+        "name": "Żywotność filtra"
+      },
+      "lifespan_side_brush": {
+        "name": "Żywotność szczotki bocznej"
+      },
+      "current_room": {
+        "name": "Bieżące pomieszczenie"
+      },
+      "remaining_time": {
+        "name": "Pozostały czas"
+      },
+      "cleaning_end": {
+        "name": "Przewidywany koniec"
+      },
+      "problem": {
+        "name": "Problem",
+        "state": {
+          "none": "Brak problemu",
+          "low_battery": "Niski poziom baterii",
+          "lifted": "Podniesiony z podłogi",
+          "wheel": "Koło zablokowane",
+          "cliff_sensor": "Czujniki upadku zabrudzone",
+          "stuck": "Utknął",
+          "side_brush_worn": "Wymień szczotki boczne",
+          "main_brush_worn": "Wymień szczotkę główną",
+          "filter_worn": "Wymień filtr",
+          "side_brush_tangled": "Szczotka boczna zaplątana",
+          "main_brush_tangled": "Szczotka główna zaplątana",
+          "no_dustbin": "Brak pojemnika na kurz",
+          "bumper": "Zderzak zablokowany",
+          "laser_sensor": "Awaria czujnika odległości",
+          "dustbin_full": "Pojemnik na kurz pełny",
+          "battery_fault": "Awaria baterii",
+          "front_sensor": "Awaria czujnika przedniego",
+          "gyroscope": "Awaria żyroskopu",
+          "filter_blocked": "Filtr zatkany",
+          "fan": "Awaria wentylatora",
+          "water_tank": "Awaria zbiornika wody",
+          "no_water_tank": "Brak zbiornika wody",
+          "mop_plate": "Problem z nakładką mopa",
+          "clean_water_empty": "Zbiornik czystej wody pusty",
+          "dirty_water_full": "Zbiornik brudnej wody pełny",
+          "no_clean_water_tank": "Brak zbiornika czystej wody",
+          "no_dirty_water_tank": "Brak zbiornika brudnej wody",
+          "no_sink_filter": "Brak filtra stacji",
+          "station_fault": "Awaria stacji",
+          "communication": "Błąd komunikacji",
+          "lid_open": "Pokrywa stacji otwarta",
+          "dust_bag_full": "Worek na kurz pełny",
+          "no_water_module": "Brak modułu wody",
+          "detergent_low": "Mało płynu czyszczącego",
+          "mop_plugged": "Mop zamontowany",
+          "replace_mop": "Wymień mop",
+          "dock_not_found": "Nie znaleziono stacji",
+          "position_lost": "Utracono pozycję",
+          "obstacle": "Wykryto przeszkodę",
+          "other": "Inny problem"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Kod"
+          },
+          "description": {
+            "name": "Opis"
+          }
+        }
+      },
+      "last_cleaning": {
+        "name": "Ostatnie sprzątanie",
+        "state_attributes": {
+          "minutes": {
+            "name": "Czas (min)"
+          },
+          "area": {
+            "name": "Powierzchnia (m²)"
+          },
+          "rooms": {
+            "name": "Pomieszczenia"
+          },
+          "result": {
+            "name": "Wynik"
+          },
+          "history": {
+            "name": "Historia"
+          }
+        }
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "mop_only": "Tylko mopowanie",
+              "normal": "Standardowa",
+              "max": "Max",
+              "max_plus": "Max+"
+            }
+          }
+        }
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Zlokalizuj ponownie"
+      },
+      "clear_map": {
+        "name": "Wyczyść mapę (także w aplikacji yeedi!)"
+      },
+      "station_empty_dustbin": {
+        "name": "Opróżnij pojemnik na kurz"
+      },
+      "reset_lifespan_brush": {
+        "name": "Zresetuj żywotność szczotki głównej"
+      },
+      "reset_lifespan_filter": {
+        "name": "Zresetuj żywotność filtra"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Zresetuj żywotność szczotki bocznej"
+      },
+      "station_wash_mop": {
+        "name": "Umyj mop"
+      },
+      "station_dry_mop": {
+        "name": "Wysusz mop"
+      }
+    },
+    "switch": {
+      "continuous_cleaning": {
+        "name": "Kontynuacja sprzątania"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Zwiększenie mocy na dywanach"
+      },
+      "advanced_mode": {
+        "name": "Tryb zaawansowany"
+      },
+      "child_lock": {
+        "name": "Blokada rodzicielska"
+      },
+      "true_detect": {
+        "name": "Omijanie przeszkód (TrueDetect)"
+      },
+      "voice_assistant": {
+        "name": "Asystent głosowy"
+      },
+      "border_switch": {
+        "name": "Sprzątanie krawędzi"
+      },
+      "border_spin": {
+        "name": "Obrót przy krawędziach"
+      },
+      "moveup_warning": {
+        "name": "Ostrzeżenie o podniesieniu"
+      },
+      "cross_map_border_warning": {
+        "name": "Ostrzeżenie o wyjściu poza mapę"
+      },
+      "safe_protect": {
+        "name": "Ochrona bezpieczeństwa"
+      },
+      "clean_preference": {
+        "name": "Preferencje sprzątania"
+      },
+      "multi_map": {
+        "name": "Wiele map"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Głośność"
+      },
+      "water_amount": {
+        "name": "Przepływ wody"
+      },
+      "clean_count": {
+        "name": "Przejścia na sprzątanie"
+      },
+      "mop_auto_wash_frequency": {
+        "name": "Odstęp mycia mopa"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Uwierzytelnienie nie powiodło się, zaloguj się ponownie."
+    },
+    "device_verification_required": {
+      "message": "yeedi prosi o weryfikację tego urządzenia, zaloguj się ponownie."
+    },
+    "setup_error": {
+      "message": "Nie można połączyć się z chmurą yeedi."
+    },
+    "params_dict": {
+      "message": "Params musi być słownikiem."
+    },
+    "area_not_supported": {
+      "message": "Ten robot nie obsługuje sprzątania obszarów."
+    },
+    "rooms_required": {
+      "message": "Polecenie spot_area wymaga parametru 'rooms'."
+    },
+    "unknown_room": {
+      "message": "Nieznane pomieszczenie \"{room}\": użyj numeru pomieszczenia lub nazwy z mapy."
+    },
+    "zone_four_values": {
+      "message": "Strefa wymaga czterech wartości: x1, y1, x2, y2."
+    }
+  },
+  "services": {
+    "clean_rooms": {
+      "name": "Posprzątaj pomieszczenia",
+      "description": "Sprząta podane pomieszczenia w podanej kolejności.",
+      "fields": {
+        "rooms": {
+          "name": "Pomieszczenia",
+          "description": "Numery lub nazwy pomieszczeń, np. [\"Kuchnia\", 3]."
+        },
+        "cleanings": {
+          "name": "Przejścia",
+          "description": "Liczba przejść (1 lub 2)."
+        }
+      }
+    },
+    "clean_zone": {
+      "name": "Posprzątaj strefę",
+      "description": "Sprząta prostokąt na mapie.",
+      "fields": {
+        "zone": {
+          "name": "Strefa",
+          "description": "Narożniki w metrach od początku mapy: [x1, y1, x2, y2]."
+        },
+        "cleanings": {
+          "name": "Przejścia",
+          "description": "Liczba przejść (1 lub 2)."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje",
+        "description": "Czy robot ma stację automatycznego opróżniania? Dodaje przycisk \"Opróżnij pojemnik na kurz\" i ustawienie automatycznego opróżniania.",
+        "data": {
+          "station": "Stacja automatycznego opróżniania"
+        }
+      }
+    }
+  }
+}

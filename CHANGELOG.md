@@ -13,6 +13,7 @@
 - **Recent cleanings** (optional, `show: {history: true}` or in the editor): the last 3 cleanings under the controls.
 
 ### Other
+- **Dutch and Polish**: the integration and the map card are now also in Dutch and Polish.
 - **"Clear the map" button renamed "Clear the map (also in the yeedi app!)"**: it deletes the map on the robot, not only in Home Assistant. Reported by @kevingufler (#5).
 - README: the yeedi 2 hybrid is tested by a user (#5); zones are in metres with up to 3 decimals (millimetres).
 - Map card tests run on GitHub for four robots (vac max, vac station, M16 Infinity, yeedi 2 hybrid).
