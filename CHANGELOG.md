@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.14b5 (test version)
+- **Map card: the water flow of the M16 Infinity is a real slider** from 0 to 50, at the robot's own step (1), instead of 5 steps. The value follows the finger and is sent when you let go.
+
 ## 0.2.14b4 (test version)
 - **Map card: choose what it shows.** Every part can be hidden, from the card editor ("What the card shows") or with `show:` in YAML: name, state, battery, water alerts, map, room names, no-mop zones and walls, dock, robot, trace, buttons, zone, suction, water, station and the last cleaning line. Without the map, the rooms show as buttons. `controls: false` still works.
 

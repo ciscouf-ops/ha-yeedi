@@ -16,7 +16,7 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.14b4';
+const CARD_VERSION = '0.2.14b5';
 
 const TEXT = {
   en: {
@@ -149,7 +149,7 @@ class YeediMapCard extends HTMLElement {
     if (first || !this._unsub) this._subscribe();
     const st = hass.states[this._config.entity];
     const key = st ? `${st.state}|${st.last_updated}|${this._otherStates()}` : '';
-    if (key !== this._key) { this._key = key; this._render(); }
+    if (key !== this._key && !this._sliding) { this._key = key; this._render(); }
   }
 
   getCardSize() { return 6; }
@@ -339,6 +339,9 @@ class YeediMapCard extends HTMLElement {
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
       this.shadowRoot.addEventListener('click', (ev) => this._onClick(ev));
+      // Water slider: the value follows the finger, the robot gets it when the finger lifts.
+      this.shadowRoot.addEventListener('input', (ev) => this._onWater(ev, false));
+      this.shadowRoot.addEventListener('change', (ev) => this._onWater(ev, true));
       this.shadowRoot.addEventListener('pointerdown', (ev) => this._onPointer(ev, 'down'));
       this.shadowRoot.addEventListener('pointermove', (ev) => this._onPointer(ev, 'move'));
       this.shadowRoot.addEventListener('pointerup', (ev) => this._onPointer(ev, 'up'));
@@ -651,13 +654,13 @@ class YeediMapCard extends HTMLElement {
     else if (wst && wst.attributes.options) {
       water = this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', wst.attributes.options, wst.state, waterLabel, 'data-water');
     } else if (wst && related.water.startsWith('number.')) {
-      // Recent models: a flow from min to max, offered as 5 steps like the levels.
-      const min = Number(wst.attributes.min ?? 0), max = Number(wst.attributes.max ?? 50), v = Number(wst.state);
-      const steps = [1, 2, 3, 4, 5].map((i) => String(Math.round(min + ((max - min) * i) / 5)));
-      const near = isNaN(v) || v <= min ? null
-        : steps.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
-      water = this._levelRow(text.water, '<ha-icon icon="mdi:water-outline"></ha-icon>', steps, near, (o) => o, 'data-waternum')
-        .replace(/<small>[^<]*<\/small>/, `<small>${isNaN(v) ? '' : esc(String(Math.round(v)))}</small>`);
+      // Recent models (M16 Infinity): a flow from min to max, set with a slider at the robot's own step.
+      const min = Number(wst.attributes.min ?? 0), max = Number(wst.attributes.max ?? 50);
+      const step = Number(wst.attributes.step) > 0 ? Number(wst.attributes.step) : 1, v = Number(wst.state);
+      const val = isNaN(v) ? min : v, pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+      water = `<div class="row"><span class="lbl">${esc(text.water)}<small class="wv">${isNaN(v) ? '' : esc(String(Math.round(v)))}</small></span>
+        <div class="chips"><div class="gauge slide"><ha-icon icon="mdi:water-outline"></ha-icon>
+        <input type="range" class="wrange" min="${min}" max="${max}" step="${step}" value="${val}" style="--p:${pct}%" aria-label="${esc(text.water)}"></div></div></div>`;
     }
 
     // Station: its actions, only while the robot is on it.
@@ -747,6 +750,19 @@ class YeediMapCard extends HTMLElement {
   }
 
   // Zone mode: drag on the map to draw the rectangle to clean.
+  _onWater(ev, done) {
+    const r = ev.target;
+    if (!r || !r.classList || !r.classList.contains('wrange')) return;
+    const min = Number(r.min), max = Number(r.max), v = Number(r.value);
+    r.style.setProperty('--p', `${max > min ? ((v - min) / (max - min)) * 100 : 0}%`);
+    const lbl = r.closest('.row') && r.closest('.row').querySelector('.wv');
+    if (lbl) lbl.textContent = String(v);
+    this._sliding = !done;
+    clearTimeout(this._slideTimer);
+    if (!done) this._slideTimer = setTimeout(() => { this._sliding = false; }, 5000); // finger lost: render again
+    if (done) this._hass.callService('number', 'set_value', { entity_id: this._related().water, value: v });
+  }
+
   _onPointer(ev, phase) {
     if (!this._zoneMode || !this._geo) return;
     const svg = ev.composedPath().find((n) => n.tagName === 'svg' && n.classList && n.classList.contains('plan'));
@@ -818,7 +834,7 @@ class YeediMapCard extends HTMLElement {
 
   _onClick(ev) {
     const path = ev.composedPath();
-    const el = path.find((n) => n.dataset && (n.dataset.room || n.dataset.act || n.dataset.fan || n.dataset.water || n.dataset.waternum || n.dataset.station));
+    const el = path.find((n) => n.dataset && (n.dataset.room || n.dataset.act || n.dataset.fan || n.dataset.water || n.dataset.station));
     if (!el || el.disabled) return;
     const st = this._hass.states[this._config.entity];
     if (el.dataset.room) {
@@ -838,9 +854,7 @@ class YeediMapCard extends HTMLElement {
     else if (el.dataset.water) {
       this._hass.callService('select', 'select_option', { entity_id: this._related().water, option: el.dataset.water });
     }
-    else if (el.dataset.waternum) {
-      this._hass.callService('number', 'set_value', { entity_id: this._related().water, value: Number(el.dataset.waternum) });
-    }
+
     else if (el.dataset.station) {
       this._hass.callService('button', 'press', { entity_id: el.dataset.station });
     }
@@ -945,6 +959,13 @@ const STYLE = `
   .seg:last-of-type { border-radius: 3px 6px 6px 3px; }
   .seg.fill { background: color-mix(in srgb, var(--primary-color) 55%, transparent); }
   .seg.on { background: var(--primary-color); }
+  .gauge.slide { padding-right: 12px; }
+  .wrange { -webkit-appearance: none; appearance: none; flex: 1 1 auto; min-width: 0; height: 12px; margin: 0; border-radius: 6px; cursor: pointer; background:
+      linear-gradient(var(--primary-color), var(--primary-color)) 0 / var(--p, 0%) 100% no-repeat,
+      color-mix(in srgb, var(--primary-text-color) 12%, transparent); }
+  .wrange::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-color); border: 2px solid var(--card-background-color, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .wrange::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--primary-color); border: 2px solid var(--card-background-color, #fff); }
+  .wrange:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 3px; }
 `;
 
 
