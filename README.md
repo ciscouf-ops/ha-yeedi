@@ -1,21 +1,32 @@
 # <img src="custom_components/yeedi/brand/icon@2x.png" width="40" alt="" align="absmiddle"> yeedi for Home Assistant
 
-A Home Assistant integration for **yeedi** robot vacuums, through the yeedi cloud account.
+Control your **yeedi** robot vacuum from Home Assistant: start, rooms, zones, suction and water, the station, and a live map card. It logs in with the account of the yeedi app.
 
-> **Tested with a yeedi vac max** (class `04z443`, on Home Assistant 2026.11) **and, by users, with a yeedi vac station** (class `mnx7f4`) **a yeedi M16 Infinity** (class `4e64gs`) **and a yeedi 2 hybrid** (class `p5nx9u`). Other yeedi models are declared on a best-effort basis and have not been tried: please open an issue (with the diagnostics file, see Troubleshooting) to report what works or not.
+[![HACS](https://img.shields.io/badge/HACS-default-41BDF5)](https://hacs.xyz) [![Release](https://img.shields.io/github/v/release/ciscouf-ops/ha-yeedi)](https://github.com/ciscouf-ops/ha-yeedi/releases/latest) [![Validate](https://github.com/ciscouf-ops/ha-yeedi/actions/workflows/validate.yml/badge.svg)](https://github.com/ciscouf-ops/ha-yeedi/actions/workflows/validate.yml)
+
+<p align="center">
+  <img src="docs/card-cleaning.png" width="280" alt="Map card during a cleaning: rooms, robot, dock and trace">&nbsp;&nbsp;
+  <img src="docs/card-rooms.png" width="280" alt="Map card with two rooms selected for cleaning">
+</p>
+
+**Quick start:** HACS → search **yeedi** → download → restart Home Assistant → *Add integration* → **yeedi** → your yeedi e-mail and password. Details in [Installation](#installation).
+
+## Which robots work
 
 | Model | Class | Dock | Status |
 |---|---|---|---|
-| yeedi vac max | `04z443` | auto-empty station | tested |
-| yeedi vac hybrid | `h041es` | auto-empty station | declared |
-| yeedi vac station | `mnx7f4` | auto-empty station | tested by a user (#1, #3) |
-| yeedi vac 2 | `9t30w8` | auto-empty station | declared |
-| yeedi vac 2 pro | `aaxesz` | auto-empty station (optional bundle) | declared |
-| yeedi cube | `6r6dbt` | auto-empty station | declared |
-| yeedi 2 hybrid | `p5nx9u` | charging dock | tested by a user (#5), room outlines drawn wrong on the map card (being looked at) |
-| yeedi mop station / mop station pro | `vthpeg`, `zwvyi2` | mop-washing station (no station entities yet) | declared |
-| yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying; washing and drying not exposed yet) | tested by a user (#2) |
+| yeedi vac max | `04z443` | auto-empty station | ✅ tested |
+| yeedi vac station | `mnx7f4` | auto-empty station | ✅ tested by a user (#1, #3) |
+| yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying) | ✅ tested by a user (#2) |
+| yeedi 2 hybrid | `p5nx9u` | charging dock | ✅ tested by a user (#5), room outlines drawn wrong on the map card (being looked at) |
+| yeedi vac hybrid | `h041es` | auto-empty station | declared, not tried yet |
+| yeedi vac 2 | `9t30w8` | auto-empty station | declared, not tried yet |
+| yeedi vac 2 pro | `aaxesz` | auto-empty station (optional bundle) | declared, not tried yet |
+| yeedi cube | `6r6dbt` | auto-empty station | declared, not tried yet |
+| yeedi mop station / mop station pro | `vthpeg`, `zwvyi2` | mop-washing station | declared, not tried yet |
 | yeedi Floor 3 Station / Floor 3+ | `t5e5o6`, `kd0una`, `t6kipw`, `u3bsxq`, `rwp09o` | mop-washing station | supported natively by deebot-client |
+
+Your robot works, or does not? Please open an issue with the diagnostics file (see [Troubleshooting](#troubleshooting)): a model moves to "tested" as soon as someone confirms it.
 
 Recent models not in this table (for example the M12 Pro+ or the S20 Infinity Ultra, whose class nobody has reported yet) are set up in **experimental mode**, from the M16 Infinity base: some entities may stay unavailable. Please open an issue with the class shown in the log and the diagnostics, so the model can be added. The older models using the legacy XML protocol (yeedi K650, first yeedi vac) are logged as *not supported yet*.
 
@@ -107,16 +118,11 @@ The room ids and names are in the `rooms` attribute of the vacuum entity.
 The integration ships its own Lovelace card, loaded automatically (no extra resource to add):
 
 <p align="center">
-  <img src="docs/card-cleaning.png" width="300" alt="Map card during a cleaning: rooms, robot, dock and trace">&nbsp;&nbsp;
-  <img src="docs/card-rooms.png" width="300" alt="Map card with two rooms selected for cleaning">
-</p>
-<p align="center">
   <img src="docs/card-zone.png" width="300" alt="Map card in zone mode: a rectangle drawn on the plan, no-mop zone and virtual wall">&nbsp;&nbsp;
   <img src="docs/card-dark.png" width="300" alt="Map card in a dark theme">
 </p>
 
-*Preview rendered with a fictional flat; the card draws the outlines your robot reports.*
-
+*Previews rendered with a fictional flat; the card draws the outlines your robot reports.*
 
 ```yaml
 type: custom:yeedi-map-card
