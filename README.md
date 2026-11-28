@@ -13,22 +13,33 @@ Control your **yeedi** robot vacuum from Home Assistant: start, rooms, zones, su
 
 ## Which robots work
 
-| Model | Class | Dock | Status |
-|---|---|---|---|
-| yeedi vac max | `04z443` | auto-empty station | ✅ tested |
-| yeedi vac station | `mnx7f4` | auto-empty station | ✅ tested by a user (#1, #3) |
-| yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying) | ✅ tested by a user (#2) |
-| yeedi 2 hybrid | `p5nx9u` | charging dock | ✅ tested by a user (#5), room outlines drawn wrong on the map card (being looked at) |
-| yeedi vac hybrid | `h041es` | auto-empty station | declared, not tried yet |
-| yeedi vac 2 | `9t30w8` | auto-empty station | declared, not tried yet |
-| yeedi vac 2 pro | `aaxesz` | auto-empty station (optional bundle) | declared, not tried yet |
-| yeedi cube | `6r6dbt` | auto-empty station | declared, not tried yet |
-| yeedi mop station / mop station pro | `vthpeg`, `zwvyi2` | mop-washing station | declared, not tried yet |
-| yeedi Floor 3 Station / Floor 3+ | `t5e5o6`, `kd0una`, `t6kipw`, `u3bsxq`, `rwp09o` | mop-washing station | supported natively by deebot-client |
+| Released | Model | Class | Dock | Status |
+|---|---|---|---|---|
+| 2020 | yeedi K650 | ? | charging dock | not supported yet (old XML protocol) |
+| 2020 | yeedi 2 hybrid | `p5nx9u` | charging dock | ✅ tested by a user (#5), room outlines drawn wrong on the map card (being looked at) |
+| 2021 | yeedi vac | ? | charging dock | not supported yet (old XML protocol) |
+| May 2021 | yeedi vac hybrid | `h041es` | auto-empty station | declared, not tried yet |
+| Jun 2021 | yeedi vac max | `04z443` | auto-empty station | ✅ tested |
+| Jul 2021 | yeedi vac station | `mnx7f4` | auto-empty station | ✅ tested by a user (#1, #3) |
+| Aug 2021 | yeedi mop station | `vthpeg`, `zwvyi2` | mop-washing station | declared, not tried yet |
+| May 2022 | yeedi vac 2 | `9t30w8` | auto-empty station | declared, not tried yet |
+| May 2022 | yeedi vac 2 pro | `aaxesz` | auto-empty station (optional bundle) | declared, not tried yet |
+| 2022 | yeedi mop station pro | `vthpeg`, `zwvyi2` | mop-washing station | declared, not tried yet |
+| Apr 2023 | yeedi Floor 3 Station / Floor 3+ | `t5e5o6`, `kd0una`, `t6kipw`, `u3bsxq`, `rwp09o` | mop-washing station | supported natively by deebot-client |
+| Aug 2023 | yeedi cube | `6r6dbt` | auto-empty station | declared, not tried yet |
+| Mar 2024 | yeedi M12 Pro+ | ? | omni station | experimental mode |
+| Jun 2024 | yeedi C12 / C12 Plus / C12 Pro Plus | ? | charging dock / auto-empty station | experimental mode |
+| Sep 2024 | yeedi C12 Combo | ? | auto-empty station + stick vacuum | experimental mode |
+| Mar 2025 | yeedi S14 Plus | ? | omni station | experimental mode |
+| May 2025 | yeedi M14 Plus | ? | omni station | experimental mode |
+| Jul 2025 | yeedi S16 Plus | ? | omni station | experimental mode |
+| Sep 2025 | yeedi S20 Infinity | ? | omni station | experimental mode |
+| Mar 2026 | yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying) | ✅ tested by a user (#2) |
+| May 2026 | yeedi S20 Infinity Ultra | ? | omni station | experimental mode |
 
 Your robot works, or does not? Please open an issue with the diagnostics file (see [Troubleshooting](#troubleshooting)): a model moves to "tested" as soon as someone confirms it.
 
-Recent models not in this table (for example the M12 Pro+ or the S20 Infinity Ultra, whose class nobody has reported yet) are set up in **experimental mode**, from the M16 Infinity base: some entities may stay unavailable. Please open an issue with the class shown in the log and the diagnostics, so the model can be added. The older models using the legacy XML protocol (yeedi K650, first yeedi vac) are logged as *not supported yet*.
+Release dates are the first launch found (Europe or US), so they can differ by a few months in your country. "?" means nobody has reported the class yet: these robots are set up in **experimental mode**, from the M16 Infinity base, and some entities may stay unavailable. Please open an issue with the class shown in the log and the diagnostics, so the model can be added. The M12 Max Plus, M12 Pro Gen 2 and C14 Pro Plus are announced but not sold yet.
 
 yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, but the official Ecovacs integration cannot log into a yeedi account. This integration logs in with the yeedi application identity and reuses [deebot-client](https://github.com/DeebotUniverse/client.py), the library behind the official integration, with the yeedi specifics added (login, model sheets, map discovery).
 
@@ -155,7 +166,7 @@ yeedi robots only send the outline of their rooms now and then, mostly while cle
 
 ## Known limitations
 
-- Only the yeedi vac max, the yeedi vac station and the yeedi M16 Infinity have been tested. Other models may expose different settings or report their map differently.
+- Only the yeedi vac max, the yeedi vac station, the yeedi M16 Infinity and the yeedi 2 hybrid have been tested. Other models may expose different settings or report their map differently.
 - Room names are the generic ones reported by the robot (Living room, Bedroom…). Custom names from the yeedi app are not available through the cloud API.
 - No map image (walls and floor) as in the yeedi app: the card draws the outline of the rooms reported by the robot.
 - The remaining time is an estimate: it starts from the room areas (1.2 min/m²) and improves with each cleaning, as the integration learns how long each room takes. A zone cleaning has no estimate.
