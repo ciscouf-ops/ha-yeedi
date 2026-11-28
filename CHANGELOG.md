@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- **"Clear the map" button renamed "Clear the map (also in the yeedi app!)"**: it deletes the map on the robot, not only in Home Assistant. Reported by @kevingufler (#5).
+- README: the yeedi 2 hybrid is tested by a user (#5); zones are in metres with up to 3 decimals (millimetres).
+
 ## 0.2.14b5 (test version)
 - **Map card: the water flow of the M16 Infinity is a real slider** from 0 to 50, at the robot's own step (1), instead of 5 steps. The value follows the finger and is sent when you let go.
 

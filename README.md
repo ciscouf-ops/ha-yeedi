@@ -2,7 +2,7 @@
 
 A Home Assistant integration for **yeedi** robot vacuums, through the yeedi cloud account.
 
-> **Tested with a yeedi vac max** (class `04z443`, on Home Assistant 2026.11) **and, by users, with a yeedi vac station** (class `mnx7f4`) **and a yeedi M16 Infinity** (class `4e64gs`). Other yeedi models are declared on a best-effort basis and have not been tried: please open an issue (with the diagnostics file, see Troubleshooting) to report what works or not.
+> **Tested with a yeedi vac max** (class `04z443`, on Home Assistant 2026.11) **and, by users, with a yeedi vac station** (class `mnx7f4`) **a yeedi M16 Infinity** (class `4e64gs`) **and a yeedi 2 hybrid** (class `p5nx9u`). Other yeedi models are declared on a best-effort basis and have not been tried: please open an issue (with the diagnostics file, see Troubleshooting) to report what works or not.
 
 | Model | Class | Dock | Status |
 |---|---|---|---|
@@ -12,7 +12,7 @@ A Home Assistant integration for **yeedi** robot vacuums, through the yeedi clou
 | yeedi vac 2 | `9t30w8` | auto-empty station | declared |
 | yeedi vac 2 pro | `aaxesz` | auto-empty station (optional bundle) | declared |
 | yeedi cube | `6r6dbt` | auto-empty station | declared |
-| yeedi 2 hybrid | `p5nx9u` | charging dock | declared |
+| yeedi 2 hybrid | `p5nx9u` | charging dock | tested by a user (#5), room outlines drawn wrong on the map card (being looked at) |
 | yeedi mop station / mop station pro | `vthpeg`, `zwvyi2` | mop-washing station (no station entities yet) | declared |
 | yeedi M16 Infinity | `4e64gs` | omni station (auto-empty, mop washing and drying; washing and drying not exposed yet) | tested by a user (#2) |
 | yeedi Floor 3 Station / Floor 3+ | `t5e5o6`, `kd0una`, `t6kipw`, `u3bsxq`, `rwp09o` | mop-washing station | supported natively by deebot-client |
@@ -32,7 +32,7 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - During a cleaning: **current room**, **remaining time** and **estimated end** sensors, learned from the time the robot spent in each room on previous cleanings (the map card shows them under the controls, with a progress bar)
 - Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**
 - Switches: **continuous cleaning**, **carpet boost**, **advanced mode**; number: **volume**
-- Buttons: **relocate**, **reset** of each consumable counter, **clear the map** (disabled by default); with the *auto-empty station* option (integration → Configure): **empty the dustbin** button and **auto-empty** select
+- Buttons: **relocate**, **reset** of each consumable counter, **clear the map** (disabled by default; ⚠️ it deletes the map on the robot, so in the yeedi app too, and you have to map your home again); with the *auto-empty station* option (integration → Configure): **empty the dustbin** button and **auto-empty** select
 - **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map, zone cleaning by drawing a rectangle, no-mop zones and virtual walls
 
 ## Installation
@@ -64,7 +64,7 @@ data:
   cleanings: 1          # 1 or 2 passes
 ```
 
-and `yeedi.clean_zone` cleans a rectangle, given in metres from the map origin (the card shows the robot coordinates while you draw a zone):
+and `yeedi.clean_zone` cleans a rectangle, given in metres from the map origin (the card shows the robot coordinates while you draw a zone). The robot works in millimetres, so use up to 3 decimals: `-1.051` is 1051 mm, the value you see in the logs:
 
 ```yaml
 action: yeedi.clean_zone
