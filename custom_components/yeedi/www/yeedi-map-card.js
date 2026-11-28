@@ -16,7 +16,7 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.14b6';
+const CARD_VERSION = '0.2.14';
 
 const TEXT = {
   en: {

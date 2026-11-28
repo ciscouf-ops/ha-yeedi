@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.2.14b6 (test version)
+## 0.2.14
+
+### Mop-washing stations (M16 Infinity)
+- **"Wash the mop" and "Dry the mop" buttons.** The station is built in, so these buttons and "Empty the dustbin" are created without the station option.
+- **"Clean water tank empty" and "Dirty water tank full"** problem sensors. The station measures no water level, it only reports these as errors (codes 301/322 and 302/305/318/323): the sensors turn on with them and off when the robot reports no error. Suggested by @majorbig4 (#2).
 
 ### New entities
 - **Problem** sensor: what is wrong with the robot, in words (stuck, brush tangled, dustbin full, dock not found, clean water tank empty…), translated, with the robot code as an attribute. Handy for notifications. The error code sensor stays.
@@ -9,31 +13,18 @@
 - The other settings deebot-client knows, created only for the robots that declare them: child lock, obstacle avoidance (TrueDetect), voice assistant, edge cleaning, edge spin, lift and map border warnings, safe protection, cleaning preference, multiple maps (switches); cleaning mode (select); passes per cleaning and mop wash interval (numbers). On the M16 Infinity: child lock, TrueDetect, voice assistant, cleaning mode, passes and mop wash interval.
 
 ### Map card
+- **Choose what it shows.** Every part can be hidden, from the card editor ("What the card shows") or with `show:` in YAML: name, state, battery, water alerts, map, room names, no-mop zones and walls, dock, robot, trace, buttons, zone, suction, water, station, last cleaning line and recent cleanings. Without the map, the rooms show as buttons. `controls: false` still works.
 - **Order of the rooms during a cleaning**: the planned rooms are numbered on the map, the current one in colour.
 - **Recent cleanings** (optional, `show: {history: true}` or in the editor): the last 3 cleanings under the controls.
+- **A "Station" row**, shown only while the robot is docked and only with the actions its station has: empty on auto-empty stations, plus wash and dry on mop-washing stations.
+- **Water tank alerts**: an empty clean water tank or a full dirty water tank shows under the robot state, in orange, only while it lasts.
+- **The water flow of the M16 Infinity is a slider** from 0 to 50, at the robot's own step (1). The value follows the finger and is sent when you let go. It was missing.
 
 ### Other
 - **Dutch and Polish**: the integration and the map card are now also in Dutch and Polish.
 - **"Clear the map" button renamed "Clear the map (also in the yeedi app!)"**: it deletes the map on the robot, not only in Home Assistant. Reported by @kevingufler (#5).
-- README: the yeedi 2 hybrid is tested by a user (#5); zones are in metres with up to 3 decimals (millimetres).
+- README: clearer start (pictures, quick start), all yeedi robots listed by release date, the yeedi 2 hybrid is tested by a user (#5), zones are in metres with up to 3 decimals (millimetres).
 - Map card tests run on GitHub for four robots (vac max, vac station, M16 Infinity, yeedi 2 hybrid).
-
-## 0.2.14b5 (test version)
-- **Map card: the water flow of the M16 Infinity is a real slider** from 0 to 50, at the robot's own step (1), instead of 5 steps. The value follows the finger and is sent when you let go.
-
-## 0.2.14b4 (test version)
-- **Map card: choose what it shows.** Every part can be hidden, from the card editor ("What the card shows") or with `show:` in YAML: name, state, battery, water alerts, map, room names, no-mop zones and walls, dock, robot, trace, buttons, zone, suction, water, station and the last cleaning line. Without the map, the rooms show as buttons. `controls: false` still works.
-
-## 0.2.14b3 (test version)
-- **New: "Wash the mop" and "Dry the mop" buttons** for mop-washing stations (M16 Infinity). Their station is built in, so these buttons and "Empty the dustbin" are created without the station option.
-- **Map card: a "Station" row**, shown only while the robot is docked and only with the actions its station has: empty on auto-empty stations, plus wash and dry on mop-washing stations.
-
-## 0.2.14b2 (test version)
-- **Map card**: an empty clean water tank or a full dirty water tank shows under the robot state, in orange, only while it lasts.
-- **Map card: the water flow of the M16 Infinity** (a number from 0 to 50) now shows as a 5-step gauge, like the water levels of the other models. It was missing.
-
-## 0.2.14b1 (test version)
-- **New: "Clean water tank empty" and "Dirty water tank full"** problem sensors, for the stations that wash the mop (M16 Infinity). The station measures no water level, it only reports these as errors (codes 301/322 and 302/305/318/323): the sensors turn on with them and off when the robot reports no error. Suggested by @majorbig4 (#2).
 
 ## 0.2.13
 
