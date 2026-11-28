@@ -381,7 +381,7 @@ class YeediMapCard extends HTMLElement {
     let body;
     if (this._error) body = `<div class="msg">${text[this._error]}</div>`;
     else if (!this._data) body = `<div class="msg">${text.no_map}</div>`;
-    else if (!this._show('map')) body = this._show('buttons') ? this._roomChips(moving) : '';
+    else if (!this._show('map')) body = this._show('buttons') && this._data && this._data.rooms.length ? `<div class="nomap">${this._roomChips(moving)}</div>` : '';
     else body = this._map(moving);
 
     this.shadowRoot.innerHTML = `
@@ -960,6 +960,7 @@ const STYLE = `
   .seg.fill { background: color-mix(in srgb, var(--primary-color) 55%, transparent); }
   .seg.on { background: var(--primary-color); }
   .gauge.slide { padding-right: 12px; }
+  .nomap { padding: 2px 16px 4px; }
   .wrange { -webkit-appearance: none; appearance: none; flex: 1 1 auto; min-width: 0; height: 12px; margin: 0; border-radius: 6px; cursor: pointer; background:
       linear-gradient(var(--primary-color), var(--primary-color)) 0 / var(--p, 0%) 100% no-repeat,
       color-mix(in srgb, var(--primary-text-color) 12%, transparent); }
