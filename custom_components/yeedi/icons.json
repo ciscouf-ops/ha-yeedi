@@ -29,16 +29,69 @@
       },
       "advanced_mode": {
         "default": "mdi:tune"
+      },
+      "child_lock": {
+        "default": "mdi:lock-outline"
+      },
+      "true_detect": {
+        "default": "mdi:eye-outline"
+      },
+      "voice_assistant": {
+        "default": "mdi:microphone-outline"
+      },
+      "border_switch": {
+        "default": "mdi:border-outside"
+      },
+      "border_spin": {
+        "default": "mdi:rotate-right"
+      },
+      "moveup_warning": {
+        "default": "mdi:arrow-up-bold-outline"
+      },
+      "cross_map_border_warning": {
+        "default": "mdi:map-marker-alert-outline"
+      },
+      "safe_protect": {
+        "default": "mdi:shield-outline"
+      },
+      "clean_preference": {
+        "default": "mdi:tune-variant"
+      },
+      "multi_map": {
+        "default": "mdi:layers-outline"
       }
     },
     "number": {
       "volume": {
         "default": "mdi:volume-high"
+      },
+      "clean_count": {
+        "default": "mdi:repeat"
+      },
+      "mop_auto_wash_frequency": {
+        "default": "mdi:timer-sand"
       }
     },
     "select": {
       "auto_empty": {
         "default": "mdi:delete-restore"
+      },
+      "work_mode": {
+        "default": "mdi:broom"
+      },
+      "active_map": {
+        "default": "mdi:floor-plan"
+      }
+    },
+    "sensor": {
+      "problem": {
+        "default": "mdi:alert-circle-outline",
+        "state": {
+          "none": "mdi:check-circle-outline"
+        }
+      },
+      "last_cleaning": {
+        "default": "mdi:history"
       }
     }
   },

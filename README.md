@@ -27,13 +27,14 @@ yeedi is an Ecovacs brand: the robots speak the same protocol as the Deebots, bu
 - `vacuum` entity: start, pause, stop, return to dock, locate, fan speed (Standard / Max / Max+) and **mop only** (vacuum motor off)
 - Room cleaning with the native **segments** of Home Assistant (`vacuum.clean_area`), rooms cleaned in the order given
 - Actions **`yeedi.clean_rooms`** (by room number *or name*) and **`yeedi.clean_zone`** (a rectangle in metres), plus `vacuum.send_command` with `spot_area` / `custom_area`
-- Sensors: battery, error, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
+- Sensors: battery, **problem** (what is wrong, in words: stuck, brush tangled, dustbin full, dock not found…, with the robot code as an attribute), error code, area and duration of the last cleaning, totals, consumables (main brush, filter, side brush)
+- **Last cleaning** sensor: when the last cleaning ended, with its duration, area, the rooms in the order they were cleaned and whether it finished on the dock; the last 10 cleanings are in its `history` attribute. Recorded by ha-yeedi from the moment you install this version.
 - Mop-washing stations (M16 Infinity): "Wash the mop" and "Dry the mop" buttons, and "Clean water tank empty" and "Dirty water tank full" problem sensors. The station measures no water level, it only reports these as errors.
 - During a cleaning: **current room**, **remaining time** and **estimated end** sensors, learned from the time the robot spent in each room on previous cleanings (the map card shows them under the controls, with a progress bar)
-- Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**
-- Switches: **continuous cleaning**, **carpet boost**, **advanced mode**; number: **volume**
+- Selects: **suction power** (Standard / Max / Max+ / mop only), **water flow level**, **cleaning mode** (vacuum, mop, both, mop after vacuum; recent models), **active map** (robots that keep one map per floor)
+- Switches: **continuous cleaning**, **carpet boost**, **advanced mode**, and on the robots that have them **child lock**, **obstacle avoidance (TrueDetect)**, **voice assistant**, **edge cleaning**, **multiple maps**…; numbers: **volume**, and on recent models **passes per cleaning** and **mop wash interval**. Each robot only gets the settings its model declares. A do-not-disturb schedule is not available: deebot-client does not support it yet.
 - Buttons: **relocate**, **reset** of each consumable counter, **clear the map** (disabled by default; ⚠️ it deletes the map on the robot, so in the yeedi app too, and you have to map your home again); with the *auto-empty station* option (integration → Configure): **empty the dustbin** button and **auto-empty** select
-- **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map, zone cleaning by drawing a rectangle, no-mop zones and virtual walls
+- **Map card included**: rooms, dock, robot and trace of the current cleaning, room selection by tapping the map (numbered in the order they will be cleaned, also during a cleaning, the current room in colour), zone cleaning by drawing a rectangle, no-mop zones and virtual walls, recent cleanings (optional)
 
 ## Installation
 
@@ -135,7 +136,7 @@ show:                  # optional: everything is shown by default, hide what you
 
 *Left: `show: {trace: false, zone: false, suction: false, water: false, station: false, footer: false}`. Right: `show: {map: false, footer: false}`.*
 
-Parts you can hide with `show`: `name`, `status`, `battery`, `tanks` (station water alerts), `map`, `room_names`, `restrictions` (no-mop zones and virtual walls), `dock`, `robot`, `trace`, `buttons` (clean, pause, dock), `zone`, `suction`, `water`, `station`, `footer` (last cleaning or progress). The card editor has the same switches under "What the card shows". Without the map, the rooms show as buttons. The older `controls: false` still works.
+Parts you can hide with `show`: `name`, `status`, `battery`, `tanks` (station water alerts), `map`, `room_names`, `restrictions` (no-mop zones and virtual walls), `dock`, `robot`, `trace`, `buttons` (clean, pause, dock), `zone`, `suction`, `water`, `station`, `footer` (last cleaning or progress), and `history` (the last 3 cleanings, hidden unless you set `history: true`). The card editor has the same switches under "What the card shows". Without the map, the rooms show as buttons. The older `controls: false` still works.
 
 Room names come, in this order, from `room_names`, from the Home Assistant area each room is associated with (vacuum entity settings → segments), and from the robot.
 

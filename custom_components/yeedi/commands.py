@@ -138,6 +138,19 @@ class EmptyDustbin(ExecuteCommand):
         super().__init__({"act": "start"})
 
 
+class UseMap(ExecuteCommand):
+    """Make a saved map the active one (robots that keep several floors).
+
+    Not in deebot-client: ``setCachedMapInfo`` with ``act: use``, as the yeedi and
+    Ecovacs apps send it.
+    """
+
+    NAME = "setCachedMapInfo"
+
+    def __init__(self, map_id: str) -> None:
+        super().__init__({"act": "use", "mid": str(map_id)})
+
+
 # A robot answers ``{"code": 20003, "msg": "rcp not support"}`` to a command it does not
 # know. The commands below then run their fallback instead, so a model declared on a
 # best-effort basis adapts by itself (seen on the M16 Infinity for ``clean``).

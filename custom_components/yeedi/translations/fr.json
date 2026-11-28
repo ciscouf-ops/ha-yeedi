@@ -68,6 +68,18 @@
           "min_15": "Toutes les 15 minutes",
           "min_25": "Toutes les 25 minutes"
         }
+      },
+      "work_mode": {
+        "name": "Mode de nettoyage",
+        "state": {
+          "vacuum_and_mop": "Aspirer et laver",
+          "vacuum": "Aspirer seulement",
+          "mop": "Laver seulement",
+          "mop_after_vacuum": "Laver après aspiration"
+        }
+      },
+      "active_map": {
+        "name": "Plan actif"
       }
     },
     "sensor": {
@@ -106,6 +118,79 @@
       },
       "cleaning_end": {
         "name": "Fin estimée"
+      },
+      "problem": {
+        "name": "Problème",
+        "state": {
+          "none": "Aucun problème",
+          "low_battery": "Batterie faible",
+          "lifted": "Soulevé du sol",
+          "wheel": "Roue bloquée",
+          "cliff_sensor": "Capteurs anti-chute sales",
+          "stuck": "Coincé",
+          "side_brush_worn": "Brosses latérales à changer",
+          "main_brush_worn": "Brosse principale à changer",
+          "filter_worn": "Filtre à changer",
+          "side_brush_tangled": "Brosse latérale emmêlée",
+          "main_brush_tangled": "Brosse principale emmêlée",
+          "no_dustbin": "Bac à poussière absent",
+          "bumper": "Pare-chocs bloqué",
+          "laser_sensor": "Capteur de distance en panne",
+          "dustbin_full": "Bac à poussière plein",
+          "battery_fault": "Batterie en panne",
+          "front_sensor": "Capteur avant en panne",
+          "gyroscope": "Gyroscope en panne",
+          "filter_blocked": "Filtre bouché",
+          "fan": "Ventilateur en panne",
+          "water_tank": "Réservoir d'eau en panne",
+          "no_water_tank": "Réservoir d'eau absent",
+          "mop_plate": "Problème de serpillière",
+          "clean_water_empty": "Réservoir d'eau propre vide",
+          "dirty_water_full": "Réservoir d'eau sale plein",
+          "no_clean_water_tank": "Réservoir d'eau propre absent",
+          "no_dirty_water_tank": "Réservoir d'eau sale absent",
+          "no_sink_filter": "Filtre de la station absent",
+          "station_fault": "Station en panne",
+          "communication": "Problème de communication",
+          "lid_open": "Couvercle de la station ouvert",
+          "dust_bag_full": "Sac à poussière plein",
+          "no_water_module": "Module d'eau absent",
+          "detergent_low": "Détergent presque vide",
+          "mop_plugged": "Serpillière installée",
+          "replace_mop": "Serpillière à changer",
+          "dock_not_found": "Base introuvable",
+          "position_lost": "Position perdue",
+          "obstacle": "Obstacle détecté",
+          "other": "Autre problème"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Code"
+          },
+          "description": {
+            "name": "Description"
+          }
+        }
+      },
+      "last_cleaning": {
+        "name": "Dernier nettoyage",
+        "state_attributes": {
+          "minutes": {
+            "name": "Durée (min)"
+          },
+          "area": {
+            "name": "Surface (m²)"
+          },
+          "rooms": {
+            "name": "Pièces"
+          },
+          "result": {
+            "name": "Résultat"
+          },
+          "history": {
+            "name": "Historique"
+          }
+        }
       }
     },
     "vacuum": {
@@ -157,6 +242,36 @@
       },
       "advanced_mode": {
         "name": "Mode avancé"
+      },
+      "child_lock": {
+        "name": "Verrouillage enfant"
+      },
+      "true_detect": {
+        "name": "Évitement des obstacles (TrueDetect)"
+      },
+      "voice_assistant": {
+        "name": "Assistant vocal"
+      },
+      "border_switch": {
+        "name": "Nettoyage des bords"
+      },
+      "border_spin": {
+        "name": "Rotation le long des bords"
+      },
+      "moveup_warning": {
+        "name": "Alerte de soulèvement"
+      },
+      "cross_map_border_warning": {
+        "name": "Alerte de sortie du plan"
+      },
+      "safe_protect": {
+        "name": "Protection de sécurité"
+      },
+      "clean_preference": {
+        "name": "Préférences de nettoyage"
+      },
+      "multi_map": {
+        "name": "Plusieurs plans"
       }
     },
     "number": {
@@ -165,6 +280,12 @@
       },
       "water_amount": {
         "name": "Débit d'eau"
+      },
+      "clean_count": {
+        "name": "Passages par nettoyage"
+      },
+      "mop_auto_wash_frequency": {
+        "name": "Intervalle de lavage de la serpillière"
       }
     }
   },

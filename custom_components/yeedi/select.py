@@ -10,7 +10,9 @@ from deebot_client.capabilities import CapabilitySetTypes
 from deebot_client.device import Device
 from deebot_client.events import Event
 from deebot_client.events.auto_empty import AutoEmptyEvent, Frequency
+from deebot_client.events.map import CachedMapInfoEvent
 from deebot_client.events.water_info import WaterAmountEvent
+from deebot_client.events.work_mode import WorkMode, WorkModeEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -18,6 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .commands import UseMap
 from .const import CONF_STATION
 from .controller import YeediConfigEntry
 from .entity import (
@@ -46,6 +49,16 @@ def _name_key(value: Any) -> str:
 
 
 ENTITY_DESCRIPTIONS: tuple[YeediSelectEntityDescription, ...] = (
+    # Recent models: vacuum, mop, both at once, or mop after vacuuming.
+    YeediSelectEntityDescription[WorkModeEvent](
+        key="work_mode",
+        translation_key="work_mode",
+        capability_fn=lambda caps: caps.clean.work_mode,
+        current_option_fn=lambda e: _name_key(e.mode),
+        options_fn=lambda cap: [_name_key(t) for t in cap.types],
+        set_args_fn=lambda option: (WorkMode[option.upper()],),
+        entity_category=EntityCategory.CONFIG,
+    ),
     YeediSelectEntityDescription[WaterAmountEvent](
         key="water_amount",
         translation_key="water_amount",
@@ -97,6 +110,12 @@ async def async_setup_entry(
         YeediSuctionSelect(device, controller.suction[device.device_info["did"]])
         for device in controller.devices
         if controller.suction[device.device_info["did"]].supported
+    )
+    # Robots that can keep several maps (floors): which one is active.
+    entities.extend(
+        YeediMapSelect(device, device.capabilities.map)
+        for device in controller.devices
+        if device.capabilities.map and device.capabilities.map.multi_state
     )
     async_add_entities(entities)
 
@@ -177,3 +196,50 @@ class YeediSuctionSelect(YeediEntity[YeediSuction], SelectEntity, RestoreEntity)
     async def async_select_option(self, option: str) -> None:
         """Change the suction power."""
         await self._capability.async_set(option)
+
+
+class YeediMapSelect(YeediEntity, SelectEntity):
+    """The active map, for robots that keep one map per floor."""
+
+    entity_description = SelectEntityDescription(
+        key="active_map",
+        translation_key="active_map",
+        entity_category=EntityCategory.CONFIG,
+    )
+
+    def __init__(self, device: Device, capability: Any) -> None:
+        """Initialize the select."""
+        super().__init__(device, capability)
+        self._maps: dict[str, str] = {}  # name -> map id
+        self._attr_options = []
+
+    async def async_added_to_hass(self) -> None:
+        """Follow the saved maps."""
+        await super().async_added_to_hass()
+
+        async def on_event(event: CachedMapInfoEvent) -> None:
+            maps = sorted(event.maps, key=lambda m: str(m.id))
+            names: dict[str, str] = {}
+            for i, m in enumerate(maps, start=1):
+                name = (m.name or "").strip() or f"#{i}"
+                names[name if name not in names else f"{name} ({m.id})"] = str(m.id)
+            self._maps = names
+            self._attr_options = list(names)
+            self._attr_current_option = next(
+                (n for n, i in names.items() if any(m.using and str(m.id) == i for m in maps)), None
+            )
+            self.async_write_ha_state()
+
+        self._subscribe(self._capability.cached_info.event, on_event)
+
+    @property
+    def available(self) -> bool:
+        """Only once the robot listed its maps."""
+        return super().available and bool(self._maps)
+
+    async def async_select_option(self, option: str) -> None:
+        """Make this map the active one, then read the maps again."""
+        if (map_id := self._maps.get(option)) is None:
+            return
+        await self._device.execute_command(UseMap(map_id))
+        self._device.events.request_refresh(CachedMapInfoEvent)

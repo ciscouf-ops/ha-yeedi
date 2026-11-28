@@ -1,4 +1,4 @@
-"""Switches for Yeedi robots: continuous cleaning, carpet boost, advanced mode."""
+"""Switches for Yeedi robots: the on/off settings each robot declares."""
 
 from __future__ import annotations
 
@@ -45,6 +45,68 @@ ENTITY_DESCRIPTIONS: tuple[YeediSwitchEntityDescription, ...] = (
         key="advanced_mode",
         translation_key="advanced_mode",
         capability_fn=lambda caps: caps.settings.advanced_mode,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    # 28/11/2026: the other on/off settings deebot-client knows, created only for the
+    # robots whose sheet declares them.
+    YeediSwitchEntityDescription(
+        key="child_lock",
+        translation_key="child_lock",
+        capability_fn=lambda caps: caps.settings.child_lock,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="true_detect",
+        translation_key="true_detect",
+        capability_fn=lambda caps: caps.settings.true_detect,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="voice_assistant",
+        translation_key="voice_assistant",
+        capability_fn=lambda caps: caps.settings.voice_assistant,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="border_switch",
+        translation_key="border_switch",
+        capability_fn=lambda caps: caps.settings.border_switch,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="border_spin",
+        translation_key="border_spin",
+        capability_fn=lambda caps: caps.settings.border_spin,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="moveup_warning",
+        translation_key="moveup_warning",
+        capability_fn=lambda caps: caps.settings.moveup_warning,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="cross_map_border_warning",
+        translation_key="cross_map_border_warning",
+        capability_fn=lambda caps: caps.settings.cross_map_border_warning,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="safe_protect",
+        translation_key="safe_protect",
+        capability_fn=lambda caps: caps.settings.safe_protect,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="clean_preference",
+        translation_key="clean_preference",
+        capability_fn=lambda caps: caps.clean.preference,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    YeediSwitchEntityDescription(
+        key="multi_map",
+        translation_key="multi_map",
+        capability_fn=lambda caps: (caps.map.multi_state if caps.map else None),
         entity_category=EntityCategory.CONFIG,
     ),
 )

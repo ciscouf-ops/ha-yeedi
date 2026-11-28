@@ -68,6 +68,18 @@
           "min_15": "Every 15 minutes",
           "min_25": "Every 25 minutes"
         }
+      },
+      "work_mode": {
+        "name": "Cleaning mode",
+        "state": {
+          "vacuum_and_mop": "Vacuum and mop",
+          "vacuum": "Vacuum only",
+          "mop": "Mop only",
+          "mop_after_vacuum": "Mop after vacuum"
+        }
+      },
+      "active_map": {
+        "name": "Active map"
       }
     },
     "sensor": {
@@ -106,6 +118,79 @@
       },
       "cleaning_end": {
         "name": "Estimated end"
+      },
+      "problem": {
+        "name": "Problem",
+        "state": {
+          "none": "No problem",
+          "low_battery": "Low battery",
+          "lifted": "Lifted off the floor",
+          "wheel": "Wheel blocked",
+          "cliff_sensor": "Cliff sensors dirty",
+          "stuck": "Stuck",
+          "side_brush_worn": "Replace the side brushes",
+          "main_brush_worn": "Replace the main brush",
+          "filter_worn": "Replace the filter",
+          "side_brush_tangled": "Side brush tangled",
+          "main_brush_tangled": "Main brush tangled",
+          "no_dustbin": "Dustbin missing",
+          "bumper": "Bumper stuck",
+          "laser_sensor": "Distance sensor fault",
+          "dustbin_full": "Dustbin full",
+          "battery_fault": "Battery fault",
+          "front_sensor": "Front sensor fault",
+          "gyroscope": "Gyroscope fault",
+          "filter_blocked": "Filter blocked",
+          "fan": "Fan fault",
+          "water_tank": "Water tank fault",
+          "no_water_tank": "Water tank missing",
+          "mop_plate": "Mop pad problem",
+          "clean_water_empty": "Clean water tank empty",
+          "dirty_water_full": "Dirty water tank full",
+          "no_clean_water_tank": "Clean water tank missing",
+          "no_dirty_water_tank": "Dirty water tank missing",
+          "no_sink_filter": "Station filter missing",
+          "station_fault": "Station fault",
+          "communication": "Communication fault",
+          "lid_open": "Station lid open",
+          "dust_bag_full": "Dust bag full",
+          "no_water_module": "Water module missing",
+          "detergent_low": "Cleaning solution low",
+          "mop_plugged": "Mop attached",
+          "replace_mop": "Replace the mop",
+          "dock_not_found": "Dock not found",
+          "position_lost": "Position lost",
+          "obstacle": "Obstacle detected",
+          "other": "Other problem"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Code"
+          },
+          "description": {
+            "name": "Description"
+          }
+        }
+      },
+      "last_cleaning": {
+        "name": "Last cleaning",
+        "state_attributes": {
+          "minutes": {
+            "name": "Duration (min)"
+          },
+          "area": {
+            "name": "Area (m²)"
+          },
+          "rooms": {
+            "name": "Rooms"
+          },
+          "result": {
+            "name": "Result"
+          },
+          "history": {
+            "name": "History"
+          }
+        }
       }
     },
     "vacuum": {
@@ -157,6 +242,36 @@
       },
       "advanced_mode": {
         "name": "Advanced mode"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "true_detect": {
+        "name": "Obstacle avoidance (TrueDetect)"
+      },
+      "voice_assistant": {
+        "name": "Voice assistant"
+      },
+      "border_switch": {
+        "name": "Edge cleaning"
+      },
+      "border_spin": {
+        "name": "Edge spin"
+      },
+      "moveup_warning": {
+        "name": "Lift warning"
+      },
+      "cross_map_border_warning": {
+        "name": "Map border warning"
+      },
+      "safe_protect": {
+        "name": "Safe protection"
+      },
+      "clean_preference": {
+        "name": "Cleaning preference"
+      },
+      "multi_map": {
+        "name": "Multiple maps"
       }
     },
     "number": {
@@ -165,6 +280,12 @@
       },
       "water_amount": {
         "name": "Water flow"
+      },
+      "clean_count": {
+        "name": "Passes per cleaning"
+      },
+      "mop_auto_wash_frequency": {
+        "name": "Mop wash interval"
       }
     }
   },

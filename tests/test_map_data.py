@@ -205,6 +205,12 @@ async def test_progress_room_and_estimate(hass, device, monkeypatch) -> None:
     saved = data._to_save()
     assert saved["durations"] == {"2": 3.0, "3": 2.0}
 
+    # The cleaning is in the history, once (returning then docked), rooms in order.
+    (last,) = data.history
+    assert last["rooms"] == ["Living Room", "Bedroom"] and last["result"] == "finished"
+    assert last["minutes"] == 5 and saved["history"] == [last]
+    assert data.as_dict()["history"] == [last]
+
     # Next cleaning of the whole home: the learned minutes drive the estimate.
     data.set_plan(None)
     await device.events.emit(StateEvent(State.CLEANING))

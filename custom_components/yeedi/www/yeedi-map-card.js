@@ -16,12 +16,12 @@
  * "Clean". The data comes live from the integration (WebSocket "yeedi/map/subscribe").
  */
 
-const CARD_VERSION = '0.2.14b5';
+const CARD_VERSION = '0.2.14b6';
 
 const TEXT = {
   en: {
     clean: 'Clean', clean_all: 'Clean everything', clean_rooms: (n) => `Clean ${n} room${n > 1 ? 's' : ''}`, pause: 'Pause',
-    resume: 'Resume', dock: 'Dock', clear: 'Clear', last_clean: 'Last cleaning', zone: 'Zone', clean_zone: 'Clean the zone', zone_help: 'Draw a rectangle on the map.', no_map: 'Waiting for the map…',
+    resume: 'Resume', dock: 'Dock', clear: 'Clear', last_clean: 'Last cleaning', history: 'Recent cleanings', zone: 'Zone', clean_zone: 'Clean the zone', zone_help: 'Draw a rectangle on the map.', no_map: 'Waiting for the map…',
     no_outline: 'The robot did not send the outline of the rooms: choose them below.',
     not_yeedi: 'This entity is not a yeedi vacuum.', fan: 'Suction', water: 'Water', station: 'Station', st_empty: 'Empty', st_wash: 'Wash', st_dry: 'Dry', clean_empty: 'Clean water empty', dirty_full: 'Dirty water full', mop_only_short: 'Off',
     states: { cleaning: 'Cleaning', returning: 'Returning to the dock', docked: 'Docked',
@@ -30,7 +30,7 @@ const TEXT = {
   },
   fr: {
     clean: 'Nettoyer', clean_all: 'Nettoyer tout', clean_rooms: (n) => `Nettoyer ${n} pièce${n > 1 ? 's' : ''}`, pause: 'Pause',
-    resume: 'Reprendre', dock: 'Base', clear: 'Effacer', last_clean: 'Dernier nettoyage', zone: 'Zone', clean_zone: 'Nettoyer la zone', zone_help: 'Trace un rectangle sur le plan.', no_map: 'En attente de la carte…',
+    resume: 'Reprendre', dock: 'Base', clear: 'Effacer', last_clean: 'Dernier nettoyage', history: 'Derniers nettoyages', zone: 'Zone', clean_zone: 'Nettoyer la zone', zone_help: 'Trace un rectangle sur le plan.', no_map: 'En attente de la carte…',
     no_outline: "Le robot n'a pas envoyé le contour des pièces : choisis-les ci-dessous.",
     not_yeedi: "Cette entité n'est pas un aspirateur yeedi.", fan: 'Aspiration', water: 'Eau', station: 'Station', st_empty: 'Vider', st_wash: 'Laver', st_dry: 'Sécher', clean_empty: 'Eau propre vide', dirty_full: 'Eau sale pleine', mop_only_short: 'Coupée',
     states: { cleaning: 'Nettoyage', returning: 'Retour à la base', docked: 'Sur la base',
@@ -39,7 +39,7 @@ const TEXT = {
   },
   de: {
     clean: 'Reinigen', clean_all: 'Alles reinigen', clean_rooms: (n) => `${n} ${n > 1 ? 'Räume' : 'Raum'} reinigen`, pause: 'Pause',
-    resume: 'Fortsetzen', dock: 'Station', clear: 'Zurücksetzen', last_clean: 'Letzte Reinigung', zone: 'Zone', clean_zone: 'Zone reinigen', zone_help: 'Ziehe ein Rechteck auf der Karte.', no_map: 'Warte auf die Karte…',
+    resume: 'Fortsetzen', dock: 'Station', clear: 'Zurücksetzen', last_clean: 'Letzte Reinigung', history: 'Letzte Reinigungen', zone: 'Zone', clean_zone: 'Zone reinigen', zone_help: 'Ziehe ein Rechteck auf der Karte.', no_map: 'Warte auf die Karte…',
     no_outline: 'Der Roboter hat keine Raumumrisse gesendet: wähle die Räume unten aus.',
     not_yeedi: 'Diese Entität ist kein yeedi-Staubsauger.', fan: 'Saugkraft', water: 'Wasser', station: 'Station', st_empty: 'Leeren', st_wash: 'Waschen', st_dry: 'Trocknen', clean_empty: 'Frischwasser leer', dirty_full: 'Schmutzwasser voll', mop_only_short: 'Aus',
     states: { cleaning: 'Reinigt', returning: 'Rückkehr zur Station', docked: 'An der Station',
@@ -48,7 +48,7 @@ const TEXT = {
   },
   es: {
     clean: 'Limpiar', clean_all: 'Limpiar todo', clean_rooms: (n) => `Limpiar ${n} habitaci${n > 1 ? 'ones' : 'ón'}`, pause: 'Pausa',
-    resume: 'Reanudar', dock: 'Base', clear: 'Borrar', last_clean: 'Última limpieza', zone: 'Zona', clean_zone: 'Limpiar la zona', zone_help: 'Dibuja un rectángulo en el mapa.', no_map: 'Esperando el mapa…',
+    resume: 'Reanudar', dock: 'Base', clear: 'Borrar', last_clean: 'Última limpieza', history: 'Últimas limpiezas', zone: 'Zona', clean_zone: 'Limpiar la zona', zone_help: 'Dibuja un rectángulo en el mapa.', no_map: 'Esperando el mapa…',
     no_outline: 'El robot no envió el contorno de las habitaciones: elígelas abajo.',
     not_yeedi: 'Esta entidad no es una aspiradora yeedi.', fan: 'Succión', water: 'Agua', station: 'Estación', st_empty: 'Vaciar', st_wash: 'Lavar', st_dry: 'Secar', clean_empty: 'Agua limpia vacía', dirty_full: 'Agua sucia llena', mop_only_short: 'Apagada',
     states: { cleaning: 'Limpiando', returning: 'Volviendo a la base', docked: 'En la base',
@@ -57,7 +57,7 @@ const TEXT = {
   },
   it: {
     clean: 'Pulisci', clean_all: 'Pulisci tutto', clean_rooms: (n) => `Pulisci ${n} stanz${n > 1 ? 'e' : 'a'}`, pause: 'Pausa',
-    resume: 'Riprendi', dock: 'Base', clear: 'Annulla', last_clean: 'Ultima pulizia', zone: 'Zona', clean_zone: 'Pulisci la zona', zone_help: 'Disegna un rettangolo sulla mappa.', no_map: 'In attesa della mappa…',
+    resume: 'Riprendi', dock: 'Base', clear: 'Annulla', last_clean: 'Ultima pulizia', history: 'Ultime pulizie', zone: 'Zona', clean_zone: 'Pulisci la zona', zone_help: 'Disegna un rettangolo sulla mappa.', no_map: 'In attesa della mappa…',
     no_outline: 'Il robot non ha inviato il contorno delle stanze: scegline qui sotto.',
     not_yeedi: 'Questa entità non è un aspirapolvere yeedi.', fan: 'Aspirazione', water: 'Acqua', station: 'Stazione', st_empty: 'Svuota', st_wash: 'Lava', st_dry: 'Asciuga', clean_empty: 'Acqua pulita vuota', dirty_full: 'Acqua sporca piena', mop_only_short: 'Spenta',
     states: { cleaning: 'Pulizia', returning: 'Ritorno alla base', docked: 'Alla base',
@@ -107,10 +107,13 @@ function pointInPolygon(x, y, poly) {
 // second group are the ones the older option "controls: false" used to hide.
 const SHOW_KEYS = ['name', 'status', 'battery', 'tanks', 'map', 'room_names', 'restrictions', 'dock', 'robot', 'trace'];
 const CONTROL_KEYS = ['buttons', 'zone', 'suction', 'water', 'station', 'footer'];
+// Parts shown only when asked for (show: {history: true}).
+const OFF_KEYS = ['history'];
 
 function showPart(config, key) {
   const s = (config && config.show) || {};
   if (key in s) return s[key] !== false;
+  if (OFF_KEYS.includes(key)) return false;
   return !(CONTROL_KEYS.includes(key) && config && config.controls === false);
 }
 
@@ -542,14 +545,19 @@ class YeediMapCard extends HTMLElement {
       rooms.forEach((room) => {
         const rx = room.outline.map((p) => p[0]), ry = room.outline.map((p) => p[1]);
         const cx = X((Math.min(...rx) + Math.max(...rx)) / 2), cy = Y((Math.min(...ry) + Math.max(...ry)) / 2);
-        const sel = this._selected.indexOf(room.id);
+        // Order: of the rooms picked, or (28/11/2026) of the rooms of the running cleaning.
+        let sel = this._selected.indexOf(room.id);
+        const plan = job && job.rooms.length ? job.rooms : (moving && d.progress && d.progress.planned) || [];
+        const inJob = sel < 0 && plan.length > 1 ? plan.indexOf(room.id) : -1;
+        if (inJob >= 0) sel = inJob;
+        const now = inJob >= 0 && d.progress && d.progress.room_id === room.id;
         const lab = this._roomLabel(this._roomName(room), Math.max(...rx) - Math.min(...rx), u);
         const lh = lab.font * 1.15, nl = lab.lines.length;
         const block = (y0) => (!this._show('room_names') ? '' : lab.lines.map((l, k) => `<text class="name" x="${cx}" y="${(y0 + (k - (nl - 1) / 2) * lh).toFixed(0)}" font-size="${lab.font}">${esc(l)}</text>`).join(''));
         if (sel >= 0) {
           // Order badge above the name.
           const r = font * 0.8, by = cy - font * 0.7 - (nl * lh) / 2;
-          s += `<circle class="badge" cx="${cx}" cy="${by}" r="${r}" data-room="${room.id}"/>
+          s += `<circle class="badge${inJob >= 0 ? (now ? ' now' : ' job') : ''}" cx="${cx}" cy="${by}" r="${r}" data-room="${room.id}"/>
             <text class="badgetxt" x="${cx}" y="${by}" font-size="${Math.round(font * 1.05)}" data-room="${room.id}">${sel + 1}</text>` + block(cy + font * 0.5);
         } else {
           s += block(cy);
@@ -670,10 +678,27 @@ class YeediMapCard extends HTMLElement {
 
     const hint = this._zoneMode && !this._zone ? `<div class="foot">${esc(text.zone_help)}</div>` : '';
     const buttons = this._show('buttons') ? `<div class="actions">${main}${clear}${zone}${dock}</div>${hint}` : '';
-    return `${buttons}${fan}${water}${station}${this._show('footer') ? this._lastClean(related, moving) : ''}`;
+    return `${buttons}${fan}${water}${station}${this._show('footer') ? this._lastClean(related, moving) : ''}${this._show('history') ? this._history() : ''}`;
   }
 
   // "Last cleaning: 32 min · 18 m² · 2 h ago", from the statistics sensors.
+  // 28/11/2026: the last cleanings recorded by ha-yeedi (date, duration, area, rooms).
+  _history() {
+    const h = (this._data && this._data.history) || [];
+    if (!h.length) return '';
+    const { text } = this._t();
+    const lang = this._hass?.locale?.language || 'en';
+    const day = new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const rows = h.slice(0, 3).map((c) => {
+      const bits = [`${c.minutes} min`];
+      if (c.area) bits.push(`${Math.round(c.area * 10) / 10} m²`);
+      const rooms = (c.rooms || []).map((n) => esc(this._roomName({ name: n }))).join(', ');
+      return `<div class="hrow${c.result === 'stopped' ? ' stopped' : ''}"><span class="hd">${esc(day.format(new Date(c.end * 1000)))}</span>`
+        + `<span class="hv">${bits.join(' · ')}${rooms ? ` · ${rooms}` : ''}</span></div>`;
+    }).join('');
+    return `<div class="hist"><div class="ht">${esc(text.history)}</div>${rows}</div>`;
+  }
+
   _lastClean(related, moving) {
     if (moving) return this._progressFoot();
     const { text } = this._t();
@@ -897,6 +922,7 @@ const STYLE = `
   .has-sel .room:not(.sel) { fill-opacity: .12; }
   .selring { fill: none; stroke: var(--primary-color); stroke-width: 55; stroke-linejoin: round; pointer-events: none; }
   .badge { fill: var(--primary-color); stroke: var(--card-background-color, #fff); stroke-width: 25; }
+  .badge.job { fill: var(--secondary-text-color); opacity: .75; }
   .zonetxt { fill: var(--primary-color); font-weight: 600; text-anchor: middle; dominant-baseline: central; pointer-events: none; paint-order: stroke; stroke: var(--card-background-color, #fff); stroke-width: 60; stroke-linejoin: round; }
   .badgetxt { fill: #fff; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
   .name { text-anchor: middle; dominant-baseline: middle; fill: var(--primary-text-color); font-weight: 500;
@@ -961,6 +987,12 @@ const STYLE = `
   .seg.on { background: var(--primary-color); }
   .gauge.slide { padding-right: 12px; }
   .nomap { padding: 2px 16px 4px; }
+  .hist { padding: 4px 16px 12px; font-size: 12px; color: var(--secondary-text-color); }
+  .ht { font-weight: 500; color: var(--primary-text-color); margin-bottom: 4px; }
+  .hrow { display: flex; gap: 8px; padding: 2px 0; min-width: 0; }
+  .hrow .hd { flex: none; }
+  .hrow .hv { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hrow.stopped { opacity: .7; }
   .wrange { -webkit-appearance: none; appearance: none; flex: 1 1 auto; min-width: 0; height: 12px; margin: 0; border-radius: 6px; cursor: pointer; background:
       linear-gradient(var(--primary-color), var(--primary-color)) 0 / var(--p, 0%) 100% no-repeat,
       color-mix(in srgb, var(--primary-text-color) 12%, transparent); }
@@ -974,23 +1006,23 @@ const STYLE = `
 
 const EDITOR_TEXT = {
   en: { title: "Title", show: "What the card shows",
-    parts: {"name": "Name", "status": "State", "battery": "Battery", "tanks": "Station water tank alerts", "map": "Map", "room_names": "Room names on the map", "restrictions": "No-mop zones and virtual walls", "dock": "Dock on the map", "robot": "Robot on the map", "trace": "Cleaning trace", "buttons": "Clean, pause and dock buttons", "zone": "Zone button", "suction": "Suction", "water": "Water", "station": "Station buttons", "footer": "Last cleaning / progress"},
+    parts: {"history": "Recent cleanings (off by default)", "name": "Name", "status": "State", "battery": "Battery", "tanks": "Station water tank alerts", "map": "Map", "room_names": "Room names on the map", "restrictions": "No-mop zones and virtual walls", "dock": "Dock on the map", "robot": "Robot on the map", "trace": "Cleaning trace", "buttons": "Clean, pause and dock buttons", "zone": "Zone button", "suction": "Suction", "water": "Water", "station": "Station buttons", "footer": "Last cleaning / progress"},
     rooms: 'Rename rooms on this card only (optional)',
     rooms_help: 'Normally leave these empty: the card shows the Home Assistant area each room is associated with (vacuum entity settings → Clean rooms), or else the name from the robot. Type a name here only to override it on this card.', waiting: 'Waiting for the robot’s rooms…' },
   fr: { title: "Titre", show: "Ce que la carte affiche",
-    parts: {"name": "Nom", "status": "État", "battery": "Batterie", "tanks": "Alertes des réservoirs de la station", "map": "Plan", "room_names": "Noms des pièces sur le plan", "restrictions": "Zones sans serpillière et murs virtuels", "dock": "Base sur le plan", "robot": "Robot sur le plan", "trace": "Trace du nettoyage", "buttons": "Boutons Nettoyer, Pause et Base", "zone": "Bouton Zone", "suction": "Aspiration", "water": "Eau", "station": "Boutons de la station", "footer": "Dernier nettoyage / progression"},
+    parts: {"history": "Derniers nettoyages (masqué par défaut)", "name": "Nom", "status": "État", "battery": "Batterie", "tanks": "Alertes des réservoirs de la station", "map": "Plan", "room_names": "Noms des pièces sur le plan", "restrictions": "Zones sans serpillière et murs virtuels", "dock": "Base sur le plan", "robot": "Robot sur le plan", "trace": "Trace du nettoyage", "buttons": "Boutons Nettoyer, Pause et Base", "zone": "Bouton Zone", "suction": "Aspiration", "water": "Eau", "station": "Boutons de la station", "footer": "Dernier nettoyage / progression"},
     rooms: 'Renommer les pièces sur cette carte seulement (facultatif)',
     rooms_help: 'À laisser vide en général : la carte affiche la pièce Home Assistant associée (paramètres de l’entité aspirateur → Nettoyer des pièces), sinon le nom donné par le robot. Ne saisir un nom ici que pour le remplacer sur cette carte.', waiting: 'En attente des pièces du robot…' },
   de: { title: "Titel", show: "Was die Karte zeigt",
-    parts: {"name": "Name", "status": "Zustand", "battery": "Akku", "tanks": "Wassertank-Hinweise der Station", "map": "Karte", "room_names": "Raumnamen auf der Karte", "restrictions": "No-Mop-Zonen und virtuelle Wände", "dock": "Station auf der Karte", "robot": "Roboter auf der Karte", "trace": "Reinigungsspur", "buttons": "Tasten Reinigen, Pause und Station", "zone": "Taste Zone", "suction": "Saugkraft", "water": "Wasser", "station": "Tasten der Station", "footer": "Letzte Reinigung / Fortschritt"},
+    parts: {"history": "Letzte Reinigungen (standardmäßig aus)", "name": "Name", "status": "Zustand", "battery": "Akku", "tanks": "Wassertank-Hinweise der Station", "map": "Karte", "room_names": "Raumnamen auf der Karte", "restrictions": "No-Mop-Zonen und virtuelle Wände", "dock": "Station auf der Karte", "robot": "Roboter auf der Karte", "trace": "Reinigungsspur", "buttons": "Tasten Reinigen, Pause und Station", "zone": "Taste Zone", "suction": "Saugkraft", "water": "Wasser", "station": "Tasten der Station", "footer": "Letzte Reinigung / Fortschritt"},
     rooms: 'Räume nur auf dieser Karte umbenennen (optional)',
     rooms_help: 'Normalerweise leer lassen: die Karte zeigt den zugeordneten Home-Assistant-Bereich (Einstellungen der Staubsauger-Entität → Räume reinigen), sonst den Namen vom Roboter. Nur ausfüllen, um ihn auf dieser Karte zu ersetzen.', waiting: 'Warte auf die Räume des Roboters…' },
   es: { title: "Título", show: "Lo que muestra la tarjeta",
-    parts: {"name": "Nombre", "status": "Estado", "battery": "Batería", "tanks": "Avisos de los depósitos de la estación", "map": "Mapa", "room_names": "Nombres de las habitaciones en el mapa", "restrictions": "Zonas sin fregado y paredes virtuales", "dock": "Base en el mapa", "robot": "Robot en el mapa", "trace": "Rastro de la limpieza", "buttons": "Botones Limpiar, Pausa y Base", "zone": "Botón Zona", "suction": "Succión", "water": "Agua", "station": "Botones de la estación", "footer": "Última limpieza / progreso"},
+    parts: {"history": "Últimas limpiezas (oculto por defecto)", "name": "Nombre", "status": "Estado", "battery": "Batería", "tanks": "Avisos de los depósitos de la estación", "map": "Mapa", "room_names": "Nombres de las habitaciones en el mapa", "restrictions": "Zonas sin fregado y paredes virtuales", "dock": "Base en el mapa", "robot": "Robot en el mapa", "trace": "Rastro de la limpieza", "buttons": "Botones Limpiar, Pausa y Base", "zone": "Botón Zona", "suction": "Succión", "water": "Agua", "station": "Botones de la estación", "footer": "Última limpieza / progreso"},
     rooms: 'Renombrar habitaciones solo en esta tarjeta (opcional)',
     rooms_help: 'Normalmente déjalo vacío: la tarjeta muestra el área de Home Assistant asociada (ajustes de la entidad aspiradora → Limpiar habitaciones), o si no el nombre del robot. Escribe un nombre solo para sustituirlo en esta tarjeta.', waiting: 'Esperando las habitaciones del robot…' },
   it: { title: "Titolo", show: "Cosa mostra la scheda",
-    parts: {"name": "Nome", "status": "Stato", "battery": "Batteria", "tanks": "Avvisi dei serbatoi della stazione", "map": "Mappa", "room_names": "Nomi delle stanze sulla mappa", "restrictions": "Zone senza lavaggio e muri virtuali", "dock": "Base sulla mappa", "robot": "Robot sulla mappa", "trace": "Traccia della pulizia", "buttons": "Pulsanti Pulisci, Pausa e Base", "zone": "Pulsante Zona", "suction": "Aspirazione", "water": "Acqua", "station": "Pulsanti della stazione", "footer": "Ultima pulizia / avanzamento"},
+    parts: {"history": "Ultime pulizie (nascosto per impostazione predefinita)", "name": "Nome", "status": "Stato", "battery": "Batteria", "tanks": "Avvisi dei serbatoi della stazione", "map": "Mappa", "room_names": "Nomi delle stanze sulla mappa", "restrictions": "Zone senza lavaggio e muri virtuali", "dock": "Base sulla mappa", "robot": "Robot sulla mappa", "trace": "Traccia della pulizia", "buttons": "Pulsanti Pulisci, Pausa e Base", "zone": "Pulsante Zona", "suction": "Aspirazione", "water": "Acqua", "station": "Pulsanti della stazione", "footer": "Ultima pulizia / avanzamento"},
     rooms: 'Rinomina le stanze solo su questa scheda (facoltativo)',
     rooms_help: 'Di solito lascia vuoto: la scheda mostra l’area di Home Assistant associata (impostazioni dell’entità aspirapolvere → Pulisci stanze), altrimenti il nome dato dal robot. Scrivi un nome solo per sostituirlo su questa scheda.', waiting: 'In attesa delle stanze del robot…' },
 };
@@ -1035,7 +1067,8 @@ class YeediMapCardEditor extends HTMLElement {
     const config = { ...this._config, ...patch };
     if (patch.show) {
       // Only the hidden parts are written; "controls" is replaced by them.
-      const hidden = Object.fromEntries(Object.entries(patch.show).filter(([, v]) => v === false));
+      const hidden = Object.fromEntries(Object.entries(patch.show)
+        .filter(([k, v]) => (OFF_KEYS.includes(k) ? v === true : v === false)));
       delete config.controls;
       if (Object.keys(hidden).length) config.show = hidden; else delete config.show;
     }
@@ -1071,7 +1104,7 @@ class YeediMapCardEditor extends HTMLElement {
       this._list = this.querySelector('.roomlist');
     }
     this._form.hass = this._hass;
-    const keys = [...SHOW_KEYS, ...CONTROL_KEYS];
+    const keys = [...SHOW_KEYS, ...CONTROL_KEYS, ...OFF_KEYS];
     this._form.data = { entity: this._config.entity || '', title: this._config.title || '',
       show: Object.fromEntries(keys.map((k) => [k, showPart(this._config, k)])) };
     this._form.schema = [

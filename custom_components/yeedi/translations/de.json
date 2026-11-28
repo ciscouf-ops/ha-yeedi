@@ -68,6 +68,18 @@
           "min_15": "Alle 15 Minuten",
           "min_25": "Alle 25 Minuten"
         }
+      },
+      "work_mode": {
+        "name": "Reinigungsmodus",
+        "state": {
+          "vacuum_and_mop": "Saugen und Wischen",
+          "vacuum": "Nur saugen",
+          "mop": "Nur wischen",
+          "mop_after_vacuum": "Wischen nach dem Saugen"
+        }
+      },
+      "active_map": {
+        "name": "Aktive Karte"
       }
     },
     "sensor": {
@@ -106,6 +118,79 @@
       },
       "cleaning_end": {
         "name": "Voraussichtliches Ende"
+      },
+      "problem": {
+        "name": "Problem",
+        "state": {
+          "none": "Kein Problem",
+          "low_battery": "Akku schwach",
+          "lifted": "Vom Boden angehoben",
+          "wheel": "Rad blockiert",
+          "cliff_sensor": "Absturzsensoren verschmutzt",
+          "stuck": "Steckt fest",
+          "side_brush_worn": "Seitenbürsten ersetzen",
+          "main_brush_worn": "Hauptbürste ersetzen",
+          "filter_worn": "Filter ersetzen",
+          "side_brush_tangled": "Seitenbürste verheddert",
+          "main_brush_tangled": "Hauptbürste verheddert",
+          "no_dustbin": "Staubbehälter fehlt",
+          "bumper": "Stoßfänger blockiert",
+          "laser_sensor": "Abstandssensor defekt",
+          "dustbin_full": "Staubbehälter voll",
+          "battery_fault": "Akkufehler",
+          "front_sensor": "Frontsensor defekt",
+          "gyroscope": "Gyroskop defekt",
+          "filter_blocked": "Filter verstopft",
+          "fan": "Lüfter defekt",
+          "water_tank": "Wassertank defekt",
+          "no_water_tank": "Wassertank fehlt",
+          "mop_plate": "Problem mit dem Wischpad",
+          "clean_water_empty": "Frischwassertank leer",
+          "dirty_water_full": "Schmutzwassertank voll",
+          "no_clean_water_tank": "Frischwassertank fehlt",
+          "no_dirty_water_tank": "Schmutzwassertank fehlt",
+          "no_sink_filter": "Stationsfilter fehlt",
+          "station_fault": "Stationsfehler",
+          "communication": "Kommunikationsfehler",
+          "lid_open": "Stationsdeckel offen",
+          "dust_bag_full": "Staubbeutel voll",
+          "no_water_module": "Wassermodul fehlt",
+          "detergent_low": "Reinigungsmittel fast leer",
+          "mop_plugged": "Wischmopp angebracht",
+          "replace_mop": "Wischtuch ersetzen",
+          "dock_not_found": "Station nicht gefunden",
+          "position_lost": "Position verloren",
+          "obstacle": "Hindernis erkannt",
+          "other": "Anderes Problem"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Code"
+          },
+          "description": {
+            "name": "Beschreibung"
+          }
+        }
+      },
+      "last_cleaning": {
+        "name": "Letzte Reinigung",
+        "state_attributes": {
+          "minutes": {
+            "name": "Dauer (min)"
+          },
+          "area": {
+            "name": "Fläche (m²)"
+          },
+          "rooms": {
+            "name": "Räume"
+          },
+          "result": {
+            "name": "Ergebnis"
+          },
+          "history": {
+            "name": "Verlauf"
+          }
+        }
       }
     },
     "vacuum": {
@@ -157,6 +242,36 @@
       },
       "advanced_mode": {
         "name": "Erweiterter Modus"
+      },
+      "child_lock": {
+        "name": "Kindersicherung"
+      },
+      "true_detect": {
+        "name": "Hinderniserkennung (TrueDetect)"
+      },
+      "voice_assistant": {
+        "name": "Sprachassistent"
+      },
+      "border_switch": {
+        "name": "Kantenreinigung"
+      },
+      "border_spin": {
+        "name": "Kantenrotation"
+      },
+      "moveup_warning": {
+        "name": "Warnung beim Anheben"
+      },
+      "cross_map_border_warning": {
+        "name": "Warnung beim Verlassen der Karte"
+      },
+      "safe_protect": {
+        "name": "Sicherheitsschutz"
+      },
+      "clean_preference": {
+        "name": "Reinigungspräferenz"
+      },
+      "multi_map": {
+        "name": "Mehrere Karten"
       }
     },
     "number": {
@@ -165,6 +280,12 @@
       },
       "water_amount": {
         "name": "Wassermenge"
+      },
+      "clean_count": {
+        "name": "Durchgänge pro Reinigung"
+      },
+      "mop_auto_wash_frequency": {
+        "name": "Wischmopp-Waschintervall"
       }
     }
   },

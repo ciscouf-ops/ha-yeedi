@@ -1,8 +1,21 @@
 # Changelog
 
-## Unreleased
+## 0.2.14b6 (test version)
+
+### New entities
+- **Problem** sensor: what is wrong with the robot, in words (stuck, brush tangled, dustbin full, dock not found, clean water tank empty…), translated, with the robot code as an attribute. Handy for notifications. The error code sensor stays.
+- **Last cleaning** sensor, recorded by ha-yeedi: end time, duration, area, rooms in the order they were cleaned, finished on the dock or stopped; the last 10 cleanings in the `history` attribute.
+- **Active map** select, for robots that keep one map per floor (multiple maps switched on). Not tried on a robot yet: please report.
+- The other settings deebot-client knows, created only for the robots that declare them: child lock, obstacle avoidance (TrueDetect), voice assistant, edge cleaning, edge spin, lift and map border warnings, safe protection, cleaning preference, multiple maps (switches); cleaning mode (select); passes per cleaning and mop wash interval (numbers). On the M16 Infinity: child lock, TrueDetect, voice assistant, cleaning mode, passes and mop wash interval.
+
+### Map card
+- **Order of the rooms during a cleaning**: the planned rooms are numbered on the map, the current one in colour.
+- **Recent cleanings** (optional, `show: {history: true}` or in the editor): the last 3 cleanings under the controls.
+
+### Other
 - **"Clear the map" button renamed "Clear the map (also in the yeedi app!)"**: it deletes the map on the robot, not only in Home Assistant. Reported by @kevingufler (#5).
 - README: the yeedi 2 hybrid is tested by a user (#5); zones are in metres with up to 3 decimals (millimetres).
+- Map card tests run on GitHub for four robots (vac max, vac station, M16 Infinity, yeedi 2 hybrid).
 
 ## 0.2.14b5 (test version)
 - **Map card: the water flow of the M16 Infinity is a real slider** from 0 to 50, at the robot's own step (1), instead of 5 steps. The value follows the finger and is sent when you let go.

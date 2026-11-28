@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- Test page of the map card: a fake Home Assistant with one robot (see run.cjs). -->
+<style>
+  :root { --primary-color:#03a9f4; --primary-text-color:#212121; --secondary-text-color:#727272; --card-background-color:#fff; --divider-color:#e0e0e0; }
+  body { margin:16px; width:420px; font-family:sans-serif; background:#f5f5f5; }
+  ha-card { display:block; background:#fff; border-radius:12px; }
+</style>
+<script>
+  customElements.define('ha-card', class extends HTMLElement {});
+  customElements.define('ha-icon', class extends HTMLElement {});
+  customElements.define('ha-form', class extends HTMLElement {});
+</script>
+<script src="../../custom_components/yeedi/www/yeedi-map-card.js"></script>
+</head><body><div id="c"></div>
+<script>
+// window.FIXTURE and window.CONFIG are set by the test before the page loads.
+const f = window.FIXTURE;
+window.calls = [];
+window.errors = [];
+const entities = {}, states = {};
+for (const [id, e] of Object.entries(f.entities)) {
+  entities[id] = { entity_id: id, device_id: 'd1', platform: 'yeedi', translation_key: e.key };
+  states[id] = { entity_id: id, state: e.state, attributes: e.attributes || {}, last_changed: new Date().toISOString() };
+}
+window.hass = {
+  states, entities, locale: { language: 'en' }, language: 'en',
+  callService: (domain, service, data) => window.calls.push([domain, service, data]),
+  callWS: async () => ({}),
+  connection: { subscribeMessage: async (cb) => { setTimeout(() => cb(f.data), 5); return () => {}; } },
+};
+const card = document.createElement('yeedi-map-card');
+card.setConfig(Object.assign({ entity: 'vacuum.robot' }, window.CONFIG || {}));
+document.getElementById('c').appendChild(card);
+card.hass = window.hass;
+</script></body></html>

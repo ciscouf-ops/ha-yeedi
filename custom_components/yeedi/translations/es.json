@@ -68,6 +68,18 @@
           "min_15": "Cada 15 minutos",
           "min_25": "Cada 25 minutos"
         }
+      },
+      "work_mode": {
+        "name": "Modo de limpieza",
+        "state": {
+          "vacuum_and_mop": "Aspirar y fregar",
+          "vacuum": "Solo aspirar",
+          "mop": "Solo fregar",
+          "mop_after_vacuum": "Fregar después de aspirar"
+        }
+      },
+      "active_map": {
+        "name": "Mapa activo"
       }
     },
     "sensor": {
@@ -106,6 +118,79 @@
       },
       "cleaning_end": {
         "name": "Fin estimado"
+      },
+      "problem": {
+        "name": "Problema",
+        "state": {
+          "none": "Ningún problema",
+          "low_battery": "Batería baja",
+          "lifted": "Levantado del suelo",
+          "wheel": "Rueda bloqueada",
+          "cliff_sensor": "Sensores anticaída sucios",
+          "stuck": "Atascado",
+          "side_brush_worn": "Cambiar los cepillos laterales",
+          "main_brush_worn": "Cambiar el cepillo principal",
+          "filter_worn": "Cambiar el filtro",
+          "side_brush_tangled": "Cepillo lateral enredado",
+          "main_brush_tangled": "Cepillo principal enredado",
+          "no_dustbin": "Falta el depósito de polvo",
+          "bumper": "Parachoques bloqueado",
+          "laser_sensor": "Fallo del sensor de distancia",
+          "dustbin_full": "Depósito de polvo lleno",
+          "battery_fault": "Fallo de batería",
+          "front_sensor": "Fallo del sensor frontal",
+          "gyroscope": "Fallo del giroscopio",
+          "filter_blocked": "Filtro obstruido",
+          "fan": "Fallo del ventilador",
+          "water_tank": "Fallo del depósito de agua",
+          "no_water_tank": "Falta el depósito de agua",
+          "mop_plate": "Problema con la mopa",
+          "clean_water_empty": "Depósito de agua limpia vacío",
+          "dirty_water_full": "Depósito de agua sucia lleno",
+          "no_clean_water_tank": "Falta el depósito de agua limpia",
+          "no_dirty_water_tank": "Falta el depósito de agua sucia",
+          "no_sink_filter": "Falta el filtro de la estación",
+          "station_fault": "Fallo de la estación",
+          "communication": "Fallo de comunicación",
+          "lid_open": "Tapa de la estación abierta",
+          "dust_bag_full": "Bolsa de polvo llena",
+          "no_water_module": "Falta el módulo de agua",
+          "detergent_low": "Queda poca solución limpiadora",
+          "mop_plugged": "Mopa instalada",
+          "replace_mop": "Cambiar la mopa",
+          "dock_not_found": "Base no encontrada",
+          "position_lost": "Posición perdida",
+          "obstacle": "Obstáculo detectado",
+          "other": "Otro problema"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Código"
+          },
+          "description": {
+            "name": "Descripción"
+          }
+        }
+      },
+      "last_cleaning": {
+        "name": "Última limpieza",
+        "state_attributes": {
+          "minutes": {
+            "name": "Duración (min)"
+          },
+          "area": {
+            "name": "Superficie (m²)"
+          },
+          "rooms": {
+            "name": "Habitaciones"
+          },
+          "result": {
+            "name": "Resultado"
+          },
+          "history": {
+            "name": "Historial"
+          }
+        }
       }
     },
     "vacuum": {
@@ -157,6 +242,36 @@
       },
       "advanced_mode": {
         "name": "Modo avanzado"
+      },
+      "child_lock": {
+        "name": "Bloqueo infantil"
+      },
+      "true_detect": {
+        "name": "Evitar obstáculos (TrueDetect)"
+      },
+      "voice_assistant": {
+        "name": "Asistente de voz"
+      },
+      "border_switch": {
+        "name": "Limpieza de bordes"
+      },
+      "border_spin": {
+        "name": "Giro en los bordes"
+      },
+      "moveup_warning": {
+        "name": "Aviso al levantarlo"
+      },
+      "cross_map_border_warning": {
+        "name": "Aviso al salir del mapa"
+      },
+      "safe_protect": {
+        "name": "Protección de seguridad"
+      },
+      "clean_preference": {
+        "name": "Preferencia de limpieza"
+      },
+      "multi_map": {
+        "name": "Varios mapas"
       }
     },
     "number": {
@@ -165,6 +280,12 @@
       },
       "water_amount": {
         "name": "Caudal de agua"
+      },
+      "clean_count": {
+        "name": "Pasadas por limpieza"
+      },
+      "mop_auto_wash_frequency": {
+        "name": "Intervalo de lavado de la mopa"
       }
     }
   },

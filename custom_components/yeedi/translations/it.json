@@ -68,6 +68,18 @@
           "min_15": "Ogni 15 minuti",
           "min_25": "Ogni 25 minuti"
         }
+      },
+      "work_mode": {
+        "name": "Modalità di pulizia",
+        "state": {
+          "vacuum_and_mop": "Aspirare e lavare",
+          "vacuum": "Solo aspirare",
+          "mop": "Solo lavare",
+          "mop_after_vacuum": "Lavare dopo aver aspirato"
+        }
+      },
+      "active_map": {
+        "name": "Mappa attiva"
       }
     },
     "sensor": {
@@ -106,6 +118,79 @@
       },
       "cleaning_end": {
         "name": "Fine stimata"
+      },
+      "problem": {
+        "name": "Problema",
+        "state": {
+          "none": "Nessun problema",
+          "low_battery": "Batteria scarica",
+          "lifted": "Sollevato da terra",
+          "wheel": "Ruota bloccata",
+          "cliff_sensor": "Sensori anticaduta sporchi",
+          "stuck": "Bloccato",
+          "side_brush_worn": "Sostituire le spazzole laterali",
+          "main_brush_worn": "Sostituire la spazzola principale",
+          "filter_worn": "Sostituire il filtro",
+          "side_brush_tangled": "Spazzola laterale aggrovigliata",
+          "main_brush_tangled": "Spazzola principale aggrovigliata",
+          "no_dustbin": "Contenitore polvere assente",
+          "bumper": "Paraurti bloccato",
+          "laser_sensor": "Guasto del sensore di distanza",
+          "dustbin_full": "Contenitore polvere pieno",
+          "battery_fault": "Guasto della batteria",
+          "front_sensor": "Guasto del sensore frontale",
+          "gyroscope": "Guasto del giroscopio",
+          "filter_blocked": "Filtro ostruito",
+          "fan": "Guasto della ventola",
+          "water_tank": "Guasto del serbatoio d'acqua",
+          "no_water_tank": "Serbatoio d'acqua assente",
+          "mop_plate": "Problema con il panno",
+          "clean_water_empty": "Serbatoio acqua pulita vuoto",
+          "dirty_water_full": "Serbatoio acqua sporca pieno",
+          "no_clean_water_tank": "Serbatoio acqua pulita assente",
+          "no_dirty_water_tank": "Serbatoio acqua sporca assente",
+          "no_sink_filter": "Filtro della stazione assente",
+          "station_fault": "Guasto della stazione",
+          "communication": "Errore di comunicazione",
+          "lid_open": "Coperchio della stazione aperto",
+          "dust_bag_full": "Sacchetto polvere pieno",
+          "no_water_module": "Modulo acqua assente",
+          "detergent_low": "Detergente quasi esaurito",
+          "mop_plugged": "Panno montato",
+          "replace_mop": "Sostituire il panno",
+          "dock_not_found": "Base non trovata",
+          "position_lost": "Posizione persa",
+          "obstacle": "Ostacolo rilevato",
+          "other": "Altro problema"
+        },
+        "state_attributes": {
+          "code": {
+            "name": "Codice"
+          },
+          "description": {
+            "name": "Descrizione"
+          }
+        }
+      },
+      "last_cleaning": {
+        "name": "Ultima pulizia",
+        "state_attributes": {
+          "minutes": {
+            "name": "Durata (min)"
+          },
+          "area": {
+            "name": "Superficie (m²)"
+          },
+          "rooms": {
+            "name": "Stanze"
+          },
+          "result": {
+            "name": "Risultato"
+          },
+          "history": {
+            "name": "Cronologia"
+          }
+        }
       }
     },
     "vacuum": {
@@ -157,6 +242,36 @@
       },
       "advanced_mode": {
         "name": "Modalità avanzata"
+      },
+      "child_lock": {
+        "name": "Blocco bambini"
+      },
+      "true_detect": {
+        "name": "Evitamento ostacoli (TrueDetect)"
+      },
+      "voice_assistant": {
+        "name": "Assistente vocale"
+      },
+      "border_switch": {
+        "name": "Pulizia dei bordi"
+      },
+      "border_spin": {
+        "name": "Rotazione sui bordi"
+      },
+      "moveup_warning": {
+        "name": "Avviso di sollevamento"
+      },
+      "cross_map_border_warning": {
+        "name": "Avviso di uscita dalla mappa"
+      },
+      "safe_protect": {
+        "name": "Protezione di sicurezza"
+      },
+      "clean_preference": {
+        "name": "Preferenza di pulizia"
+      },
+      "multi_map": {
+        "name": "Più mappe"
       }
     },
     "number": {
@@ -165,6 +280,12 @@
       },
       "water_amount": {
         "name": "Flusso d'acqua"
+      },
+      "clean_count": {
+        "name": "Passaggi per pulizia"
+      },
+      "mop_auto_wash_frequency": {
+        "name": "Intervallo di lavaggio del panno"
       }
     }
   },

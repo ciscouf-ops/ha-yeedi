@@ -32,6 +32,7 @@ from deebot_client.events import (
     PositionsEvent,
     RoomsEvent,
     StateEvent,
+    StatsEvent,
 )
 from deebot_client.events.map import MapInfoEvent
 from deebot_client.models import State
@@ -59,6 +60,7 @@ _LEARN_MIN_MINUTES = 1.0  # a shorter stay is a room merely crossed
 _LEARN_MIN_RATE = 0.3  # min/m²: below this the room was crossed, not cleaned
 _DONE_FRACTION = 0.5  # a planned room with this share of its estimate is done
 _MAX_CLEANING_HOURS = 4
+_HISTORY_SIZE = 20  # cleanings kept in the history
 
 
 def _parse_outline(coordinates: str | None) -> list[list[float]]:
@@ -138,6 +140,10 @@ class YeediMapData:
         # What a cleaning taught: minutes per room and the order of a full cleaning.
         self._durations: dict[int, float] = {}
         self._full_order: list[int] = []
+        # Past cleanings, oldest first: {start, end, minutes, area, rooms, result}.
+        self._history: list[dict[str, Any]] = []
+        self._area: float | None = None  # m2 cleaned so far (robot statistics)
+        self._recorded: float | None = None  # start of the last cleaning written
         self._listeners: list[Callable[[], None]] = []
         self._unsubscribers: list[Callable[[], None]] = []
         self._notify_handle: asyncio.TimerHandle | None = None
@@ -185,6 +191,7 @@ class YeediMapData:
             self._full_order = [
                 int(i) for i in saved.get("full_order") or [] if str(i).lstrip("-").isdigit()
             ]
+            self._history = [h for h in saved.get("history") or [] if isinstance(h, dict)][-_HISTORY_SIZE:]
         events = self._device.events
         self._unsubscribers += [
             events.subscribe(StateEvent, self._on_state),
@@ -193,6 +200,7 @@ class YeediMapData:
             events.subscribe(MapSubsetEvent, self._on_map_subset),
             events.subscribe(CachedMapInfoEvent, self._on_map_info),
             events.subscribe(MapInfoEvent, self._on_outlines),
+            events.subscribe(StatsEvent, self._on_stats),
         ]
 
     def stop(self) -> None:
@@ -297,6 +305,7 @@ class YeediMapData:
             self._room_order = []
             self._last_position_at = None
             self._learned = False
+            self._area = None
             if any(not r["outline"] for r in self._rooms.values()) or not self._rooms:
                 self._start_rooms_refresh()
         if event.state in _MOVING:
@@ -305,7 +314,43 @@ class YeediMapData:
             self._last_position_at = None
         if event.state is State.DOCKED and previous in _MOVING + (State.PAUSED,):
             self._learn()
+        if event.state in (State.DOCKED, State.IDLE) and previous in _MOVING + (State.PAUSED,):
+            self._record(event.state)
         self._schedule_notify()
+
+    async def _on_stats(self, event: StatsEvent) -> None:
+        if self._state in _MOVING + (State.PAUSED,) and event.area:
+            self._area = float(event.area)
+
+    def _record(self, end_state: State) -> None:
+        """Write the cleaning that just ended in the history (once per cleaning)."""
+        start = self._trace_start
+        if start is None or start == self._recorded:
+            return
+        end = time.time()
+        minutes = (end - start) / 60
+        if minutes < 1:
+            return
+        self._recorded = start
+        names = {r["id"]: r.get("name") or "" for r in self._rooms.values()}
+        self._history.append(
+            {
+                "start": round(start),
+                "end": round(end),
+                "minutes": round(minutes),
+                "area": self._area,
+                "rooms": [names.get(i) or str(i) for i in self._room_order],
+                # Back on the dock: finished; stopped elsewhere: interrupted.
+                "result": "finished" if end_state is State.DOCKED else "stopped",
+            }
+        )
+        del self._history[:-_HISTORY_SIZE]
+        self._schedule_save()
+
+    @property
+    def history(self) -> list[dict[str, Any]]:
+        """Past cleanings, most recent first."""
+        return list(reversed(self._history))
 
     async def _on_positions(self, event: PositionsEvent) -> None:
         for position in event.positions:
@@ -493,6 +538,7 @@ class YeediMapData:
             "no_mop": [{"id": i, "points": p} for i, p in self._no_mop.items()],
             "durations": {str(i): m for i, m in self._durations.items()},
             "full_order": list(self._full_order),
+            "history": self._history,
         }
 
     @callback
@@ -544,5 +590,6 @@ class YeediMapData:
             "trace_start": self._trace_start,
             "state": self._state.name.lower() if self._state is not None else None,
             "progress": self.estimate(),
+            "history": self.history[:5],
             "updated": self._updated,
         }

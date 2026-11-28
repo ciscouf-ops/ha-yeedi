@@ -1,11 +1,12 @@
-"""Number entities for Yeedi robots: voice volume, water flow on recent models."""
+"""Number entities for Yeedi robots: voice volume, water flow, passes, mop washing."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 from deebot_client.capabilities import CapabilityNumber, CapabilitySet
-from deebot_client.events import VolumeEvent
+from deebot_client.events import CleanCountEvent, Event, VolumeEvent
+from deebot_client.events.mop_auto_wash_frequency import MopAutoWashFrequencyEvent
 from deebot_client.events.water_info import WaterCustomAmountEvent
 
 from homeassistant.components.number import (
@@ -63,6 +64,30 @@ WATER_DESCRIPTIONS: tuple[YeediNumberEntityDescription, ...] = (
 )
 
 
+# 28/11/2026: other number settings of recent models.
+SETTING_DESCRIPTIONS: tuple[YeediNumberEntityDescription, ...] = (
+    YeediNumberEntityDescription(
+        key="clean_count",
+        translation_key="clean_count",
+        capability_fn=lambda caps: caps.clean.count,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=1,
+        native_max_value=2,
+        native_step=1,
+        mode=NumberMode.BOX,
+    ),
+    YeediNumberEntityDescription(
+        key="mop_auto_wash_frequency",
+        translation_key="mop_auto_wash_frequency",
+        capability_fn=lambda caps: caps.settings.mop_auto_wash_frequency,
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_unit_of_measurement="min",
+        mode=NumberMode.BOX,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: YeediConfigEntry,
@@ -74,6 +99,7 @@ async def async_setup_entry(
         [
             *get_supported_entities(devices, YeediVolume, ENTITY_DESCRIPTIONS),
             *get_supported_entities(devices, YeediWaterAmount, WATER_DESCRIPTIONS),
+            *get_supported_entities(devices, YeediSettingNumber, SETTING_DESCRIPTIONS),
         ]
     )
 
@@ -123,4 +149,34 @@ class YeediWaterAmount(YeediDescriptionEntity[CapabilityNumber], NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Change the water flow."""
+        await self._device.execute_command(self._capability.set(int(value)))
+
+
+class YeediSettingNumber(YeediDescriptionEntity[CapabilitySet], NumberEntity):
+    """A number setting: passes per cleaning, minutes between mop washes."""
+
+    entity_description: YeediNumberEntityDescription
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Take the range from the robot sheet when it has one."""
+        super().__init__(*args, **kwargs)
+        if isinstance(self._capability, CapabilityNumber):
+            self._attr_native_min_value = self._capability.min
+            self._attr_native_max_value = self._capability.max
+
+    async def async_added_to_hass(self) -> None:
+        """Follow the setting."""
+        await super().async_added_to_hass()
+
+        async def on_event(event: Event) -> None:
+            if isinstance(event, CleanCountEvent):
+                self._attr_native_value = event.count
+            elif isinstance(event, MopAutoWashFrequencyEvent):
+                self._attr_native_value = event.value
+            self.async_write_ha_state()
+
+        self._subscribe(self._capability.event, on_event)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the setting."""
         await self._device.execute_command(self._capability.set(int(value)))

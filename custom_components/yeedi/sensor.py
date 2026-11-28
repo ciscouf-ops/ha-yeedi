@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import SUPPORTED_LIFESPANS
+from .const import PROBLEM_CODES, PROBLEM_OPTIONS, SUPPORTED_LIFESPANS
 from .controller import YeediConfigEntry
 from .entity import (
     YeediCapabilityEntityDescription,
@@ -113,6 +113,15 @@ ENTITY_DESCRIPTIONS: tuple[YeediSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     YeediSensorEntityDescription[ErrorEvent](
+        # What is wrong, in words (translated), for dashboards and notifications.
+        key="problem",
+        translation_key="problem",
+        capability_fn=lambda caps: caps.error,
+        value_fn=lambda e: PROBLEM_CODES.get(e.code, "other"),
+        device_class=SensorDeviceClass.ENUM,
+        options=PROBLEM_OPTIONS,
+    ),
+    YeediSensorEntityDescription[ErrorEvent](
         key="error",
         translation_key="error",
         capability_fn=lambda caps: caps.error,
@@ -175,6 +184,8 @@ class YeediProgressSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[dict[str, Any] | None], StateType | datetime]
     attributes_fn: Callable[[dict[str, Any] | None], dict[str, Any]] = lambda _: {}
+    # What the sensor reads in the map data (default: the progress of the cleaning).
+    data_fn: Callable[[YeediMapData], Any] = lambda m: m.estimate()
 
 
 def _end(progress: dict[str, Any] | None) -> datetime | None:
@@ -201,6 +212,25 @@ PROGRESS_DESCRIPTIONS: tuple[YeediProgressSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         suggested_display_precision=0,
+    ),
+    # 28/11/2026: history of the cleanings, recorded by ha-yeedi (rooms included).
+    YeediProgressSensorEntityDescription(
+        key="last_cleaning",
+        translation_key="last_cleaning",
+        data_fn=lambda m: m.history,
+        value_fn=lambda h: datetime.fromtimestamp(h[0]["end"], UTC) if h else None,
+        attributes_fn=lambda h: (
+            {
+                "minutes": h[0].get("minutes"),
+                "area": h[0].get("area"),
+                "rooms": h[0].get("rooms"),
+                "result": h[0].get("result"),
+                "history": h[:10],
+            }
+            if h
+            else {}
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     YeediProgressSensorEntityDescription(
         key="cleaning_end",
@@ -248,6 +278,8 @@ class YeediSensor(YeediDescriptionEntity[CapabilityEvent], RestoreSensor):
                 self._attr_native_value = value
                 if isinstance(event, ErrorEvent):
                     self._attr_extra_state_attributes = {"description": event.description}
+                    if self.entity_description.key == "problem":
+                        self._attr_extra_state_attributes["code"] = event.code
                 if stats:
                     self._attr_extra_state_attributes = {ATTR_END: dt_util.utcnow().isoformat()}
                 self.async_write_ha_state()
@@ -298,6 +330,6 @@ class YeediProgressSensor(YeediDescriptionEntity[YeediMapData], SensorEntity):
         self.async_write_ha_state()
 
     def _refresh(self) -> None:
-        progress = self._capability.estimate()
+        progress = self.entity_description.data_fn(self._capability)
         self._attr_native_value = self.entity_description.value_fn(progress)
         self._attr_extra_state_attributes = self.entity_description.attributes_fn(progress)
